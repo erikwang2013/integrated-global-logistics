@@ -16,6 +16,8 @@
 - **tracking-gateway 高频网关**（Rust e-cat 框架）—— 对外查询 API 的第一道入口：Redis 缓存、限流、按承运商熔断、worker 负载均衡，只做高频面，不懂承运商协议；
 - **global-logistics 统一门面**（PHP 包）—— 209 家承运商适配器（国内 45 + 国际 164）、187 条单号自动识别规则、`TrackStatus` 7 种统一状态语义。
 
+**当前进度**：M1 管理面（承运商/凭证/查询记录/订阅 CRUD）与 M2 查询网关（对外 API 全链路）已完成 —— 客户端 → e-cat → worker → 承运商的轨迹查询链路可演示。
+
 ## 项目说明
 
 <img src="docs/diagrams/description.svg" alt="项目说明" width="100%">
@@ -24,6 +26,8 @@
 - **自动识别**：187 条单号正则规则顺序敏感、优先命中国内通道；识别不了的场景可显式调用 `domestic()` / `international()`；
 - **统一状态**：各家五花八门的原始状态映射为统一的 `TrackStatus` 枚举（待揽收 / 运输中 / 派送中 / 已签收 / 异常 / 退回 / 无法识别）；
 - **全球覆盖**：DHL、FedEx、UPS、USPS 四大快递与各国邮政 S10 系统（欧洲、拉美加勒比、非洲中东、亚太四区域）；
+- **对外 API**：e-cat 查询网关提供 API-Key 鉴权、Redis 缓存命中（`X-Cache: HIT`）、限流 429、按承运商熔断 503、RoundRobin worker 负载均衡；
+- **查询全审计**：每次查询落库 `logistics_tracking_query`（成功/失败、耗时、错误码），管理面可查可统计；
 - **密钥零硬编码**：各家密钥全部经配置注入，数据库层用 Encryptable 密文存储，代码与密钥完全分离。
 
 ## 项目架构
