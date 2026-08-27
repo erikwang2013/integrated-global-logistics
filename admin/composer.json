@@ -24,7 +24,7 @@
     "source": "https://github.com/walkor/webman"
   },
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.2",
     "workerman/webman-framework": "^2.1",
     "monolog/monolog": "^2.0",
     "erikwang2013/snowflake-php": "^2.0",
@@ -34,6 +34,7 @@
     "erikwang2013/encryptable": "^2.0",
     "erikwang2013/webman-scout": "^2.0",
     "erikwang2013/season": "^2.0",
+    "erikwang2013/global-logistics": "^1.0",
     "phpoffice/phpspreadsheet": "^5.7",
     "barryvdh/laravel-dompdf": "^3.1",
     "vlucas/phpdotenv": "^5.6",
@@ -76,6 +77,18 @@
   },
   "minimum-stability": "dev",
   "prefer-stable": true,
+  "repositories": [
+    {
+      "type": "path",
+      "url": "/home/wwwroot/erikwang2013/global-logistics",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "erikwang2013/global-logistics": "1.0.3"
+        }
+      }
+    }
+  ],
   "config": {
     "allow-plugins": {
       "erikwang2013/encryptable": true,

@@ -102,6 +102,18 @@ Route::group('/admin', function () {
 
     // 文件上传
     Route::post('/upload', [app\admin\controller\UploadController::class, 'upload']);
+
+    // 物流聚合 — 承运商凭证（静态路径需先于 /carrier/{id} 注册）
+    Route::resource('/carrier/credential', app\admin\controller\CarrierCredentialController::class);
+
+    // 物流聚合 — 承运商
+    Route::resource('/carrier', app\admin\controller\CarrierController::class);
+
+    // 物流聚合 — 轨迹查询记录
+    Route::get('/tracking/query', [app\admin\controller\TrackingQueryController::class, 'index']);
+
+    // 物流聚合 — 回调订阅
+    Route::resource('/callback/subscription', app\admin\controller\CallbackSubscriptionController::class);
 })->middleware([
     app\middleware\AdminAuth::class,
     app\middleware\AdminPermission::class,
