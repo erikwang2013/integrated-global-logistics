@@ -119,4 +119,5 @@
     <text x="385" y="558" font-size="12.5">V1 पुश PHP कतार में: पार्सिंग व डेटा PHP में; भाषाओं के बीच इवेंट भेजना लाभदायक नहीं</text>
     <text x="385" y="578" font-size="12.5">थ्रूपुट बाधा (&gt;10k/मिनट) होने पर कंज़्यूमर e-cat (ecat-mq) में ले जाएँ; बाहरी कॉन्ट्रैक्ट नहीं बदलता</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

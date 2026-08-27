@@ -11,6 +11,8 @@
 - NEVER add a `Co-Authored-By` trailer to user commits unless this project's `.claude/settings.json` has `attribution.commit` set (#2078). The Claude Code Bash tool may suggest one in its default commit-message template — ignore it. `Co-Authored-By` is semantic authorship attribution under git/GitHub convention; the tool is the facilitator, not a co-author.
 - Keep files under 500 lines
 - Validate input at system boundaries
+- 图片水印：README / 文档中的图片统一添加半透明水印 `erik.xyz` —— SVG 在右下角加 `<text>`，位图在角落加半透明文字；二维码类图片水印置于角落，避免遮挡扫码区域
+- 推送规则：`git push` 成功后，获取仓库最高版本号（`git tag --sort=-v:refname | head -1`，无 tag 时从 `v1.0.0` 起），基于最新版本增量创建新 tag 与 GitHub release（默认 patch 递增，如 v1.0.0 → v1.0.1；破坏性变更手动升 minor），release 标题为版本号、正文概括本次提交变更，推送完成后执行
 
 ## Agent Comms (SendMessage-First Coordination)
 

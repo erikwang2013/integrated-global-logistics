@@ -119,4 +119,5 @@
     <text x="385" y="558" font-size="12">>コールバック初版は PHP キューに留める —— イベント解析とデータは PHP 側にあり、言語横断で渡す利益はない</text>
     <text x="385" y="578" font-size="11.5">>プッシュスループットがボトルネック（分あたり万件以上）になったら、コンシューマーを e-cat（ecat-mq）へ移設、外部契約は不変</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

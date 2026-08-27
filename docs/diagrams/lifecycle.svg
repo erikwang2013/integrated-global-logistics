@@ -119,4 +119,5 @@
     <text x="385" y="558">回调首版推送留在 PHP 队列 —— 事件解析与数据都在 PHP 侧，跨语言传事件无收益</text>
     <text x="385" y="578">推送吞吐成瓶颈（万级/分钟以上）时，再把消费者迁到 e-cat（ecat-mq），外部契约不变</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

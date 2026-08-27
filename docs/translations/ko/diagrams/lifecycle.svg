@@ -119,4 +119,5 @@
     <text x="375" y="558">콜백 푸시 1차 버전은 PHP 큐 유지 — 파싱·데이터가 PHP 측, 언어 간 전달 무의미</text>
     <text x="375" y="578">푸시 처리량 병목 시(분당 수만 건+) 컨슈머를 e-cat(ecat-mq)로 이동, 외부 계약 불변</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

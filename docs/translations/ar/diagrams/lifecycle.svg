@@ -119,4 +119,5 @@
     <text x="385" y="558" font-size="12.5">الإصدار الأول من الإرسال يبقى في قائمة PHP: التحليل والبيانات في PHP؛ نقل الأحداث بين اللغات بلا فائدة</text>
     <text x="385" y="578" font-size="12.5">عند بلوغ حد الإنتاجية (&gt;10 آلاف/دقيقة) انقل المستهلك إلى e-cat (ecat-mq)؛ العقد الخارجي لا يتغير</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

@@ -119,4 +119,5 @@
     <text x="385" y="558" font-size="12.5">V1 do push fica na fila PHP: parsing e dados estão no PHP; eventos entre linguagens não compensam</text>
     <text x="385" y="578" font-size="12.5">Se o throughput virar gargalo (&gt;10k/min), migre o consumidor para e-cat (ecat-mq); contrato externo não muda</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

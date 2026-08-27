@@ -119,4 +119,5 @@
     <text x="385" y="558">v1 : push dans la file PHP – parsing &amp; données côté PHP, aucun gain à transférer les événements entre langages</text>
     <text x="385" y="578">Si le débit de push devient un goulot (&gt;10k/min), migrer les consommateurs vers e-cat (ecat-mq) ; contrat externe inchangé</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

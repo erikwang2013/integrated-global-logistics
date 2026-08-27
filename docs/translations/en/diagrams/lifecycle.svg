@@ -119,4 +119,5 @@
     <text x="375" y="558">V1 push stays in PHP queue — events &amp;data are PHP-side; cross-language passing adds nothing</text>
     <text x="375" y="578">when push throughput bottlenecks (100k+/min), migrate consumers to e-cat (ecat-mq); contract unchanged</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

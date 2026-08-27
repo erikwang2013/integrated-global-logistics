@@ -119,4 +119,5 @@
     <text x="385" y="558">v1: push en la cola de PHP (parseo y datos en PHP; transferir eventos entre lenguajes no aporta)</text>
     <text x="385" y="578">Si el push es un cuello de botella (&gt;10k/min), migrar consumidores a e-cat (ecat-mq); contrato externo intacto</text>
   </g>
+<text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>
