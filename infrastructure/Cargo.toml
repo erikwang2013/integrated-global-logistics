@@ -53,6 +53,7 @@ members = [
     "ecat-data-s3",
     "ecat-tls",
     "ecat-scheduler",
+    "tracking-gateway",
     "examples/helloworld",
     "examples/databases",
     "examples/middleware",

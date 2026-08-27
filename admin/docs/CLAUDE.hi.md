@@ -32,7 +32,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### बैकएंड
 - PHP 8.3+, webman v2 (workerman/webman)
-- डेटाबेस: MySQL 8.0+, टेबल प्रीफ़िक्स `erik_`
+- डेटाबेस: MySQL 8.0+, टेबल प्रीफ़िक्स `logistics_`
 - प्राथमिक कुंजी: BIGINT गैर-ऑटोइन्क्रीमेंट, `erikwang2013/snowflake-php` द्वारा जनरेट
 - API परत ID एन्क्रिप्शन/डिक्रिप्शन: `erikwang2013/hashids`
 - JWT प्रमाणीकरण: `erikwang2013/jwt-webman`
@@ -181,7 +181,7 @@ Redis स्लाइडिंग विंडो（Lua एटॉमिक），
 - सभी नई `.php` फ़ाइलों के हेडर में कॉपीराइट घोषणा होनी चाहिए
 
 ### डेटाबेस
-- टेबल प्रीफ़िक्स: `erik_`
+- टेबल प्रीफ़िक्स: `logistics_`
 - प्राथमिक कुंजी `id`: BIGINT प्रकार, गैर-ऑटोइन्क्रीमेंट, snowflake द्वारा जनरेट
 - संवेदनशील फ़ील्ड `erikwang2013/encryptable` trait से स्वचालित एन्क्रिप्शन/डिक्रिप्शन
 - माइग्रेशन फ़ाइलें SQL फॉर्मेट में

@@ -53,7 +53,7 @@
     <text x="600" y="436" font-size="11" fill="#6C757D">Penyimpanan terenkripsi Encryptable</text>
     <rect x="726" y="400" width="210" height="44" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="831" y="420" font-weight="bold" fill="#1F4E79" font-size="11.5">>Simpan</text>
-    <text x="831" y="436" font-size="11" fill="#6C757D">erik_tracking_query JSON standar</text>
+    <text x="831" y="436" font-size="11" fill="#6C757D">logistics_tracking_query JSON standar</text>
   </g>
   <line x1="600" y1="458" x2="600" y2="486" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
   <text x="612" y="478" font-size="11" fill="#6C757D">Guzzle (RetryingClient menyertakan 2 percobaan ulang)</text>

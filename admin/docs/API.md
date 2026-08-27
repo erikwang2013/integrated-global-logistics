@@ -1821,3 +1821,54 @@ docker-compose up -d
 ### Nginx 安全配置
 
 生产环境部署请参考 `docs/nginx-security.conf` 进行反向代理安全加固配置。
+
+## 16. 内部轨迹接口（e-cat → PHP worker）
+
+仅供 e-cat 查询网关调用，请求头必须携带 `X-Internal-Token`（值来自 `config/logistics.php` 的 `internal_token`，生产环境用 `INTERNAL_TOKEN` 环境变量覆盖）。未携带/错误令牌返回 `401 INTERNAL_UNAUTHORIZED`。
+
+### 16.1 承运商识别
+
+`POST /internal/tracking/detect`
+
+```json
+{"tracking_no": "SF1234567890"}
+```
+
+响应：`{"code":0,"data":{"carrier_code":"sf","channel":"domestic","confidence":1}}`；无法识别返回 `404 CARRIER_NOT_DETECTED`。
+
+### 16.2 轨迹查询
+
+`POST /internal/tracking/query`
+
+```json
+{"carrier_code": "sf-international", "tracking_no": "SF1234567890", "credential_id": 1}
+```
+
+`credential_id` 可选（多凭证场景指定，须与 `carrier_code` 匹配，否则 `400 INVALID_PARAMS`）。成功返回统一 Tracking 结构（`status`、`events[]`、`delivered_at` 等）；失败返回错误契约（见下）。每次查询落库 `logistics_tracking_query`。
+
+### 16.3 承运商清单
+
+`GET /internal/carriers` — 返回注册表内全部承运商 `{carrier_code, channel}`，供网关启动/定时同步。
+
+### 16.4 错误契约
+
+| HTTP | `code` | `error_code` | 场景 |
+|---|---|---|---|
+| 400 | 400 | `INVALID_PARAMS` | 缺参数 / credential_id 不匹配 |
+| 401 | 401 | `INTERNAL_UNAUTHORIZED` | 内部令牌错误 |
+| 404 | 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | 承运商未注册 / 轨迹不存在 / 无法识别 |
+| 502 | 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | 上游凭证错误 / 网络异常 / 承运商业务错误（含结构化上游报文，如 `[SF-INTERNATIONAL A1001] 必传参数不可为空`） |
+| 500 | 500 | `INTERNAL_ERROR` | 内部异常 |
+
+## 17. e-cat 查询网关对外 API
+
+Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`（默认），请求头携带 `X-API-Key`（配置 `api_keys`）。网关承担 API-Key 鉴权、Redis 缓存命中（前缀 `logistics:`）、限流、按承运商熔断与 RoundRobin worker 转发；凭证永不下发到网关。
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | 健康检查 |
+| `GET /v1/carriers` | 承运商清单（转发 PHP `/internal/carriers`） |
+| `POST /v1/tracking/detect` | 单号识别（`{"tracking_no": "..."}`） |
+| `POST /v1/tracking/query` | 轨迹查询（`{"carrier_code": "...", "tracking_no": "..."}`） |
+
+网关侧附加语义：超出 `rate_limit`（默认 100 次/60s）返回 `429`；承运商连续失败触发熔断（默认 5 次 5xx/传输错误后 OPEN 60s）返回 `503`；worker 不可达返回 `502`。`/internal` 仅监听内网并以共享密钥头鉴权。

@@ -26,7 +26,7 @@ webman v2 + Flutter をベースにしたフルスタック管理バックエン
 
 ### バックエンド
 - PHP 8.3+, webman v2 (workerman/webman)
-- データベース: MySQL 8.0+、テーブルプレフィックス `erik_`
+- データベース: MySQL 8.0+、テーブルプレフィックス `logistics_`
 - 主キー: BIGINT 非オートインクリメント、`erikwang2013/snowflake-php` で生成
 - API 層の ID 暗号化・復号: `erikwang2013/hashids`
 - JWT 認証: `erikwang2013/jwt-webman`
@@ -175,7 +175,7 @@ Redis スライディングウィンドウ（Lua アトミック）、デフォ�
 - 新規作成するすべての `.php` ファイルのヘッダーに著作権声明を含める
 
 ### データベース
-- テーブルプレフィックス: `erik_`
+- テーブルプレフィックス: `logistics_`
 - 主キー `id`: BIGINT 型、非オートインクリメント、snowflake で生成
 - 機密フィールドは `erikwang2013/encryptable` trait で自動暗号化・復号
 - マイグレーションファイルは SQL 形式

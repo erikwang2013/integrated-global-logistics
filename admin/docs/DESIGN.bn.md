@@ -133,34 +133,34 @@ Controller::method()
 ### 3.1 ER সম্পর্ক
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (用户)           │    (用户-角色关联)         │     (角色)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (角色-权限关联)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (权限/菜单)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (操作日志)
 
-erik_system_config (系统配置) — 独立表
+logistics_system_config (系统配置) — 独立表
 ```
 
 ### 3.2 মূল টেবিল স্ট্রাকচার
 
 | টেবিল নাম | ফিল্ড সংখ্যা | বর্ণনা |
 |------|-------|------|
-| `erik_admin_user` | 14 | অ্যাডমিন ইউজার, phone/email/id_card এনক্রিপ্টেড স্টোরেজ, সফট ডিলিট সাপোর্ট |
-| `erik_admin_role` | 7 | রোল, slug ইউনিক |
-| `erik_admin_permission` | 10 | পারমিশন ট্রি (parent_id সেলফ-রেফারেন্স), type: 1=মেনু 2=বাটন 3=API |
-| `erik_admin_user_role` | 2 | ইউজার-রোল ম্যানি-টু-ম্যানি মিডল টেবিল |
-| `erik_admin_role_permission` | 2 | রোল-পারমিশন ম্যানি-টু-ম্যানি মিডল টেবিল |
-| `erik_system_config` | 8 | কী-ভ্যালু কনফিগ, group+key কম্বাইন্ড ইউনিক |
-| `erik_operation_log` | 9 | অপারেশন অডিট লগ (source সোর্স ডিভাইসসহ) |
+| `logistics_admin_user` | 14 | অ্যাডমিন ইউজার, phone/email/id_card এনক্রিপ্টেড স্টোরেজ, সফট ডিলিট সাপোর্ট |
+| `logistics_admin_role` | 7 | রোল, slug ইউনিক |
+| `logistics_admin_permission` | 10 | পারমিশন ট্রি (parent_id সেলফ-রেফারেন্স), type: 1=মেনু 2=বাটন 3=API |
+| `logistics_admin_user_role` | 2 | ইউজার-রোল ম্যানি-টু-ম্যানি মিডল টেবিল |
+| `logistics_admin_role_permission` | 2 | রোল-পারমিশন ম্যানি-টু-ম্যানি মিডল টেবিল |
+| `logistics_system_config` | 8 | কী-ভ্যালু কনফিগ, group+key কম্বাইন্ড ইউনিক |
+| `logistics_operation_log` | 9 | অপারেশন অডিট লগ (source সোর্স ডিভাইসসহ) |
 
 ### 3.3 প্রাইমারি কী নিয়মাবলি
 

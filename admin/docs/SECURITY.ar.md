@@ -245,11 +245,11 @@ try {
 
 **نموذج البيانات**: ارتباط ثلاثي المستويات User -> Role -> Permission
 
-- `erik_admin_user` (جدول المستخدمين)
-- `erik_admin_user_role` (جدول ارتباط المستخدمين-الأدوار)
-- `erik_admin_role` (جدول الأدوار)
-- `erik_admin_role_permission` (جدول ارتباط الأدوار-الصلاحيات)
-- `erik_admin_permission` (جدول الصلاحيات)
+- `logistics_admin_user` (جدول المستخدمين)
+- `logistics_admin_user_role` (جدول ارتباط المستخدمين-الأدوار)
+- `logistics_admin_role` (جدول الأدوار)
+- `logistics_admin_role_permission` (جدول ارتباط الأدوار-الصلاحيات)
+- `logistics_admin_permission` (جدول الصلاحيات)
 
 **أنواع الصلاحيات**:
 | type | المعنى | مثال |

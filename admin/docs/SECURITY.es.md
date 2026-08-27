@@ -245,11 +245,11 @@ Implementado por el middleware AdminPermission.
 
 **Modelo de datos**: asociación en tres niveles User -> Role -> Permission
 
-- `erik_admin_user` (tabla de usuarios)
-- `erik_admin_user_role` (tabla de relación usuario-rol)
-- `erik_admin_role` (tabla de roles)
-- `erik_admin_role_permission` (tabla de relación rol-permiso)
-- `erik_admin_permission` (tabla de permisos)
+- `logistics_admin_user` (tabla de usuarios)
+- `logistics_admin_user_role` (tabla de relación usuario-rol)
+- `logistics_admin_role` (tabla de roles)
+- `logistics_admin_role_permission` (tabla de relación rol-permiso)
+- `logistics_admin_permission` (tabla de permisos)
 
 **Tipos de permiso**:
 | type | Significado | Ejemplo |

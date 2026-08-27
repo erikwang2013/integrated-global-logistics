@@ -133,34 +133,34 @@ Controller::method()
 ### 3.1 علاقة ER
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (用户)           │    (用户-角色关联)         │     (角色)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (角色-权限关联)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (权限/菜单)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (操作日志)
 
-erik_system_config (系统配置) — 独立表
+logistics_system_config (系统配置) — 独立表
 ```
 
 ### 3.2 بنية الجداول الأساسية
 
 | اسم الجدول | عدد الحقول | الوصف |
 |------|-------|------|
-| `erik_admin_user` | 14 | مستخدمو الإدارة، phone/email/id_card مخزنة مشفرة، تدعم الحذف الناعم |
-| `erik_admin_role` | 7 | الأدوار، slug فريد |
-| `erik_admin_permission` | 10 | شجرة الصلاحيات (parent_id إحالة ذاتية)، type: 1=قائمة 2=زر 3=API |
-| `erik_admin_user_role` | 2 | جدول وسيط متعدد-متعدد للمستخدمين-الأدوار |
-| `erik_admin_role_permission` | 2 | جدول وسيط متعدد-متعدد للأدوار-الصلاحيات |
-| `erik_system_config` | 8 | إعدادات أزواج المفاتيح والقيم، group+key فريدان معًا |
-| `erik_operation_log` | 9 | سجلات تدقيق العمليات (تتضمن حقل source لجهة المصدر) |
+| `logistics_admin_user` | 14 | مستخدمو الإدارة، phone/email/id_card مخزنة مشفرة، تدعم الحذف الناعم |
+| `logistics_admin_role` | 7 | الأدوار، slug فريد |
+| `logistics_admin_permission` | 10 | شجرة الصلاحيات (parent_id إحالة ذاتية)، type: 1=قائمة 2=زر 3=API |
+| `logistics_admin_user_role` | 2 | جدول وسيط متعدد-متعدد للمستخدمين-الأدوار |
+| `logistics_admin_role_permission` | 2 | جدول وسيط متعدد-متعدد للأدوار-الصلاحيات |
+| `logistics_system_config` | 8 | إعدادات أزواج المفاتيح والقيم، group+key فريدان معًا |
+| `logistics_operation_log` | 9 | سجلات تدقيق العمليات (تتضمن حقل source لجهة المصدر) |
 
 ### 3.3 مواصفات المفتاح الأساسي
 

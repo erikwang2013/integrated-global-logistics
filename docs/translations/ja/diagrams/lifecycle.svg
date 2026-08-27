@@ -66,7 +66,7 @@
 
     <rect x="858" y="188" width="170" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
     <text x="943" y="210" text-anchor="middle" font-weight="bold" font-size="11.5">>保存 + キャッシュ書き込み</text>
-    <text x="943" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">erik_tracking_query</text>
+    <text x="943" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">logistics_tracking_query</text>
     <line x1="1028" y1="213" x2="1084" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
     <rect x="1088" y="196" width="60" height="34" rx="8" fill="#17A2B8"/>
     <text x="1118" y="217" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#FFFFFF">返却</text>
@@ -95,7 +95,7 @@
 
     <rect x="638" y="394" width="140" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="708" y="416" text-anchor="middle" font-weight="bold" font-size="12">>イベント保存</text>
-    <text x="708" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">erik_tracking_event</text>
+    <text x="708" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">logistics_tracking_event</text>
     <line x1="778" y1="419" x2="820" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
 
     <rect x="826" y="394" width="150" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
@@ -108,9 +108,9 @@
   <g font-size="12.5" fill="#6C757D">
     <rect x="292" y="466" width="862" height="56" rx="8" fill="#F8F9FA" stroke="#DEE2E6"/>
     <text x="310" y="490" fill="#212529" font-size="12">>リトライ戦略：</text>
-    <text x="395" y="490" font-size="12">>erik_callback_subscription の設定に従い、HMAC 署名 + 冪等キー + 指数バックオフリトライ + 手動再プッシュ入口</text>
+    <text x="395" y="490" font-size="12">>logistics_callback_subscription の設定に従い、HMAC 署名 + 冪等キー + 指数バックオフリトライ + 手動再プッシュ入口</text>
     <text x="310" y="510" fill="#212529">更新：</text>
-    <text x="380" y="510" font-size="12">>erik_tracking_query の最新状態を同期更新、イベント詳細は erik_tracking_event に保持</text>
+    <text x="380" y="510" font-size="12">>logistics_tracking_query の最新状態を同期更新、イベント詳細は logistics_tracking_event に保持</text>
   </g>
 
   <g font-size="12.5" fill="#6C757D">

@@ -24,8 +24,8 @@ flowchart TB
     end
 
     subgraph storage["Couche de stockage"]
-        mysql[("MySQL 8.0<br/>Stockage principal - préfixe erik_")]
-        es[("Elasticsearch<br/>Recherche plein texte - préfixe erik_")]
+        mysql[("MySQL 8.0<br/>Stockage principal - préfixe logistics_")]
+        es[("Elasticsearch<br/>Recherche plein texte - préfixe logistics_")]
         redis[("Redis<br/>Session/Cache/Captcha")]
     end
 

@@ -14,7 +14,7 @@ flowchart LR
     end
 
     subgraph store["2. 저장"]
-        s1["MySQL erik_* 테이블<br/>id BIGINT UNSIGNED NOT NULL"]
+        s1["MySQL logistics_* 테이블<br/>id BIGINT UNSIGNED NOT NULL"]
         s2["민감 필드 encryptable cast<br/>AES-128-ECB 암호화 저장"]
         g3 --> s1 --> s2
     end

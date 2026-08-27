@@ -16,7 +16,7 @@ use support\Response;
  * 首次部署时通过 Web 界面完成:
  *   1. 数据库连接配置
  *   2. 管理员账号密码设置
- *   3. 执行 database/migrations/open_admin.sql
+ *   3. 执行 database/install.sql
  */
 class InstallController
 {
@@ -162,7 +162,7 @@ class InstallController
             <form method="post" action="/install/step2">
                 <div class="field"><label>数据库主机</label><input name="host" value="127.0.0.1" required></div>
                 <div class="field"><label>端口</label><input name="port" value="3306" required></div>
-                <div class="field"><label>数据库名</label><input name="database" value="open_admin" required></div>
+                <div class="field"><label>数据库名</label><input name="database" value="logistics" required></div>
                 <div class="field"><label>用户名</label><input name="username" value="root" required></div>
                 <div class="field"><label>密码</label><div class="pwd-wrap"><input name="password" type="password"><span class="eye" onclick="togglePwd(this)">👁</span></div></div>
                 <div class="actions"><button type="submit">测试连接 → 下一步</button></div>

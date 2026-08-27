@@ -232,7 +232,7 @@ Retourne l'état de connexion de chaque composant :
 
 **Fichier** : `app/model/OperationLog.php` (modifié)
 
-La table `erik_operation_log` ne possède que la colonne `created_at` (pas de `updated_at`). Par défaut, Eloquent tente d'écrire `updated_at` dans `save()`, ce qui provoque une erreur SQL.
+La table `logistics_operation_log` ne possède que la colonne `created_at` (pas de `updated_at`). Par défaut, Eloquent tente d'écrire `updated_at` dans `save()`, ce qui provoque une erreur SQL.
 
 Correctif : `public $timestamps = false;` + spécification manuelle de `created_at` à l'écriture.
 

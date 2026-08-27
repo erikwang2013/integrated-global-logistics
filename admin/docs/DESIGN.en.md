@@ -133,34 +133,34 @@ Controller::method()
 ### 3.1 ER Relationships
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (用户)           │    (用户-角色关联)         │     (角色)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (角色-权限关联)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (权限/菜单)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (操作日志)
 
-erik_system_config (系统配置) — 独立表
+logistics_system_config (系统配置) — 独立表
 ```
 
 ### 3.2 Core Table Structures
 
 | Table | Field count | Description |
 |------|-------|------|
-| `erik_admin_user` | 14 | Admin users; phone/email/id_card stored encrypted; soft delete supported |
-| `erik_admin_role` | 7 | Roles; slug unique |
-| `erik_admin_permission` | 10 | Permission tree (parent_id self-reference); type: 1=menu 2=button 3=API |
-| `erik_admin_user_role` | 2 | User-role many-to-many pivot table |
-| `erik_admin_role_permission` | 2 | Role-permission many-to-many pivot table |
-| `erik_system_config` | 8 | Key-value config; group+key jointly unique |
-| `erik_operation_log` | 9 | Operation audit logs (incl. client source) |
+| `logistics_admin_user` | 14 | Admin users; phone/email/id_card stored encrypted; soft delete supported |
+| `logistics_admin_role` | 7 | Roles; slug unique |
+| `logistics_admin_permission` | 10 | Permission tree (parent_id self-reference); type: 1=menu 2=button 3=API |
+| `logistics_admin_user_role` | 2 | User-role many-to-many pivot table |
+| `logistics_admin_role_permission` | 2 | Role-permission many-to-many pivot table |
+| `logistics_system_config` | 8 | Key-value config; group+key jointly unique |
+| `logistics_operation_log` | 9 | Operation audit logs (incl. client source) |
 
 ### 3.3 Primary Key Conventions
 

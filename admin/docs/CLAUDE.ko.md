@@ -32,7 +32,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 백엔드
 - PHP 8.3+, webman v2 (workerman/webman)
-- 데이터베이스: MySQL 8.0+, 테이블 접두사 `erik_`
+- 데이터베이스: MySQL 8.0+, 테이블 접두사 `logistics_`
 - 기본 키: BIGINT 비자동증가, `erikwang2013/snowflake-php`로 생성
 - API 계층 ID 암·복호화: `erikwang2013/hashids`
 - JWT 인증: `erikwang2013/jwt-webman`
@@ -181,7 +181,7 @@ Redis 슬라이딩 윈도우 (Lua 원자화), 기본 60회/분/IP/라우트:
 - 모든 신규 `.php` 파일 헤더에 저작권 고지 포함 필수
 
 ### 데이터베이스
-- 테이블 접두사: `erik_`
+- 테이블 접두사: `logistics_`
 - 기본 키 `id`: BIGINT 타입, 비자동증가, snowflake로 생성
 - 민감 필드는 `erikwang2013/encryptable` trait로 자동 암·복호화
 - 마이그레이션 파일은 SQL 형식 사용

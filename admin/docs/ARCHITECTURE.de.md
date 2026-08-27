@@ -31,8 +31,8 @@ flowchart TB
     end
 
     subgraph "Speicherebene"
-        D1[("MySQL 8.0<br/>Hauptspeicher<br/>Tabellenpräfix erik_")]
-        D2[("Elasticsearch<br/>Volltextsuche<br/>Indexpräfix erik_")]
+        D1[("MySQL 8.0<br/>Hauptspeicher<br/>Tabellenpräfix logistics_")]
+        D2[("Elasticsearch<br/>Volltextsuche<br/>Indexpräfix logistics_")]
         D3[("Redis<br/>Session / Cache<br/>Captcha-Speicher")]
     end
 
@@ -371,7 +371,7 @@ flowchart LR
     end
 
     subgraph "2. Speicherung"
-        S1["MySQL erik_*-Tabellen<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
+        S1["MySQL logistics_*-Tabellen<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
         S2["Sensible Felder<br/>encryptable cast<br/>AES-128-ECB-Verschlüsselung"]
         G3 --> S1
         S1 --> S2
@@ -437,7 +437,7 @@ flowchart TB
 
 ```mermaid
 erDiagram
-    erik_admin_user {
+    logistics_admin_user {
         BIGINT id PK "Snowflake"
         VARCHAR username UK
         VARCHAR password "bcrypt"
@@ -454,7 +454,7 @@ erDiagram
         DATETIME deleted_at "Soft Delete"
     }
 
-    erik_admin_role {
+    logistics_admin_role {
         BIGINT id PK "Snowflake"
         VARCHAR name
         VARCHAR slug UK
@@ -464,7 +464,7 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_permission {
+    logistics_admin_permission {
         BIGINT id PK "Snowflake"
         BIGINT parent_id FK "Selbstreferenz"
         VARCHAR name
@@ -477,17 +477,17 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user_role {
+    logistics_admin_user_role {
         BIGINT user_id PK_FK
         BIGINT role_id PK_FK
     }
 
-    erik_admin_role_permission {
+    logistics_admin_role_permission {
         BIGINT role_id PK_FK
         BIGINT permission_id PK_FK
     }
 
-    erik_operation_log {
+    logistics_operation_log {
         BIGINT id PK "Snowflake"
         BIGINT user_id FK
         VARCHAR action
@@ -499,7 +499,7 @@ erDiagram
         DATETIME created_at
     }
 
-    erik_system_config {
+    logistics_system_config {
         BIGINT id PK "Snowflake"
         VARCHAR group
         VARCHAR key
@@ -510,12 +510,12 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user ||--o{ erik_admin_user_role : "user_id"
-    erik_admin_role ||--o{ erik_admin_user_role : "role_id"
-    erik_admin_role ||--o{ erik_admin_role_permission : "role_id"
-    erik_admin_permission ||--o{ erik_admin_role_permission : "permission_id"
-    erik_admin_user ||--o{ erik_operation_log : "user_id"
-    erik_admin_permission ||--o{ erik_admin_permission : "parent_id"
+    logistics_admin_user ||--o{ logistics_admin_user_role : "user_id"
+    logistics_admin_role ||--o{ logistics_admin_user_role : "role_id"
+    logistics_admin_role ||--o{ logistics_admin_role_permission : "role_id"
+    logistics_admin_permission ||--o{ logistics_admin_role_permission : "permission_id"
+    logistics_admin_user ||--o{ logistics_operation_log : "user_id"
+    logistics_admin_permission ||--o{ logistics_admin_permission : "parent_id"
 ```
 
 ---
@@ -667,8 +667,8 @@ flowchart TB
     end
 
     subgraph "Datenebene"
-        MYSQL["MySQL 8.0<br/>Master-Slave-Replikation<br/>erik_-Präfix"]
-        ES["Elasticsearch 8.x<br/>3-Knoten-Cluster<br/>erik_-Präfix"]
+        MYSQL["MySQL 8.0<br/>Master-Slave-Replikation<br/>logistics_-Präfix"]
+        ES["Elasticsearch 8.x<br/>3-Knoten-Cluster<br/>logistics_-Präfix"]
         REDIS["Redis 7.x<br/>Sentinel-Modus<br/>poster:captcha:*"]
     end
 

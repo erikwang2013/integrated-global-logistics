@@ -50,7 +50,7 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
-│   │   └── model/                  # 数据模型（erik_ 前缀，snowflake 主键）
+│   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── apps/
 │   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── harmonyos/              # HarmonyOS 原生客户端
@@ -74,9 +74,9 @@ integrated-global-logistics/
 
 <img src="diagrams/lifecycle.svg" alt="ライフサイクル" width="100%">
 
-**クエリチェーン（同期）**：クライアント → API-Key 認証 → Redis レート制限 → キャッシュ検索（ヒット即返却、`X-Cache: HIT`）→ サーキットブレーカー検査（OPEN なら 503 で高速失敗）→ RoundRobin で worker 選択 → PHP worker の `Logistics` ファサード（パッケージ内 RetryingClient が 2 回リトライ内蔵）→ 209 社の運送会社 → `erik_tracking_query` に保存 + キャッシュ書き込み → 標準化 JSON を返却。
+**クエリチェーン（同期）**：クライアント → API-Key 認証 → Redis レート制限 → キャッシュ検索（ヒット即返却、`X-Cache: HIT`）→ サーキットブレーカー検査（OPEN なら 503 で高速失敗）→ RoundRobin で worker 選択 → PHP worker の `Logistics` ファサード（パッケージ内 RetryingClient が 2 回リトライ内蔵）→ 209 社の運送会社 → `logistics_tracking_query` に保存 + キャッシュ書き込み → 標準化 JSON を返却。
 
-**コールバックチェーン（非同期）**：運送会社 webhook → `/api/callback/{carrier}` ホワイトリストルート + 署名検証 → `erik_tracking_event` に保存 + クエリ記録を更新 → webman キューに書き込み → 非同期コンシューマーが購読設定に従って加盟店コールバック URL へプッシュ（HMAC 署名 + 冪等キー + 指数バックオフリトライ + 手動再プッシュ入口）。
+**コールバックチェーン（非同期）**：運送会社 webhook → `/api/callback/{carrier}` ホワイトリストルート + 署名検証 → `logistics_tracking_event` に保存 + クエリ記録を更新 → webman キューに書き込み → 非同期コンシューマーが購読設定に従って加盟店コールバック URL へプッシュ（HMAC 署名 + 冪等キー + 指数バックオフリトライ + 手動再プッシュ入口）。
 
 > コールバックプッシュの初版は PHP キューに留めます —— イベント解析とデータは PHP 側にあり、言語をまたいでイベントを渡すメリットはありません。プッシュスループットがボトルネック（分あたり万件以上）になったら、コンシューマーを e-cat（ecat-mq + retry ミドルウェア）に移設します。外部契約は変わりません。
 

@@ -29,8 +29,8 @@ flowchart TB
     end
 
     subgraph "存储层"
-        D1[("MySQL 8.0<br/>主存储<br/>表前缀 erik_")]
-        D2[("Elasticsearch<br/>全文检索<br/>索引前缀 erik_")]
+        D1[("MySQL 8.0<br/>主存储<br/>表前缀 logistics_")]
+        D2[("Elasticsearch<br/>全文检索<br/>索引前缀 logistics_")]
         D3[("Redis<br/>Session / 缓存<br/>Captcha 存储")]
     end
 
@@ -369,7 +369,7 @@ flowchart LR
     end
 
     subgraph "2. 存储"
-        S1["MySQL erik_* 表<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
+        S1["MySQL logistics_* 表<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
         S2["敏感字段<br/>encryptable cast<br/>AES-128-ECB 加密"]
         G3 --> S1
         S1 --> S2
@@ -435,7 +435,7 @@ flowchart TB
 
 ```mermaid
 erDiagram
-    erik_admin_user {
+    logistics_admin_user {
         BIGINT id PK "Snowflake"
         VARCHAR username UK
         VARCHAR password "bcrypt"
@@ -452,7 +452,7 @@ erDiagram
         DATETIME deleted_at "软删除"
     }
 
-    erik_admin_role {
+    logistics_admin_role {
         BIGINT id PK "Snowflake"
         VARCHAR name
         VARCHAR slug UK
@@ -462,7 +462,7 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_permission {
+    logistics_admin_permission {
         BIGINT id PK "Snowflake"
         BIGINT parent_id FK "自引用"
         VARCHAR name
@@ -475,17 +475,17 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user_role {
+    logistics_admin_user_role {
         BIGINT user_id PK_FK
         BIGINT role_id PK_FK
     }
 
-    erik_admin_role_permission {
+    logistics_admin_role_permission {
         BIGINT role_id PK_FK
         BIGINT permission_id PK_FK
     }
 
-    erik_operation_log {
+    logistics_operation_log {
         BIGINT id PK "Snowflake"
         BIGINT user_id FK
         VARCHAR action
@@ -497,7 +497,7 @@ erDiagram
         DATETIME created_at
     }
 
-    erik_system_config {
+    logistics_system_config {
         BIGINT id PK "Snowflake"
         VARCHAR group
         VARCHAR key
@@ -508,12 +508,12 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user ||--o{ erik_admin_user_role : "user_id"
-    erik_admin_role ||--o{ erik_admin_user_role : "role_id"
-    erik_admin_role ||--o{ erik_admin_role_permission : "role_id"
-    erik_admin_permission ||--o{ erik_admin_role_permission : "permission_id"
-    erik_admin_user ||--o{ erik_operation_log : "user_id"
-    erik_admin_permission ||--o{ erik_admin_permission : "parent_id"
+    logistics_admin_user ||--o{ logistics_admin_user_role : "user_id"
+    logistics_admin_role ||--o{ logistics_admin_user_role : "role_id"
+    logistics_admin_role ||--o{ logistics_admin_role_permission : "role_id"
+    logistics_admin_permission ||--o{ logistics_admin_role_permission : "permission_id"
+    logistics_admin_user ||--o{ logistics_operation_log : "user_id"
+    logistics_admin_permission ||--o{ logistics_admin_permission : "parent_id"
 ```
 
 ---
@@ -665,8 +665,8 @@ flowchart TB
     end
 
     subgraph "数据层"
-        MYSQL["MySQL 8.0<br/>主从复制<br/>erik_ 前缀"]
-        ES["Elasticsearch 8.x<br/>3 节点集群<br/>erik_ 前缀"]
+        MYSQL["MySQL 8.0<br/>主从复制<br/>logistics_ 前缀"]
+        ES["Elasticsearch 8.x<br/>3 节点集群<br/>logistics_ 前缀"]
         REDIS["Redis 7.x<br/>哨兵模式<br/>poster:captcha:*"]
     end
 

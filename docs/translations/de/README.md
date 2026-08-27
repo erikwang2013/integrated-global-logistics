@@ -50,7 +50,7 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
-│   │   └── model/                  # 数据模型（erik_ 前缀，snowflake 主键）
+│   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── apps/
 │   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── harmonyos/              # HarmonyOS 原生客户端
@@ -74,9 +74,9 @@ integrated-global-logistics/
 
 <img src="diagrams/lifecycle.svg" alt="Lebenszyklus" width="100%">
 
-**Abfragekette (synchron)**: Client → API-Key-Authentifizierung → Redis-Rate-Limit → Cache-Lookup (Treffer sofort zurück, `X-Cache: HIT`) → Breaker-Check (OPEN → 503 Fast-Fail) → RoundRobin-Workerauswahl → `Logistics`-Fassade des PHP-Workers (RetryingClient im Paket mit 2 Wiederholungen) → 209 Carrier → `erik_tracking_query` schreiben + Cache befüllen → standardisierte JSON-Antwort.
+**Abfragekette (synchron)**: Client → API-Key-Authentifizierung → Redis-Rate-Limit → Cache-Lookup (Treffer sofort zurück, `X-Cache: HIT`) → Breaker-Check (OPEN → 503 Fast-Fail) → RoundRobin-Workerauswahl → `Logistics`-Fassade des PHP-Workers (RetryingClient im Paket mit 2 Wiederholungen) → 209 Carrier → `logistics_tracking_query` schreiben + Cache befüllen → standardisierte JSON-Antwort.
 
-**Callback-Kette (asynchron)**: Carrier-Webhook → Whitelist-Route `/api/callback/{carrier}` + Signaturprüfung → `erik_tracking_event` schreiben + Abfrage-Eintrag aktualisieren → in die webman-Queue → asynchroner Consumer pusht laut Abo-Konfiguration an die Merchant-Callback-URL (HMAC-Signatur + Idempotenz-Key + exponentielles Backoff-Retry + manueller Re-Push).
+**Callback-Kette (asynchron)**: Carrier-Webhook → Whitelist-Route `/api/callback/{carrier}` + Signaturprüfung → `logistics_tracking_event` schreiben + Abfrage-Eintrag aktualisieren → in die webman-Queue → asynchroner Consumer pusht laut Abo-Konfiguration an die Merchant-Callback-URL (HMAC-Signatur + Idempotenz-Key + exponentielles Backoff-Retry + manueller Re-Push).
 
 > Der Callback-Push bleibt in der ersten Version in der PHP-Queue – Event-Parsing und Daten liegen auf der PHP-Seite, ein sprachübergreifender Event-Transfer bringt keinen Nutzen; erst wenn der Push-Durchsatz zum Engpass wird (ab Zehntausenden pro Minute), wird der Consumer zu e-cat migriert (ecat-mq + Retry-Middleware) – der externe Vertrag bleibt unverändert.
 

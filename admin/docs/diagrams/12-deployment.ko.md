@@ -22,8 +22,8 @@ flowchart TB
     end
 
     subgraph data["데이터 계층"]
-        mysql[("MySQL 8.0<br/>마스터-슬레이브 복제<br/>erik_ 접두사")]
-        es[("Elasticsearch 8.x<br/>3노드 클러스터<br/>erik_ 접두사")]
+        mysql[("MySQL 8.0<br/>마스터-슬레이브 복제<br/>logistics_ 접두사")]
+        es[("Elasticsearch 8.x<br/>3노드 클러스터<br/>logistics_ 접두사")]
         redis[("Redis 7.x<br/>센티널 모드<br/>poster:captcha:*")]
     end
 

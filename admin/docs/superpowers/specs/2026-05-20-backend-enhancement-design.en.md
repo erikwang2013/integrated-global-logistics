@@ -232,7 +232,7 @@ Returns the connection status of each component:
 
 **File**: `app/model/OperationLog.php` (modified)
 
-The `erik_operation_log` table only has a `created_at` column (no `updated_at`). Eloquent's default `save()` tries to write `updated_at`, which causes SQL errors.
+The `logistics_operation_log` table only has a `created_at` column (no `updated_at`). Eloquent's default `save()` tries to write `updated_at`, which causes SQL errors.
 
 Fix: `public $timestamps = false;` + manually set `created_at` on write.
 

@@ -17,7 +17,7 @@ class TrackingQuery extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'query_no', 'carrier_id', 'carrier_code', 'tracking_no', 'credential_id',
+        'id', 'query_no', 'carrier_id', 'carrier_code', 'tracking_no', 'credential_id',
         'status', 'result', 'raw_response', 'query_source', 'cost_ms',
         'error_code', 'error_message',
     ];

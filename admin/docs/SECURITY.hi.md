@@ -245,11 +245,11 @@ AdminPermission मिडलवेयर द्वारा लागू।
 
 **डेटा मॉडल**: User -> Role -> Permission तीन-परत संबंध
 
-- `erik_admin_user` (उपयोगकर्ता टेबल)
-- `erik_admin_user_role` (उपयोगकर्ता-भूमिका संबंध टेबल)
-- `erik_admin_role` (भूमिका टेबल)
-- `erik_admin_role_permission` (भूमिका-अनुमति संबंध टेबल)
-- `erik_admin_permission` (अनुमति टेबल)
+- `logistics_admin_user` (उपयोगकर्ता टेबल)
+- `logistics_admin_user_role` (उपयोगकर्ता-भूमिका संबंध टेबल)
+- `logistics_admin_role` (भूमिका टेबल)
+- `logistics_admin_role_permission` (भूमिका-अनुमति संबंध टेबल)
+- `logistics_admin_permission` (अनुमति टेबल)
 
 **अनुमति प्रकार**:
 | type | अर्थ | उदाहरण |

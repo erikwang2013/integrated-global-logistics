@@ -55,8 +55,19 @@
       "": "./",
       "app\\": "./app",
       "App\\": "./app",
-      "app\\View\\Components\\": "./app/view/components"
-    }
+      "app\\View\\Components\\": "./app/view/components",
+      "GlobalLogistics\\": "vendor/erikwang2013/global-logistics/src/",
+      "GuzzleHttp\\": "vendor/guzzlehttp/guzzle/src/",
+      "GuzzleHttp\\Promise\\": "vendor/guzzlehttp/promises/src/",
+      "GuzzleHttp\\Psr7\\": "vendor/guzzlehttp/psr7/src/",
+      "Psr\\Http\\Client\\": "vendor/psr/http-client/src/",
+      "Psr\\Http\\Message\\": "vendor/psr/http-message/src/",
+      "Psr\\Http\\Factory\\": "vendor/psr/http-factory/src/"
+    },
+    "files": [
+      "vendor/guzzlehttp/guzzle/src/functions_include.php",
+      "vendor/ralouphie/getallheaders/src/getallheaders.php"
+    ]
   },
   "scripts": {
     "post-package-install": [

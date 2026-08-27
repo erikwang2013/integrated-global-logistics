@@ -24,8 +24,8 @@ flowchart TB
     end
 
     subgraph storage["طبقة التخزين"]
-        mysql[("MySQL 8.0<br/>التخزين الرئيسي - بادئة erik_")]
-        es[("Elasticsearch<br/>بحث نصي كامل - بادئة erik_")]
+        mysql[("MySQL 8.0<br/>التخزين الرئيسي - بادئة logistics_")]
+        es[("Elasticsearch<br/>بحث نصي كامل - بادئة logistics_")]
         redis[("Redis<br/>Session/ذاكرة مؤقتة/Captcha")]
     end
 

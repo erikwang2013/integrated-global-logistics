@@ -134,34 +134,34 @@ Anzeigeebene (mask)             — Handynummer: 138****1234, E-Mail: a***@examp
 ### 3.1 ER-Beziehungen
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (Benutzer)       │    (Benutzer-Rolle-Zuordnung) │     (Rolle)
                    │                          │
-                   │                    erik_admin_role_permission
+                   │                    logistics_admin_role_permission
                    │                     (Rolle-Berechtigung-Zuordnung)
                    │                          │
                    │                          ▼
-                   │                    erik_admin_permission
+                   │                    logistics_admin_permission
                    │                      (Berechtigung/Menü)
                    │
                    ▼
-            erik_operation_log
+            logistics_operation_log
               (Aktionsprotokoll)
 
-erik_system_config (Systemkonfiguration) — eigenständige Tabelle
+logistics_system_config (Systemkonfiguration) — eigenständige Tabelle
 ```
 
 ### 3.2 Kern-Tabellenstrukturen
 
 | Tabellenname | Feldanzahl | Beschreibung |
 |------|-------|------|
-| `erik_admin_user` | 14 | Admin-Benutzer, phone/email/id_card verschlüsselt gespeichert, Soft Delete unterstützt |
-| `erik_admin_role` | 7 | Rollen, slug eindeutig |
-| `erik_admin_permission` | 10 | Berechtigungsbaum (parent_id-Selbstreferenz), type: 1=Menü 2=Button 3=API |
-| `erik_admin_user_role` | 2 | Viele-zu-viele-Zwischentabelle Benutzer-Rolle |
-| `erik_admin_role_permission` | 2 | Viele-zu-viele-Zwischentabelle Rolle-Berechtigung |
-| `erik_system_config` | 8 | Schlüssel-Wert-Konfiguration, group+key gemeinsam eindeutig |
-| `erik_operation_log` | 9 | Aktions-Auditprotokoll (inkl. source-Quelle) |
+| `logistics_admin_user` | 14 | Admin-Benutzer, phone/email/id_card verschlüsselt gespeichert, Soft Delete unterstützt |
+| `logistics_admin_role` | 7 | Rollen, slug eindeutig |
+| `logistics_admin_permission` | 10 | Berechtigungsbaum (parent_id-Selbstreferenz), type: 1=Menü 2=Button 3=API |
+| `logistics_admin_user_role` | 2 | Viele-zu-viele-Zwischentabelle Benutzer-Rolle |
+| `logistics_admin_role_permission` | 2 | Viele-zu-viele-Zwischentabelle Rolle-Berechtigung |
+| `logistics_system_config` | 8 | Schlüssel-Wert-Konfiguration, group+key gemeinsam eindeutig |
+| `logistics_operation_log` | 9 | Aktions-Auditprotokoll (inkl. source-Quelle) |
 
 ### 3.3 Primärschlüssel-Konventionen
 

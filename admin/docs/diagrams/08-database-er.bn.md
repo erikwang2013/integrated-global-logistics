@@ -6,7 +6,7 @@
 
 ```mermaid
 erDiagram
-    erik_admin_user {
+    logistics_admin_user {
         BIGINT id PK "Snowflake জেনারেশন"
         VARCHAR username UK "ব্যবহারকারীর নাম"
         VARCHAR password "bcrypt হ্যাশ"
@@ -23,7 +23,7 @@ erDiagram
         DATETIME deleted_at "সফট ডিলিট"
     }
 
-    erik_admin_role {
+    logistics_admin_role {
         BIGINT id PK "Snowflake জেনারেশন"
         VARCHAR name "ভূমিকার নাম"
         VARCHAR slug UK "ভূমিকা আইডি"
@@ -33,7 +33,7 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_permission {
+    logistics_admin_permission {
         BIGINT id PK "Snowflake জেনারেশন"
         BIGINT parent_id FK "প্যারেন্ট পারমিশন ID"
         VARCHAR name "পারমিশনের নাম"
@@ -46,17 +46,17 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user_role {
+    logistics_admin_user_role {
         BIGINT user_id PK_FK "ব্যবহারকারী ID"
         BIGINT role_id PK_FK "ভূমিকা ID"
     }
 
-    erik_admin_role_permission {
+    logistics_admin_role_permission {
         BIGINT role_id PK_FK "ভূমিকা ID"
         BIGINT permission_id PK_FK "পারমিশন ID"
     }
 
-    erik_operation_log {
+    logistics_operation_log {
         BIGINT id PK "Snowflake জেনারেশন"
         BIGINT user_id FK "অপারেটিং ব্যবহারকারী"
         VARCHAR action "অপারেশন অ্যাকশন"
@@ -67,7 +67,7 @@ erDiagram
         DATETIME created_at "অপারেশনের সময়"
     }
 
-    erik_system_config {
+    logistics_system_config {
         BIGINT id PK "Snowflake জেনারেশন"
         VARCHAR group_name "কনফিগারেশন গ্রুপ"
         VARCHAR key_name "কনফিগারেশন কী"
@@ -78,10 +78,10 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user ||--o{ erik_admin_user_role : user_id
-    erik_admin_role ||--o{ erik_admin_user_role : role_id
-    erik_admin_role ||--o{ erik_admin_role_permission : role_id
-    erik_admin_permission ||--o{ erik_admin_role_permission : permission_id
-    erik_admin_user ||--o{ erik_operation_log : user_id
-    erik_admin_permission ||--o{ erik_admin_permission : parent_id
+    logistics_admin_user ||--o{ logistics_admin_user_role : user_id
+    logistics_admin_role ||--o{ logistics_admin_user_role : role_id
+    logistics_admin_role ||--o{ logistics_admin_role_permission : role_id
+    logistics_admin_permission ||--o{ logistics_admin_role_permission : permission_id
+    logistics_admin_user ||--o{ logistics_operation_log : user_id
+    logistics_admin_permission ||--o{ logistics_admin_permission : parent_id
 ```

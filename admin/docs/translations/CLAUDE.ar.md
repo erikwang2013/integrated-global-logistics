@@ -32,7 +32,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### الخلفية
 - PHP 8.3+, webman v2 (workerman/webman)
-- قاعدة البيانات: MySQL 8.0+، بادئة الجداول `erik_`
+- قاعدة البيانات: MySQL 8.0+، بادئة الجداول `logistics_`
 - المفتاح الأساسي: BIGINT غير تلقائي الزيادة، يُولَّد عبر `erikwang2013/snowflake-php`
 - تشفير وفك تشفير معرفات طبقة API: `erikwang2013/hashids`
 - مصادقة JWT: `erikwang2013/jwt-webman`
@@ -190,7 +190,7 @@ curl -H "API-Version: v1" http://localhost:8787/api/auth/login
 - يحوّل webman تحذيرات PHP إلى استثناءات، وتؤدي الخصائص/المتغيرات غير المعرفة إلى خطأ 500
 
 ### قاعدة البيانات
-- بادئة الجداول: `erik_`
+- بادئة الجداول: `logistics_`
 - المفتاح الأساسي `id`: نوع BIGINT، غير تلقائي الزيادة، يُولَّد عبر snowflake
 - الحقول الحساسة تُشفَّر وتُفك تلقائيًا عبر trait الخاص بـ `erikwang2013/encryptable`
 - ملفات الترحيل بصيغة SQL

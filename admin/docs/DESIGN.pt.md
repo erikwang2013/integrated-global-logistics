@@ -133,34 +133,34 @@ Camada de exibição (mask)              — telefone: 138****1234, e-mail: a***
 ### 3.1 Relações ER
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (usuários)       │    (associação usuário-papel) │     (papéis)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (associação papel-permissão)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (permissões/menus)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (logs de operação)
 
-erik_system_config (configuração do sistema) — tabela independente
+logistics_system_config (configuração do sistema) — tabela independente
 ```
 
 ### 3.2 Estrutura das tabelas principais
 
 | Nome da tabela | Nº de campos | Descrição |
 |------|-------|------|
-| `erik_admin_user` | 14 | Usuários administrativos, phone/email/id_card armazenados criptografados, suporta soft delete |
-| `erik_admin_role` | 7 | Papéis, slug exclusivo |
-| `erik_admin_permission` | 10 | Árvore de permissões (parent_id autorreferenciado), type: 1=menu 2=botão 3=API |
-| `erik_admin_user_role` | 2 | Tabela intermediária muitos-para-muitos usuário-papel |
-| `erik_admin_role_permission` | 2 | Tabela intermediária muitos-para-muitos papel-permissão |
-| `erik_system_config` | 8 | Configuração de pares chave-valor, group+key exclusivos em conjunto |
-| `erik_operation_log` | 9 | Logs de auditoria de operações (inclui source de origem) |
+| `logistics_admin_user` | 14 | Usuários administrativos, phone/email/id_card armazenados criptografados, suporta soft delete |
+| `logistics_admin_role` | 7 | Papéis, slug exclusivo |
+| `logistics_admin_permission` | 10 | Árvore de permissões (parent_id autorreferenciado), type: 1=menu 2=botão 3=API |
+| `logistics_admin_user_role` | 2 | Tabela intermediária muitos-para-muitos usuário-papel |
+| `logistics_admin_role_permission` | 2 | Tabela intermediária muitos-para-muitos papel-permissão |
+| `logistics_system_config` | 8 | Configuração de pares chave-valor, group+key exclusivos em conjunto |
+| `logistics_operation_log` | 9 | Logs de auditoria de operações (inclui source de origem) |
 
 ### 3.3 Convenções de chave primária
 

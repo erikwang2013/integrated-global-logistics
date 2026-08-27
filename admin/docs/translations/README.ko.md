@@ -32,7 +32,7 @@ webman v2 + Flutter 기반의 풀스택 관리 백엔드 시스템입니다.
 |---|------|------|
 | 백엔드 프레임워크 | webman v2 (workerman) | 초고성능 PHP 상주 프로세스 프레임워크 |
 | PHP 버전 | 8.3+ | |
-| 데이터베이스 | MySQL 8.0+ | 테이블 접두사 `erik_`, BIGINT 비자동증가 기본 키 |
+| 데이터베이스 | MySQL 8.0+ | 테이블 접두사 `logistics_`, BIGINT 비자동증가 기본 키 |
 | 검색 엔진 | Elasticsearch | `webman-scout`로 동기화 및 조회 |
 | 관리자 프론트엔드 | Flutter 3.x | 웹은 PC 관리 백엔드 스타일(`apps/flutter/`) |
 | 모바일 | HarmonyOS ArkTS | HarmonyOS 네이티브 클라이언트(`apps/harmonyos/`), 휴대폰/태블릿/2in1 지원 |
@@ -209,7 +209,7 @@ docker-compose up -d
 
 ## 데이터베이스 규칙
 
-- **테이블 접두사**: `erik_`
+- **테이블 접두사**: `logistics_`
 - **기본 키**: 모든 테이블의 기본 키는 `id BIGINT UNSIGNED NOT NULL`, **AUTO_INCREMENT 금지**
 - **ID 생성**: 기본 키 ID는 애플리케이션 계층의 `SnowflakeService::generate()`로 생성, 분산 환경에서 고유
 - **필수 필드**: 모든 테이블은 `id`, `created_at`, `updated_at`을 포함해야 함

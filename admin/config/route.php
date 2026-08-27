@@ -125,6 +125,24 @@ Route::get('/admin/profile', [app\admin\controller\ProfileController::class, 'sh
     ->middleware([app\middleware\AdminAuth::class]);
 
 // ============================================================
+// 内部接口（e-cat → PHP worker，仅内网）
+// InternalAuth：X-Internal-Token 共享密钥 + 拒绝公网来源 IP
+// 不落 OperationLog、不走 RBAC
+// ============================================================
+Route::group('/internal', function () {
+    // 轨迹查询：{carrier_code, tracking_no, credential_id?} → 标准化 Tracking JSON 或错误码
+    Route::post('/tracking/query', [app\controllers\internal\InternalQueryController::class, 'query']);
+
+    // 承运商识别：{tracking_no} → {carrier_code, channel, confidence}
+    Route::post('/tracking/detect', [app\controllers\internal\InternalQueryController::class, 'detect']);
+
+    // 承运商注册表（包内 Resources/carrier-registry.php）
+    Route::get('/carriers', [app\controllers\internal\InternalCarrierController::class, 'carriers']);
+})->middleware([
+    app\middleware\InternalAuth::class,
+]);
+
+// ============================================================
 // 公开接口（通过 API-Version 头路由到版本化控制器）
 // ============================================================
 Route::group('/api', function () {

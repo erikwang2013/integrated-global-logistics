@@ -50,7 +50,7 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
-│   │   └── model/                  # 数据模型（erik_ 前缀，snowflake 主键）
+│   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── apps/
 │   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── harmonyos/              # HarmonyOS 原生客户端
@@ -74,9 +74,9 @@ integrated-global-logistics/
 
 <img src="docs/diagrams/lifecycle.svg" alt="生命周期" width="100%">
 
-**查询链路（同步）**：客户端 → API-Key 鉴权 → Redis 限流 → 缓存查找（命中即返，`X-Cache: HIT`）→ 熔断检查（OPEN 则 503 快速失败）→ RoundRobin 选 worker → PHP worker 的 `Logistics` 门面（包内 RetryingClient 自带 2 次重试）→ 209 家承运商 → 落库 `erik_tracking_query` + 写缓存 → 返回标准化 JSON。
+**查询链路（同步）**：客户端 → API-Key 鉴权 → Redis 限流 → 缓存查找（命中即返，`X-Cache: HIT`）→ 熔断检查（OPEN 则 503 快速失败）→ RoundRobin 选 worker → PHP worker 的 `Logistics` 门面（包内 RetryingClient 自带 2 次重试）→ 209 家承运商 → 落库 `logistics_tracking_query` + 写缓存 → 返回标准化 JSON。
 
-**回调链路（异步）**：承运商 webhook → `/api/callback/{carrier}` 白名单路由 + 签名校验 → 落库 `erik_tracking_event` + 更新查询记录 → 写入 webman 队列 → 异步消费者按订阅配置推送到商户回调 URL（HMAC 签名 + 幂等键 + 指数退避重试 + 手动重推入口）。
+**回调链路（异步）**：承运商 webhook → `/api/callback/{carrier}` 白名单路由 + 签名校验 → 落库 `logistics_tracking_event` + 更新查询记录 → 写入 webman 队列 → 异步消费者按订阅配置推送到商户回调 URL（HMAC 签名 + 幂等键 + 指数退避重试 + 手动重推入口）。
 
 > 回调推送首版留在 PHP 队列 —— 事件解析与数据都在 PHP 侧，跨语言传事件无收益；若推送吞吐成为瓶颈（万级/分钟以上），再把消费者迁到 e-cat（ecat-mq + retry 中间件），外部契约不变。
 
@@ -107,8 +107,11 @@ php start.php start
 
 ```bash
 cd infrastructure
-cargo build
+cargo build --offline
+TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/tracking-gateway
 ```
+
+网关默认监听 `0.0.0.0:8080`（`tracking-gateway/config/config.json` 可改），worker 指向 PHP internal 端点（默认 `http://127.0.0.1:8787`），API-Key 与内部令牌在配置中声明。
 
 详细部署见 [admin/README.md](admin/README.md)（Docker Compose 编排 5 个服务：Nginx / PHP / MySQL / Redis / Elasticsearch）与实施规划文档。
 

@@ -5575,6 +5575,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracking-gateway"
+version = "3.0.3"
+dependencies = [
+ "axum 0.8.9",
+ "ecat",
+ "ecat-circuit-breaker",
+ "ecat-client",
+ "ecat-config",
+ "ecat-data",
+ "ecat-data-redis",
+ "ecat-health",
+ "ecat-metrics",
+ "ecat-middleware",
+ "ecat-transport-http",
+ "prometheus",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tower 0.5.3",
+ "tracing",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"

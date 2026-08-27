@@ -133,34 +133,34 @@ Capa de presentación (mask)          — teléfono: 138****1234, correo: a***@e
 ### 3.1 Relaciones ER
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (usuarios)      │    (relación usuario-rol) │     (roles)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (relación rol-permiso)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (permisos/menús)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (registros de operaciones)
 
-erik_system_config (configuración del sistema) — tabla independiente
+logistics_system_config (configuración del sistema) — tabla independiente
 ```
 
 ### 3.2 Estructura de las tablas principales
 
 | Nombre de la tabla | Número de campos | Descripción |
 |------|-------|------|
-| `erik_admin_user` | 14 | Usuarios del panel; phone/email/id_card se almacenan cifrados; soporta borrado lógico |
-| `erik_admin_role` | 7 | Roles, slug único |
-| `erik_admin_permission` | 10 | Árbol de permisos (parent_id autoreferenciado), type: 1=menú 2=botón 3=API |
-| `erik_admin_user_role` | 2 | Tabla intermedia muchos a muchos usuario-rol |
-| `erik_admin_role_permission` | 2 | Tabla intermedia muchos a muchos rol-permiso |
-| `erik_system_config` | 8 | Configuración de pares clave-valor, group+key único conjunto |
-| `erik_operation_log` | 9 | Registros de auditoría de operaciones (incluye el origen source) |
+| `logistics_admin_user` | 14 | Usuarios del panel; phone/email/id_card se almacenan cifrados; soporta borrado lógico |
+| `logistics_admin_role` | 7 | Roles, slug único |
+| `logistics_admin_permission` | 10 | Árbol de permisos (parent_id autoreferenciado), type: 1=menú 2=botón 3=API |
+| `logistics_admin_user_role` | 2 | Tabla intermedia muchos a muchos usuario-rol |
+| `logistics_admin_role_permission` | 2 | Tabla intermedia muchos a muchos rol-permiso |
+| `logistics_system_config` | 8 | Configuración de pares clave-valor, group+key único conjunto |
+| `logistics_operation_log` | 9 | Registros de auditoría de operaciones (incluye el origen source) |
 
 ### 3.3 Normas de las claves primarias
 

@@ -32,7 +32,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### Backend
 - PHP 8.3+, webman v2 (workerman/webman)
-- Datenbank: MySQL 8.0+, Tabellenpräfix `erik_`
+- Datenbank: MySQL 8.0+, Tabellenpräfix `logistics_`
 - Primärschlüssel: BIGINT ohne Auto-Increment, erzeugt von `erikwang2013/snowflake-php`
 - API-Ebenen-ID-Ver-/entschlüsselung: `erikwang2013/hashids`
 - JWT-Authentifizierung: `erikwang2013/jwt-webman`
@@ -181,7 +181,7 @@ Redis-Gleitfenster (atomar per Lua), Standard 60/Minute/IP/Route:
 - Alle neuen `.php`-Dateien müssen oben den Copyright-Hinweis enthalten
 
 ### Datenbank
-- Tabellenpräfix: `erik_`
+- Tabellenpräfix: `logistics_`
 - Primärschlüssel `id`: Typ BIGINT, ohne Auto-Increment, von Snowflake erzeugt
 - Sensible Felder werden über das `erikwang2013/encryptable`-Trait automatisch ver-/entschlüsselt
 - Migrationsdateien im SQL-Format

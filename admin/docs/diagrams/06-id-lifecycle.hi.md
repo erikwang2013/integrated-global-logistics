@@ -14,7 +14,7 @@ flowchart LR
     end
 
     subgraph store["2.भंडारण"]
-        s1["MySQL erik_* तालिका<br/>id BIGINT UNSIGNED NOT NULL"]
+        s1["MySQL logistics_* तालिका<br/>id BIGINT UNSIGNED NOT NULL"]
         s2["संवेदनशील फ़ील्ड encryptable cast<br/>AES-128-ECB एन्क्रिप्टेड स्टोरेज"]
         g3 --> s1 --> s2
     end

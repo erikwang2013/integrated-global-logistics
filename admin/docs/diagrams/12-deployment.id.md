@@ -22,8 +22,8 @@ flowchart TB
     end
 
     subgraph data["Lapisan data"]
-        mysql[("MySQL 8.0<br/>Replikasi master-slave<br/>prefiks erik_")]
-        es[("Elasticsearch 8.x<br/>Cluster 3 node<br/>prefiks erik_")]
+        mysql[("MySQL 8.0<br/>Replikasi master-slave<br/>prefiks logistics_")]
+        es[("Elasticsearch 8.x<br/>Cluster 3 node<br/>prefiks logistics_")]
         redis[("Redis 7.x<br/>Mode sentinel<br/>poster:captcha:*")]
     end
 

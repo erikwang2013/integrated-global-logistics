@@ -245,11 +245,11 @@ AdminPermission 미들웨어로 구현됩니다.
 
 **데이터 모델**: User -> Role -> Permission 3계층 연결
 
-- `erik_admin_user` (사용자 테이블)
-- `erik_admin_user_role` (사용자-역할 연결 테이블)
-- `erik_admin_role` (역할 테이블)
-- `erik_admin_role_permission` (역할-권한 연결 테이블)
-- `erik_admin_permission` (권한 테이블)
+- `logistics_admin_user` (사용자 테이블)
+- `logistics_admin_user_role` (사용자-역할 연결 테이블)
+- `logistics_admin_role` (역할 테이블)
+- `logistics_admin_role_permission` (역할-권한 연결 테이블)
+- `logistics_admin_permission` (권한 테이블)
 
 **권한 유형**:
 | type | 의미 | 예시 |

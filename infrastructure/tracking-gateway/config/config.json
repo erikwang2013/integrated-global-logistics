@@ -1,0 +1,15 @@
+{
+  "port": "0.0.0.0:8080",
+  "redis_url": "redis://127.0.0.1:6379",
+  "internal_token": "lg-internal-8f3a2c9e6b1d4f7a",
+  "key_prefix": "logistics:",
+  "api_keys": ["demo-api-key"],
+  "workers": ["http://127.0.0.1:8787"],
+  "timeout_ms": 15000,
+  "rate_limit": { "max_requests": 100, "window_secs": 60 },
+  "cache": { "default_ttl_secs": 300 },
+  "carrier_cache_ttl": {},
+  "detect_ttl_secs": 300,
+  "carriers_cache_ttl_secs": 600,
+  "breaker": { "failure_ratio": 0.5, "window_secs": 30, "half_open_probes": 3, "open_secs": 60 }
+}

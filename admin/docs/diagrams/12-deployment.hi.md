@@ -22,8 +22,8 @@ flowchart TB
     end
 
     subgraph data["डेटा परत"]
-        mysql[("MySQL 8.0<br/>मास्टर-स्लेव रेप्लिकेशन<br/>erik_ प्रीफ़िक्स")]
-        es[("Elasticsearch 8.x<br/>3-नोड क्लस्टर<br/>erik_ प्रीफ़िक्स")]
+        mysql[("MySQL 8.0<br/>मास्टर-स्लेव रेप्लिकेशन<br/>logistics_ प्रीफ़िक्स")]
+        es[("Elasticsearch 8.x<br/>3-नोड क्लस्टर<br/>logistics_ प्रीफ़िक्स")]
         redis[("Redis 7.x<br/>सेंटिनल मोड<br/>poster:captcha:*")]
     end
 

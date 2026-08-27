@@ -131,34 +131,34 @@ Controller::method()
 ### 3.1 ER 关系
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (用户)           │    (用户-角色关联)         │     (角色)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (角色-权限关联)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (权限/菜单)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (操作日志)
 
-erik_system_config (系统配置) — 独立表
+logistics_system_config (系统配置) — 独立表
 ```
 
 ### 3.2 核心表结构
 
 | 表名 | 字段数 | 说明 |
 |------|-------|------|
-| `erik_admin_user` | 14 | 管理用户，phone/email/id_card 加密存储，支持软删除 |
-| `erik_admin_role` | 7 | 角色，slug 唯一 |
-| `erik_admin_permission` | 10 | 权限树（parent_id 自引用），type: 1=菜单 2=按钮 3=API |
-| `erik_admin_user_role` | 2 | 用户-角色多对多中间表 |
-| `erik_admin_role_permission` | 2 | 角色-权限多对多中间表 |
-| `erik_system_config` | 8 | 键值对配置，group+key 联合唯一 |
-| `erik_operation_log` | 9 | 操作审计日志（含 source 来源端） |
+| `logistics_admin_user` | 14 | 管理用户，phone/email/id_card 加密存储，支持软删除 |
+| `logistics_admin_role` | 7 | 角色，slug 唯一 |
+| `logistics_admin_permission` | 10 | 权限树（parent_id 自引用），type: 1=菜单 2=按钮 3=API |
+| `logistics_admin_user_role` | 2 | 用户-角色多对多中间表 |
+| `logistics_admin_role_permission` | 2 | 角色-权限多对多中间表 |
+| `logistics_system_config` | 8 | 键值对配置，group+key 联合唯一 |
+| `logistics_operation_log` | 9 | 操作审计日志（含 source 来源端） |
 
 ### 3.3 主键规范
 

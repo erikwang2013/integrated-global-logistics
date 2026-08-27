@@ -232,7 +232,7 @@ Redis::setex("jwt_blacklist:" . md5($token), max($ttl, 0), '1');
 
 **파일**: `app/model/OperationLog.php`(수정)
 
-`erik_operation_log` 테이블에는 `created_at` 열만 있습니다(`updated_at` 없음). Eloquent 기본 `save()`는 `updated_at`을 쓰려고 시도하므로 SQL 오류가 발생합니다.
+`logistics_operation_log` 테이블에는 `created_at` 열만 있습니다(`updated_at` 없음). Eloquent 기본 `save()`는 `updated_at`을 쓰려고 시도하므로 SQL 오류가 발생합니다.
 
 수정: `public $timestamps = false;` + 쓰기 시 `created_at`을 수동으로 지정.
 

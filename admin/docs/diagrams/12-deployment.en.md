@@ -22,8 +22,8 @@ flowchart TB
     end
 
     subgraph data["Data Layer"]
-        mysql[("MySQL 8.0<br/>Master-Slave Replication<br/>erik_ Prefix")]
-        es[("Elasticsearch 8.x<br/>3-Node Cluster<br/>erik_ Prefix")]
+        mysql[("MySQL 8.0<br/>Master-Slave Replication<br/>logistics_ Prefix")]
+        es[("Elasticsearch 8.x<br/>3-Node Cluster<br/>logistics_ Prefix")]
         redis[("Redis 7.x<br/>Sentinel Mode<br/>poster:captcha:*")]
     end
 

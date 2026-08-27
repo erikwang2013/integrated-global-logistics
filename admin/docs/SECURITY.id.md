@@ -245,11 +245,11 @@ Diimplementasikan oleh middleware AdminPermission.
 
 **Model data**: relasi tiga lapis User -> Role -> Permission
 
-- `erik_admin_user` (tabel pengguna)
-- `erik_admin_user_role` (tabel relasi pengguna-peran)
-- `erik_admin_role` (tabel peran)
-- `erik_admin_role_permission` (tabel relasi peran-hak akses)
-- `erik_admin_permission` (tabel hak akses)
+- `logistics_admin_user` (tabel pengguna)
+- `logistics_admin_user_role` (tabel relasi pengguna-peran)
+- `logistics_admin_role` (tabel peran)
+- `logistics_admin_role_permission` (tabel relasi peran-hak akses)
+- `logistics_admin_permission` (tabel hak akses)
 
 **Jenis hak akses**:
 | type | Arti | Contoh |

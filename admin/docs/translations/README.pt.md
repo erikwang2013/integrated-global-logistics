@@ -32,7 +32,7 @@ Sistema de administração full-stack baseado em webman v2 + Flutter.
 |---|------|------|
 | Framework backend | webman v2 (workerman) | Framework PHP residente de altíssimo desempenho |
 | Versão do PHP | 8.3+ | |
-| Banco de dados | MySQL 8.0+ | Prefixo de tabela `erik_`, chave primária BIGINT não autoincrementável |
+| Banco de dados | MySQL 8.0+ | Prefixo de tabela `logistics_`, chave primária BIGINT não autoincrementável |
 | Motor de busca | Elasticsearch | Sincronização e consulta via `webman-scout` |
 | Frontend admin | Flutter 3.x | Versão Web com estilo de painel administrativo para PC (`apps/flutter/`) |
 | Mobile | HarmonyOS ArkTS | Cliente nativo HarmonyOS (`apps/harmonyos/`), suporta celular/tablet/2em1 |
@@ -209,7 +209,7 @@ docker-compose up -d
 
 ## Convenções de banco de dados
 
-- **Prefixo de tabela**: `erik_`
+- **Prefixo de tabela**: `logistics_`
 - **Chave primária**: todas as tabelas usam `id BIGINT UNSIGNED NOT NULL`, **AUTO_INCREMENT desabilitado**
 - **Geração de ID**: as chaves primárias são geradas pelo `SnowflakeService::generate()` na camada de aplicação, exclusivas em ambiente distribuído
 - **Campos obrigatórios**: cada tabela deve conter `id`, `created_at`, `updated_at`

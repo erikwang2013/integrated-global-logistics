@@ -50,7 +50,7 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
-│   │   └── model/                  # 数据模型（erik_ 前缀，snowflake 主键）
+│   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── apps/
 │   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── harmonyos/              # HarmonyOS 原生客户端
@@ -74,9 +74,9 @@ integrated-global-logistics/
 
 <img src="diagrams/lifecycle.svg" alt="Siklus Hidup" width="100%">
 
-**Rantai query (sinkron)**：klien → autentikasi API-Key → rate limiting Redis → pencarian cache (hit langsung balik, `X-Cache: HIT`) → pemeriksaan circuit breaker (OPEN maka fast-fail 503) → RoundRobin pilih worker → facade `Logistics` worker PHP (RetryingClient dalam paket menyertakan 2 percobaan ulang) → 209 operator → simpan ke `erik_tracking_query` + tulis cache → kembalikan JSON standar.
+**Rantai query (sinkron)**：klien → autentikasi API-Key → rate limiting Redis → pencarian cache (hit langsung balik, `X-Cache: HIT`) → pemeriksaan circuit breaker (OPEN maka fast-fail 503) → RoundRobin pilih worker → facade `Logistics` worker PHP (RetryingClient dalam paket menyertakan 2 percobaan ulang) → 209 operator → simpan ke `logistics_tracking_query` + tulis cache → kembalikan JSON standar.
 
-**Rantai callback (asinkron)**：webhook operator → rute whitelist `/api/callback/{carrier}` + verifikasi signature → simpan ke `erik_tracking_event` + perbarui catatan query → tulis ke antrian webman → konsumen asinkron mengirim ke URL callback merchant sesuai konfigurasi langganan (signature HMAC + kunci idempoten + retry exponential backoff + pintu masuk push ulang manual).
+**Rantai callback (asinkron)**：webhook operator → rute whitelist `/api/callback/{carrier}` + verifikasi signature → simpan ke `logistics_tracking_event` + perbarui catatan query → tulis ke antrian webman → konsumen asinkron mengirim ke URL callback merchant sesuai konfigurasi langganan (signature HMAC + kunci idempoten + retry exponential backoff + pintu masuk push ulang manual).
 
 > Push callback versi pertama tetap di antrian PHP —— parsing event dan data semuanya di sisi PHP, mengirim event lintas bahasa tidak memberi manfaat; jika throughput push menjadi bottleneck (puluhan ribu/menit ke atas), migrasikan konsumen ke e-cat (ecat-mq + middleware retry), kontrak eksternal tidak berubah.
 

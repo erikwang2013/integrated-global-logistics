@@ -32,7 +32,7 @@ Sistem panel admin full-stack berbasis webman v2 + Flutter.
 |---|------|------|
 | Kerangka kerja backend | webman v2 (workerman) | Kerangka kerja proses-tinggal (long-running) PHP berperforma sangat tinggi |
 | Versi PHP | 8.3+ | |
-| Basis data | MySQL 8.0+ | Prefiks tabel `erik_`, primary key BIGINT non-auto-increment |
+| Basis data | MySQL 8.0+ | Prefiks tabel `logistics_`, primary key BIGINT non-auto-increment |
 | Mesin pencari | Elasticsearch | Sinkronisasi & kueri melalui `webman-scout` |
 | Frontend admin | Flutter 3.x | Web versi PC bergaya panel admin (di `apps/flutter/`) |
 | Perangkat seluler | HarmonyOS ArkTS | Klien native HarmonyOS (di `apps/harmonyos/`), mendukung ponsel/tablet/2in1 |
@@ -209,7 +209,7 @@ docker-compose up -d
 
 ## Standar Basis Data
 
-- **Prefiks tabel**: `erik_`
+- **Prefiks tabel**: `logistics_`
 - **Primary key**: Semua primary key tabel berupa `id BIGINT UNSIGNED NOT NULL`, **AUTO_INCREMENT dilarang**
 - **Pembuatan ID**: ID primary key dibuat oleh `SnowflakeService::generate()` di lapisan aplikasi, unik secara terdistribusi
 - **Bidang wajib**: Setiap tabel harus memiliki `id`, `created_at`, `updated_at`

@@ -22,8 +22,8 @@ flowchart TB
     end
 
     subgraph data["Couche de données"]
-        mysql[("MySQL 8.0<br/>Réplication maître-esclave<br/>préfixe erik_")]
-        es[("Elasticsearch 8.x<br/>Cluster de 3 nœuds<br/>préfixe erik_")]
+        mysql[("MySQL 8.0<br/>Réplication maître-esclave<br/>préfixe logistics_")]
+        es[("Elasticsearch 8.x<br/>Cluster de 3 nœuds<br/>préfixe logistics_")]
         redis[("Redis 7.x<br/>Mode sentinelle<br/>poster:captcha:*")]
     end
 

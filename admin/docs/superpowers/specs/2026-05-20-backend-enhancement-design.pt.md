@@ -232,7 +232,7 @@ Retorna o status de conexão de cada componente:
 
 **Arquivo**: `app/model/OperationLog.php` (modificado)
 
-A tabela `erik_operation_log` tem apenas a coluna `created_at` (sem `updated_at`). O `save()` padrão do Eloquent tenta gravar `updated_at`, causando erro de SQL.
+A tabela `logistics_operation_log` tem apenas a coluna `created_at` (sem `updated_at`). O `save()` padrão do Eloquent tenta gravar `updated_at`, causando erro de SQL.
 
 Correção: `public $timestamps = false;` + especificar manualmente `created_at` na gravação.
 

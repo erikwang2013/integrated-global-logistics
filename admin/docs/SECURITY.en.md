@@ -245,11 +245,11 @@ Implemented by the AdminPermission middleware.
 
 **Data model**: three-level association User -> Role -> Permission
 
-- `erik_admin_user` (users table)
-- `erik_admin_user_role` (user-role association table)
-- `erik_admin_role` (roles table)
-- `erik_admin_role_permission` (role-permission association table)
-- `erik_admin_permission` (permissions table)
+- `logistics_admin_user` (users table)
+- `logistics_admin_user_role` (user-role association table)
+- `logistics_admin_role` (roles table)
+- `logistics_admin_role_permission` (role-permission association table)
+- `logistics_admin_permission` (permissions table)
 
 **Permission types**:
 | type | Meaning | Example |

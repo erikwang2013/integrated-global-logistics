@@ -1,0 +1,26 @@
+[package]
+name = "tracking-gateway"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Logistics aggregation query gateway (M2): API-key auth, Redis cache, rate limit, per-carrier circuit breaker, worker RoundRobin"
+
+[dependencies]
+ecat = { path = "../ecat" }
+ecat-transport-http = { path = "../ecat-transport-http" }
+ecat-config = { path = "../ecat-config" }
+ecat-client = { path = "../ecat-client" }
+ecat-circuit-breaker = { path = "../ecat-circuit-breaker" }
+ecat-middleware = { path = "../ecat-middleware", features = ["redis"] }
+ecat-data = { path = "../ecat-data" }
+ecat-data-redis = { path = "../ecat-data-redis" }
+ecat-health = { path = "../ecat-health" }
+ecat-metrics = { path = "../ecat-metrics" }
+axum.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+tower.workspace = true
+tracing.workspace = true
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+prometheus = "0.13"

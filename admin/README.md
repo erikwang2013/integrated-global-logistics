@@ -28,7 +28,7 @@
 |---|------|------|
 | 后端框架 | webman v2 (workerman) | 超高性能 PHP 常驻进程框架 |
 | PHP 版本 | 8.3+ | |
-| 数据库 | MySQL 8.0+ | 表前缀 `erik_`，BIGINT 非自增主键 |
+| 数据库 | MySQL 8.0+ | 库名 `logistics`，表前缀 `logistics_`，BIGINT 非自增主键 |
 | 搜索引擎 | Elasticsearch | 通过 `webman-scout` 同步与查询 |
 | 管理端前端 | Flutter 3.x | Web 端为 PC 管理后台风格（`apps/flutter/`） |
 | 移动端 | HarmonyOS ArkTS | 鸿蒙原生客户端（`apps/harmonyos/`），支持手机/平板/2in1 |
@@ -205,7 +205,7 @@ docker-compose up -d
 
 ## 数据库规范
 
-- **表前缀**: `erik_`
+- **表前缀**: `logistics_`（数据库名 `logistics`，Redis key 前缀 `logistics:`）
 - **主键**: 所有表主键均为 `id BIGINT UNSIGNED NOT NULL`，**禁用 AUTO_INCREMENT**
 - **ID 生成**: 主键 ID 由应用层 `SnowflakeService::generate()` 生成，分布式唯一
 - **必备字段**: 每张表必须包含 `id`, `created_at`, `updated_at`

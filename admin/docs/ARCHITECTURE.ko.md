@@ -31,8 +31,8 @@ flowchart TB
     end
 
     subgraph "저장 계층"
-        D1[("MySQL 8.0<br/>주 저장소<br/>테이블 접두사 erik_")]
-        D2[("Elasticsearch<br/>전문 검색<br/>인덱스 접두사 erik_")]
+        D1[("MySQL 8.0<br/>주 저장소<br/>테이블 접두사 logistics_")]
+        D2[("Elasticsearch<br/>전문 검색<br/>인덱스 접두사 logistics_")]
         D3[("Redis<br/>Session / 캐시<br/>Captcha 저장")]
     end
 
@@ -371,7 +371,7 @@ flowchart LR
     end
 
     subgraph "2. 저장"
-        S1["MySQL erik_* 테이블<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
+        S1["MySQL logistics_* 테이블<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
         S2["민감 필드<br/>encryptable cast<br/>AES-128-ECB 암호화"]
         G3 --> S1
         S1 --> S2
@@ -437,7 +437,7 @@ flowchart TB
 
 ```mermaid
 erDiagram
-    erik_admin_user {
+    logistics_admin_user {
         BIGINT id PK "Snowflake"
         VARCHAR username UK
         VARCHAR password "bcrypt"
@@ -454,7 +454,7 @@ erDiagram
         DATETIME deleted_at "소프트 삭제"
     }
 
-    erik_admin_role {
+    logistics_admin_role {
         BIGINT id PK "Snowflake"
         VARCHAR name
         VARCHAR slug UK
@@ -464,7 +464,7 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_permission {
+    logistics_admin_permission {
         BIGINT id PK "Snowflake"
         BIGINT parent_id FK "자체 참조"
         VARCHAR name
@@ -477,17 +477,17 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user_role {
+    logistics_admin_user_role {
         BIGINT user_id PK_FK
         BIGINT role_id PK_FK
     }
 
-    erik_admin_role_permission {
+    logistics_admin_role_permission {
         BIGINT role_id PK_FK
         BIGINT permission_id PK_FK
     }
 
-    erik_operation_log {
+    logistics_operation_log {
         BIGINT id PK "Snowflake"
         BIGINT user_id FK
         VARCHAR action
@@ -499,7 +499,7 @@ erDiagram
         DATETIME created_at
     }
 
-    erik_system_config {
+    logistics_system_config {
         BIGINT id PK "Snowflake"
         VARCHAR group
         VARCHAR key
@@ -510,12 +510,12 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user ||--o{ erik_admin_user_role : "user_id"
-    erik_admin_role ||--o{ erik_admin_user_role : "role_id"
-    erik_admin_role ||--o{ erik_admin_role_permission : "role_id"
-    erik_admin_permission ||--o{ erik_admin_role_permission : "permission_id"
-    erik_admin_user ||--o{ erik_operation_log : "user_id"
-    erik_admin_permission ||--o{ erik_admin_permission : "parent_id"
+    logistics_admin_user ||--o{ logistics_admin_user_role : "user_id"
+    logistics_admin_role ||--o{ logistics_admin_user_role : "role_id"
+    logistics_admin_role ||--o{ logistics_admin_role_permission : "role_id"
+    logistics_admin_permission ||--o{ logistics_admin_role_permission : "permission_id"
+    logistics_admin_user ||--o{ logistics_operation_log : "user_id"
+    logistics_admin_permission ||--o{ logistics_admin_permission : "parent_id"
 ```
 
 ---
@@ -667,8 +667,8 @@ flowchart TB
     end
 
     subgraph "데이터 계층"
-        MYSQL["MySQL 8.0<br/>주-종 복제<br/>erik_ 접두사"]
-        ES["Elasticsearch 8.x<br/>3노드 클러스터<br/>erik_ 접두사"]
+        MYSQL["MySQL 8.0<br/>주-종 복제<br/>logistics_ 접두사"]
+        ES["Elasticsearch 8.x<br/>3노드 클러스터<br/>logistics_ 접두사"]
         REDIS["Redis 7.x<br/>센티널 모드<br/>poster:captcha:*"]
     end
 

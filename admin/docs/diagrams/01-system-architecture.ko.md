@@ -24,8 +24,8 @@ flowchart TB
     end
 
     subgraph storage["저장소 계층"]
-        mysql[("MySQL 8.0<br/>주 저장소 - erik_ 접두사")]
-        es[("Elasticsearch<br/>전문 검색 - erik_ 접두사")]
+        mysql[("MySQL 8.0<br/>주 저장소 - logistics_ 접두사")]
+        es[("Elasticsearch<br/>전문 검색 - logistics_ 접두사")]
         redis[("Redis<br/>Session/캐시/Captcha")]
     end
 

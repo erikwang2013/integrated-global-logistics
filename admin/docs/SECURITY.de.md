@@ -245,11 +245,11 @@ Implementiert in der AdminPermission-Middleware.
 
 **Datenmodell**: dreistufige Verknüpfung User -> Role -> Permission
 
-- `erik_admin_user` (Benutzertabelle)
-- `erik_admin_user_role` (Benutzer-Rolle-Zuordnungstabelle)
-- `erik_admin_role` (Rollentabelle)
-- `erik_admin_role_permission` (Rolle-Berechtigung-Zuordnungstabelle)
-- `erik_admin_permission` (Berechtigungstabelle)
+- `logistics_admin_user` (Benutzertabelle)
+- `logistics_admin_user_role` (Benutzer-Rolle-Zuordnungstabelle)
+- `logistics_admin_role` (Rollentabelle)
+- `logistics_admin_role_permission` (Rolle-Berechtigung-Zuordnungstabelle)
+- `logistics_admin_permission` (Berechtigungstabelle)
 
 **Berechtigungstypen**:
 | type | Bedeutung | Beispiel |

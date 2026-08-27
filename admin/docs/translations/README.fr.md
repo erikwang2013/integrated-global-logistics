@@ -32,7 +32,7 @@ Système de panneau d'administration full-stack basé sur webman v2 + Flutter.
 |---|------|------|
 | Framework backend | webman v2 (workerman) | Framework PHP résident ultra-performant |
 | Version PHP | 8.3+ | |
-| Base de données | MySQL 8.0+ | Préfixe de table `erik_`, clé primaire BIGINT non auto-incrémentée |
+| Base de données | MySQL 8.0+ | Préfixe de table `logistics_`, clé primaire BIGINT non auto-incrémentée |
 | Moteur de recherche | Elasticsearch | Synchronisation et requêtes via `webman-scout` |
 | Frontend d'administration | Flutter 3.x | Le Web est conçu comme un panneau d'administration PC (`apps/flutter/`) |
 | Mobile | HarmonyOS ArkTS | Client natif HarmonyOS (`apps/harmonyos/`), prend en charge téléphone / tablette / 2-en-1 |
@@ -209,7 +209,7 @@ docker-compose up -d
 
 ## Normes de base de données
 
-- **Préfixe de table** : `erik_`
+- **Préfixe de table** : `logistics_`
 - **Clé primaire** : la clé primaire de toutes les tables est `id BIGINT UNSIGNED NOT NULL`, **AUTO_INCREMENT interdit**
 - **Génération des ID** : les ID de clé primaire sont générés au niveau application par `SnowflakeService::generate()`, uniques en environnement distribué
 - **Champs obligatoires** : chaque table doit contenir `id`, `created_at`, `updated_at`

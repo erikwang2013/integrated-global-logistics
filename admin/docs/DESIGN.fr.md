@@ -133,34 +133,34 @@ Controller::method()
 ### 3.1 Relations ER
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (用户)           │    (用户-角色关联)         │     (角色)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (角色-权限关联)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (权限/菜单)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (操作日志)
 
-erik_system_config (系统配置) — 独立表
+logistics_system_config (系统配置) — 独立表
 ```
 
 ### 3.2 Structure des tables principales
 
 | Nom de table | Nombre de champs | Description |
 |------|-------|------|
-| `erik_admin_user` | 14 | Utilisateurs d'administration, phone/email/id_card stockés chiffrés, prise en charge de la suppression douce |
-| `erik_admin_role` | 7 | Rôles, slug unique |
-| `erik_admin_permission` | 10 | Arbre des permissions (auto-référence parent_id), type : 1=menu 2=bouton 3=API |
-| `erik_admin_user_role` | 2 | Table de liaison many-to-many utilisateurs-rôles |
-| `erik_admin_role_permission` | 2 | Table de liaison many-to-many rôles-permissions |
-| `erik_system_config` | 8 | Configuration par paires clé-valeur, unicité combinée group+key |
-| `erik_operation_log` | 9 | Journal d'audit des opérations (avec champ source) |
+| `logistics_admin_user` | 14 | Utilisateurs d'administration, phone/email/id_card stockés chiffrés, prise en charge de la suppression douce |
+| `logistics_admin_role` | 7 | Rôles, slug unique |
+| `logistics_admin_permission` | 10 | Arbre des permissions (auto-référence parent_id), type : 1=menu 2=bouton 3=API |
+| `logistics_admin_user_role` | 2 | Table de liaison many-to-many utilisateurs-rôles |
+| `logistics_admin_role_permission` | 2 | Table de liaison many-to-many rôles-permissions |
+| `logistics_system_config` | 8 | Configuration par paires clé-valeur, unicité combinée group+key |
+| `logistics_operation_log` | 9 | Journal d'audit des opérations (avec champ source) |
 
 ### 3.3 Normes de clé primaire
 

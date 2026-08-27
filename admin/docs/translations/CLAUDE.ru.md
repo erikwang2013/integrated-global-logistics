@@ -32,7 +32,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### Бэкенд
 - PHP 8.3+, webman v2 (workerman/webman)
-- База данных: MySQL 8.0+, префикс таблиц `erik_`
+- База данных: MySQL 8.0+, префикс таблиц `logistics_`
 - Первичный ключ: BIGINT без автоинкремента, генерируется через `erikwang2013/snowflake-php`
 - Шифрование/расшифровка ID на уровне API: `erikwang2013/hashids`
 - Аутентификация JWT: `erikwang2013/jwt-webman`
@@ -190,7 +190,7 @@ curl -H "API-Version: v1" http://localhost:8787/api/auth/login
 - webman превращает PHP Warning в исключения; неопределённые свойства/переменные приводят к 500
 
 ### База данных
-- Префикс таблиц: `erik_`
+- Префикс таблиц: `logistics_`
 - Первичный ключ `id`: тип BIGINT, без автоинкремента, генерируется snowflake
 - Чувствительные поля автоматически шифруются/расшифровываются trait `erikwang2013/encryptable`
 - Файлы миграций в формате SQL

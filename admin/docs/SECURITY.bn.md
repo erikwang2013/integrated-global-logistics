@@ -245,11 +245,11 @@ AdminPermission মিডলওয়্যারে ইমপ্লিমেন
 
 **ডেটা মডেল**: User -> Role -> Permission তিন লেয়ারের সম্পর্ক
 
-- `erik_admin_user` (ইউজার টেবিল)
-- `erik_admin_user_role` (ইউজার-রোল সম্পর্ক টেবিল)
-- `erik_admin_role` (রোল টেবিল)
-- `erik_admin_role_permission` (রোল-পারমিশন সম্পর্ক টেবিল)
-- `erik_admin_permission` (পারমিশন টেবিল)
+- `logistics_admin_user` (ইউজার টেবিল)
+- `logistics_admin_user_role` (ইউজার-রোল সম্পর্ক টেবিল)
+- `logistics_admin_role` (রোল টেবিল)
+- `logistics_admin_role_permission` (রোল-পারমিশন সম্পর্ক টেবিল)
+- `logistics_admin_permission` (পারমিশন টেবিল)
 
 **পারমিশন টাইপ**:
 | type | অর্থ | উদাহরণ |

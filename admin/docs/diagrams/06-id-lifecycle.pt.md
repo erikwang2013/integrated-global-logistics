@@ -14,7 +14,7 @@ flowchart LR
     end
 
     subgraph store["2. Armazenamento"]
-        s1["Tabelas erik_* do MySQL<br/>id BIGINT UNSIGNED NOT NULL"]
+        s1["Tabelas logistics_* do MySQL<br/>id BIGINT UNSIGNED NOT NULL"]
         s2["Cast encryptable para campos sensíveis<br/>armazenamento criptografado AES-128-ECB"]
         g3 --> s1 --> s2
     end

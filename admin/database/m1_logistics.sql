@@ -1,5 +1,5 @@
 -- M1 物流聚合管理后台增量 SQL
--- 依赖 install.sql 已执行（erik_admin_permission / erik_admin_role / erik_admin_role_permission）
+-- 依赖 install.sql 已执行（logistics_admin_permission / logistics_admin_role / logistics_admin_role_permission）
 -- 执行方式：mysql -u<user> -p <db> < m1_logistics.sql
 
 SET FOREIGN_KEY_CHECKS = 0;
@@ -7,9 +7,9 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- -------------------------------------------
 -- 物流承运商表
 -- -------------------------------------------
-DROP TABLE IF EXISTS `erik_carrier`;
+DROP TABLE IF EXISTS `logistics_carrier`;
 
-CREATE TABLE `erik_carrier` (
+CREATE TABLE `logistics_carrier` (
   `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
   `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '承运商代码（对应global-logistics包内代码，如 sf/dhl）',
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '承运商名称',
@@ -32,9 +32,9 @@ CREATE TABLE `erik_carrier` (
 -- -------------------------------------------
 -- 承运商凭证表（app_key/app_secret 加密存储，Encryptable 自动加解密）
 -- -------------------------------------------
-DROP TABLE IF EXISTS `erik_carrier_credential`;
+DROP TABLE IF EXISTS `logistics_carrier_credential`;
 
-CREATE TABLE `erik_carrier_credential` (
+CREATE TABLE `logistics_carrier_credential` (
   `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
   `carrier_id` bigint unsigned NOT NULL COMMENT '承运商ID',
   `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '凭证名称',
@@ -51,9 +51,9 @@ CREATE TABLE `erik_carrier_credential` (
 -- -------------------------------------------
 -- 轨迹查询记录表
 -- -------------------------------------------
-DROP TABLE IF EXISTS `erik_tracking_query`;
+DROP TABLE IF EXISTS `logistics_tracking_query`;
 
-CREATE TABLE `erik_tracking_query` (
+CREATE TABLE `logistics_tracking_query` (
   `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
   `query_no` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '查询流水号',
   `carrier_id` bigint unsigned NOT NULL DEFAULT '0' COMMENT '承运商ID',
@@ -79,9 +79,9 @@ CREATE TABLE `erik_tracking_query` (
 -- -------------------------------------------
 -- 回调订阅表
 -- -------------------------------------------
-DROP TABLE IF EXISTS `erik_callback_subscription`;
+DROP TABLE IF EXISTS `logistics_callback_subscription`;
 
-CREATE TABLE `erik_callback_subscription` (
+CREATE TABLE `logistics_callback_subscription` (
   `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
   `carrier_id` bigint unsigned NOT NULL COMMENT '承运商ID',
   `callback_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '回调URL',
@@ -100,7 +100,7 @@ CREATE TABLE `erik_callback_subscription` (
 -- -------------------------------------------
 -- M1 权限种子（菜单 type=1 + API type=3，ID 沿用 install.sql 的 snowflake 分段约定）
 -- -------------------------------------------
-INSERT INTO `erik_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
+INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
 ('21000000000000101', '0', '物流服务商', 'carrier', 1, 'truck', '/admin/carrier', 7, NOW(), NOW()),
 ('21000000000000102', '0', '查询记录', 'tracking-query', 1, 'search', '/admin/tracking/query', 8, NOW(), NOW()),
 ('21000000000000103', '0', '回调订阅', 'callback-subscription', 1, 'link', '/admin/callback/subscription', 9, NOW(), NOW()),
@@ -121,7 +121,7 @@ INSERT INTO `erik_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, 
 ('21000000000000151', '21000000000000104', '查看统计', 'get.admin/tracking/statistics', 3, '', '', 1, NOW(), NOW());
 
 -- 超级管理员授予 M1 新权限（沿用 install.sql 的显式授权方式）
-INSERT INTO `erik_admin_role_permission` (`role_id`, `permission_id`) VALUES
+INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUES
 ('10000000000000001', '21000000000000101'),
 ('10000000000000001', '21000000000000102'),
 ('10000000000000001', '21000000000000103'),

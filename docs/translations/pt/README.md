@@ -50,7 +50,7 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
-│   │   └── model/                  # 数据模型（erik_ 前缀，snowflake 主键）
+│   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── apps/
 │   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── harmonyos/              # HarmonyOS 原生客户端
@@ -74,9 +74,9 @@ integrated-global-logistics/
 
 <img src="diagrams/lifecycle.svg" alt="Ciclo de vida" width="100%">
 
-**Fluxo de consulta (síncrono)**: cliente → autenticação API-Key → rate limit Redis → busca no cache (resposta imediata em caso de hit, `X-Cache: HIT`) → verificação do circuit breaker (503 em caso de OPEN) → seleção RoundRobin de worker → fachada `Logistics` do worker PHP (o RetryingClient do pacote faz 2 tentativas automaticamente) → 209 transportadoras → persistência em `erik_tracking_query` + escrita no cache → resposta em JSON padronizado.
+**Fluxo de consulta (síncrono)**: cliente → autenticação API-Key → rate limit Redis → busca no cache (resposta imediata em caso de hit, `X-Cache: HIT`) → verificação do circuit breaker (503 em caso de OPEN) → seleção RoundRobin de worker → fachada `Logistics` do worker PHP (o RetryingClient do pacote faz 2 tentativas automaticamente) → 209 transportadoras → persistência em `logistics_tracking_query` + escrita no cache → resposta em JSON padronizado.
 
-**Fluxo de callback (assíncrono)**: webhook da transportadora → rota de allowlist `/api/callback/{carrier}` + verificação de assinatura → persistência em `erik_tracking_event` + atualização do registro de consulta → gravação na fila do webman → consumidores assíncronos enviam para a URL de callback do comerciante conforme a assinatura configurada (assinatura HMAC + chave de idempotência + retry com backoff exponencial + ponto de reenvio manual).
+**Fluxo de callback (assíncrono)**: webhook da transportadora → rota de allowlist `/api/callback/{carrier}` + verificação de assinatura → persistência em `logistics_tracking_event` + atualização do registro de consulta → gravação na fila do webman → consumidores assíncronos enviam para a URL de callback do comerciante conforme a assinatura configurada (assinatura HMAC + chave de idempotência + retry com backoff exponencial + ponto de reenvio manual).
 
 > O push de callbacks da primeira versão fica na fila PHP — a análise dos eventos e os dados estão todos no lado PHP, e transmitir eventos entre linguagens não traz benefício; se o throughput de envio virar gargalo (dezenas de milhares por minuto ou mais), migre o consumidor para o e-cat (ecat-mq + middleware de retry), sem alterar o contrato externo.
 

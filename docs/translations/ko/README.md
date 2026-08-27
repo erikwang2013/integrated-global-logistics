@@ -50,7 +50,7 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
-│   │   └── model/                  # 数据模型（erik_ 前缀，snowflake 主键）
+│   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── apps/
 │   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── harmonyos/              # HarmonyOS 原生客户端
@@ -74,9 +74,9 @@ integrated-global-logistics/
 
 <img src="diagrams/lifecycle.svg" alt="라이프사이클" width="100%">
 
-**조회 체인(동기)**: 클라이언트 → API-Key 인증 → Redis 속도 제한 → 캐시 조회(히트 시 즉시 반환, `X-Cache: HIT`) → 서킷 브레이커 검사(OPEN이면 503 빠른 실패) → RoundRobin worker 선택 → PHP worker의 `Logistics` 파사드(패키지 내 RetryingClient가 재시도 2회 내장) → 209개 운송사 → `erik_tracking_query` 저장 + 캐시 기록 → 표준화된 JSON 반환.
+**조회 체인(동기)**: 클라이언트 → API-Key 인증 → Redis 속도 제한 → 캐시 조회(히트 시 즉시 반환, `X-Cache: HIT`) → 서킷 브레이커 검사(OPEN이면 503 빠른 실패) → RoundRobin worker 선택 → PHP worker의 `Logistics` 파사드(패키지 내 RetryingClient가 재시도 2회 내장) → 209개 운송사 → `logistics_tracking_query` 저장 + 캐시 기록 → 표준화된 JSON 반환.
 
-**콜백 체인(비동기)**: 운송사 webhook → `/api/callback/{carrier}` 화이트리스트 라우트 + 서명 검증 → `erik_tracking_event` 저장 + 조회 기록 갱신 → webman 큐에 기록 → 비동기 컨슈머가 구독 설정에 따라 가맹점 콜백 URL로 푸시(HMAC 서명 + 멱등 키 + 지수 백오프 재시도 + 수동 재푸시 진입점).
+**콜백 체인(비동기)**: 운송사 webhook → `/api/callback/{carrier}` 화이트리스트 라우트 + 서명 검증 → `logistics_tracking_event` 저장 + 조회 기록 갱신 → webman 큐에 기록 → 비동기 컨슈머가 구독 설정에 따라 가맹점 콜백 URL로 푸시(HMAC 서명 + 멱등 키 + 지수 백오프 재시도 + 수동 재푸시 진입점).
 
 > 콜백 푸시 1차 버전은 PHP 큐에 유지합니다 — 이벤트 파싱과 데이터가 모두 PHP 측에 있어 언어 간 이벤트 전달은 이점이 없습니다. 푸시 처리량이 병목이 되면(분당 수만 건 이상) 컨슈머를 e-cat(ecat-mq + retry 미들웨어)으로 옮기면 되며 외부 계약은 변하지 않습니다.
 

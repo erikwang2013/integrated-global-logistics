@@ -50,7 +50,7 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
-│   │   └── model/                  # 数据模型（erik_ 前缀，snowflake 主键）
+│   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── apps/
 │   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── harmonyos/              # HarmonyOS 原生客户端
@@ -74,9 +74,9 @@ integrated-global-logistics/
 
 <img src="diagrams/lifecycle.svg" alt="Ciclo de vida" width="100%">
 
-**Cadena de consulta (síncrona)**: cliente → autenticación API-Key → rate-limit Redis → búsqueda en caché (hit devuelto al instante, `X-Cache: HIT`) → comprobación del breaker (OPEN → fallo rápido 503) → selección RoundRobin del worker → fachada `Logistics` del worker PHP (RetryingClient integrado con 2 reintentos) → 209 transportistas → escritura en `erik_tracking_query` + llenado de caché → respuesta JSON estandarizada.
+**Cadena de consulta (síncrona)**: cliente → autenticación API-Key → rate-limit Redis → búsqueda en caché (hit devuelto al instante, `X-Cache: HIT`) → comprobación del breaker (OPEN → fallo rápido 503) → selección RoundRobin del worker → fachada `Logistics` del worker PHP (RetryingClient integrado con 2 reintentos) → 209 transportistas → escritura en `logistics_tracking_query` + llenado de caché → respuesta JSON estandarizada.
 
-**Cadena de callback (asíncrona)**: webhook del transportista → ruta whitelist `/api/callback/{carrier}` + verificación de firma → escritura en `erik_tracking_event` + actualización del registro de consulta → cola de webman → consumidor asíncrono empuja a la URL de callback del comercio según la configuración de suscripción (firma HMAC + clave de idempotencia + reintento con backoff exponencial + re-push manual).
+**Cadena de callback (asíncrona)**: webhook del transportista → ruta whitelist `/api/callback/{carrier}` + verificación de firma → escritura en `logistics_tracking_event` + actualización del registro de consulta → cola de webman → consumidor asíncrono empuja a la URL de callback del comercio según la configuración de suscripción (firma HMAC + clave de idempotencia + reintento con backoff exponencial + re-push manual).
 
 > El push de callback permanece en v1 en la cola de PHP – el parseo de eventos y los datos están en el lado PHP, transferir eventos entre lenguajes no aporta nada; si el rendimiento del push se convierte en un cuello de botella (decenas de miles por minuto), se migra el consumidor a e-cat (ecat-mq + middleware retry) – el contrato externo permanece intacto.
 

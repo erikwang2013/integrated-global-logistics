@@ -133,34 +133,34 @@ Controller::method()
 ### 3.1 ER संबंध
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (उपयोगकर्ता)    │    (उपयोगकर्ता-भूमिका संबंध)   │     (भूमिका)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (भूमिका-अनुमति संबंध)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (अनुमति/मेनू)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (ऑपरेशन लॉग)
 
-erik_system_config (सिस्टम कॉन्फ़िगरेशन) — स्वतंत्र टेबल
+logistics_system_config (सिस्टम कॉन्फ़िगरेशन) — स्वतंत्र टेबल
 ```
 
 ### 3.2 मुख्य टेबल संरचना
 
 | टेबल नाम | फ़ील्ड संख्या | विवरण |
 |------|-------|------|
-| `erik_admin_user` | 14 | एडमिन उपयोगकर्ता, phone/email/id_card एन्क्रिप्टेड स्टोरेज, सॉफ्ट डिलीट समर्थित |
-| `erik_admin_role` | 7 | भूमिका, slug अद्वितीय |
-| `erik_admin_permission` | 10 | अनुमति ट्री (parent_id सेल्फ-रिलेशन), type: 1=मेनू 2=बटन 3=API |
-| `erik_admin_user_role` | 2 | उपयोगकर्ता-भूमिका कई-से-कई मध्यवर्ती टेबल |
-| `erik_admin_role_permission` | 2 | भूमिका-अनुमति कई-से-कई मध्यवर्ती टेबल |
-| `erik_system_config` | 8 | कुंजी-मूल्य कॉन्फ़िगरेशन, group+key संयुक्त रूप से अद्वितीय |
-| `erik_operation_log` | 9 | ऑपरेशन ऑडिट लॉग (source स्रोत डिवाइस सहित) |
+| `logistics_admin_user` | 14 | एडमिन उपयोगकर्ता, phone/email/id_card एन्क्रिप्टेड स्टोरेज, सॉफ्ट डिलीट समर्थित |
+| `logistics_admin_role` | 7 | भूमिका, slug अद्वितीय |
+| `logistics_admin_permission` | 10 | अनुमति ट्री (parent_id सेल्फ-रिलेशन), type: 1=मेनू 2=बटन 3=API |
+| `logistics_admin_user_role` | 2 | उपयोगकर्ता-भूमिका कई-से-कई मध्यवर्ती टेबल |
+| `logistics_admin_role_permission` | 2 | भूमिका-अनुमति कई-से-कई मध्यवर्ती टेबल |
+| `logistics_system_config` | 8 | कुंजी-मूल्य कॉन्फ़िगरेशन, group+key संयुक्त रूप से अद्वितीय |
+| `logistics_operation_log` | 9 | ऑपरेशन ऑडिट लॉग (source स्रोत डिवाइस सहित) |
 
 ### 3.3 प्राथमिक कुंजी मानक
 

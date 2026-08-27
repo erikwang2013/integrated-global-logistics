@@ -18,5 +18,6 @@
 
 return [
     support\bootstrap\Session::class,
+    support\bootstrap\LaravelDb::class,
     \Erikwang2013\Poster\Adapters\Webman\CaptchaPlugin::class,
 ];

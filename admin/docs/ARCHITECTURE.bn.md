@@ -31,8 +31,8 @@ flowchart TB
     end
 
     subgraph "স্টোরেজ লেয়ার"
-        D1[("MySQL 8.0<br/>প্রধান স্টোরেজ<br/>টেবিল প্রিফিক্স erik_")]
-        D2[("Elasticsearch<br/>ফুল-টেক্সট সার্চ<br/>ইন্ডেক্স প্রিফিক্স erik_")]
+        D1[("MySQL 8.0<br/>প্রধান স্টোরেজ<br/>টেবিল প্রিফিক্স logistics_")]
+        D2[("Elasticsearch<br/>ফুল-টেক্সট সার্চ<br/>ইন্ডেক্স প্রিফিক্স logistics_")]
         D3[("Redis<br/>Session / ক্যাশ<br/>Captcha স্টোরেজ")]
     end
 
@@ -371,7 +371,7 @@ flowchart LR
     end
 
     subgraph "2. স্টোরেজ"
-        S1["MySQL erik_* টেবিল<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
+        S1["MySQL logistics_* টেবিল<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
         S2["সংবেদনশীল ফিল্ড<br/>encryptable cast<br/>AES-128-ECB এনক্রিপশন"]
         G3 --> S1
         S1 --> S2
@@ -437,7 +437,7 @@ flowchart TB
 
 ```mermaid
 erDiagram
-    erik_admin_user {
+    logistics_admin_user {
         BIGINT id PK "Snowflake"
         VARCHAR username UK
         VARCHAR password "bcrypt"
@@ -454,7 +454,7 @@ erDiagram
         DATETIME deleted_at "সফট ডিলিট"
     }
 
-    erik_admin_role {
+    logistics_admin_role {
         BIGINT id PK "Snowflake"
         VARCHAR name
         VARCHAR slug UK
@@ -464,7 +464,7 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_permission {
+    logistics_admin_permission {
         BIGINT id PK "Snowflake"
         BIGINT parent_id FK "সেলফ-রেফারেন্স"
         VARCHAR name
@@ -477,17 +477,17 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user_role {
+    logistics_admin_user_role {
         BIGINT user_id PK_FK
         BIGINT role_id PK_FK
     }
 
-    erik_admin_role_permission {
+    logistics_admin_role_permission {
         BIGINT role_id PK_FK
         BIGINT permission_id PK_FK
     }
 
-    erik_operation_log {
+    logistics_operation_log {
         BIGINT id PK "Snowflake"
         BIGINT user_id FK
         VARCHAR action
@@ -499,7 +499,7 @@ erDiagram
         DATETIME created_at
     }
 
-    erik_system_config {
+    logistics_system_config {
         BIGINT id PK "Snowflake"
         VARCHAR group
         VARCHAR key
@@ -510,12 +510,12 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user ||--o{ erik_admin_user_role : "user_id"
-    erik_admin_role ||--o{ erik_admin_user_role : "role_id"
-    erik_admin_role ||--o{ erik_admin_role_permission : "role_id"
-    erik_admin_permission ||--o{ erik_admin_role_permission : "permission_id"
-    erik_admin_user ||--o{ erik_operation_log : "user_id"
-    erik_admin_permission ||--o{ erik_admin_permission : "parent_id"
+    logistics_admin_user ||--o{ logistics_admin_user_role : "user_id"
+    logistics_admin_role ||--o{ logistics_admin_user_role : "role_id"
+    logistics_admin_role ||--o{ logistics_admin_role_permission : "role_id"
+    logistics_admin_permission ||--o{ logistics_admin_role_permission : "permission_id"
+    logistics_admin_user ||--o{ logistics_operation_log : "user_id"
+    logistics_admin_permission ||--o{ logistics_admin_permission : "parent_id"
 ```
 
 ---
@@ -667,8 +667,8 @@ flowchart TB
     end
 
     subgraph "ডেটা লেয়ার"
-        MYSQL["MySQL 8.0<br/>মাস্টার-স্লেভ রেপ্লিকেশন<br/>erik_ প্রিফিক্স"]
-        ES["Elasticsearch 8.x<br/>৩ নোড ক্লাস্টার<br/>erik_ প্রিফিক্স"]
+        MYSQL["MySQL 8.0<br/>মাস্টার-স্লেভ রেপ্লিকেশন<br/>logistics_ প্রিফিক্স"]
+        ES["Elasticsearch 8.x<br/>৩ নোড ক্লাস্টার<br/>logistics_ প্রিফিক্স"]
         REDIS["Redis 7.x<br/>সেন্টিনেল মোড<br/>poster:captcha:*"]
     end
 

@@ -133,34 +133,34 @@ Controller::method()
 ### 3.1 ER 관계
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (用户)           │    (用户-角色关联)         │     (角色)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (角色-权限关联)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (权限/菜单)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (操作日志)
 
-erik_system_config (系统配置) — 独立表
+logistics_system_config (系统配置) — 独立表
 ```
 
 ### 3.2 핵심 테이블 구조
 
 | 테이블 이름 | 필드 수 | 설명 |
 |------|-------|------|
-| `erik_admin_user` | 14 | 관리 사용자, phone/email/id_card 암호화 저장, 소프트 삭제 지원 |
-| `erik_admin_role` | 7 | 역할, slug 고유 |
-| `erik_admin_permission` | 10 | 권한 트리 (parent_id 자체 참조), type: 1=메뉴 2=버튼 3=API |
-| `erik_admin_user_role` | 2 | 사용자-역할 다대다 중간 테이블 |
-| `erik_admin_role_permission` | 2 | 역할-권한 다대다 중간 테이블 |
-| `erik_system_config` | 8 | 키-값 설정, group+key 복합 고유 |
-| `erik_operation_log` | 9 | 작업 감사 로그 (source 출처 단말 포함) |
+| `logistics_admin_user` | 14 | 관리 사용자, phone/email/id_card 암호화 저장, 소프트 삭제 지원 |
+| `logistics_admin_role` | 7 | 역할, slug 고유 |
+| `logistics_admin_permission` | 10 | 권한 트리 (parent_id 자체 참조), type: 1=메뉴 2=버튼 3=API |
+| `logistics_admin_user_role` | 2 | 사용자-역할 다대다 중간 테이블 |
+| `logistics_admin_role_permission` | 2 | 역할-권한 다대다 중간 테이블 |
+| `logistics_system_config` | 8 | 키-값 설정, group+key 복합 고유 |
+| `logistics_operation_log` | 9 | 작업 감사 로그 (source 출처 단말 포함) |
 
 ### 3.3 기본 키 규칙
 

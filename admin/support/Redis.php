@@ -15,7 +15,7 @@ use RuntimeException;
  */
 class Redis
 {
-    private const DEFAULT_PREFIX = 'open-admin:';
+    private const DEFAULT_PREFIX = 'logistics:';
 
     private static ?string $prefix = null;
     private static ?RedisClient $instance = null;
@@ -24,7 +24,7 @@ class Redis
     {
         if (self::$prefix === null) {
             $env = getenv('REDIS_PREFIX');
-            self::$prefix = ($env !== false && $env !== '') ? $env : self::DEFAULT_PREFIX;
+            self::$prefix = ($env !== false && $env !== '') ? rtrim($env, ':') . ':' : self::DEFAULT_PREFIX;
         }
         return self::$prefix;
     }

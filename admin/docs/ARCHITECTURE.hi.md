@@ -31,8 +31,8 @@ flowchart TB
     end
 
     subgraph "स्टोरेज परत"
-        D1[("MySQL 8.0<br/>मुख्य स्टोरेज<br/>टेबल प्रीफ़िक्स erik_")]
-        D2[("Elasticsearch<br/>फुल-टेक्स्ट सर्च<br/>इंडेक्स प्रीफ़िक्स erik_")]
+        D1[("MySQL 8.0<br/>मुख्य स्टोरेज<br/>टेबल प्रीफ़िक्स logistics_")]
+        D2[("Elasticsearch<br/>फुल-टेक्स्ट सर्च<br/>इंडेक्स प्रीफ़िक्स logistics_")]
         D3[("Redis<br/>Session / कैश<br/>Captcha स्टोरेज")]
     end
 
@@ -371,7 +371,7 @@ flowchart LR
     end
 
     subgraph "2. स्टोरेज"
-        S1["MySQL erik_* टेबल<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
+        S1["MySQL logistics_* टेबल<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
         S2["संवेदनशील फ़ील्ड<br/>encryptable cast<br/>AES-128-ECB एन्क्रिप्शन"]
         G3 --> S1
         S1 --> S2
@@ -437,7 +437,7 @@ flowchart TB
 
 ```mermaid
 erDiagram
-    erik_admin_user {
+    logistics_admin_user {
         BIGINT id PK "Snowflake"
         VARCHAR username UK
         VARCHAR password "bcrypt"
@@ -454,7 +454,7 @@ erDiagram
         DATETIME deleted_at "सॉफ्ट डिलीट"
     }
 
-    erik_admin_role {
+    logistics_admin_role {
         BIGINT id PK "Snowflake"
         VARCHAR name
         VARCHAR slug UK
@@ -464,7 +464,7 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_permission {
+    logistics_admin_permission {
         BIGINT id PK "Snowflake"
         BIGINT parent_id FK "सेल्फ-रिलेशन"
         VARCHAR name
@@ -477,17 +477,17 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user_role {
+    logistics_admin_user_role {
         BIGINT user_id PK_FK
         BIGINT role_id PK_FK
     }
 
-    erik_admin_role_permission {
+    logistics_admin_role_permission {
         BIGINT role_id PK_FK
         BIGINT permission_id PK_FK
     }
 
-    erik_operation_log {
+    logistics_operation_log {
         BIGINT id PK "Snowflake"
         BIGINT user_id FK
         VARCHAR action
@@ -499,7 +499,7 @@ erDiagram
         DATETIME created_at
     }
 
-    erik_system_config {
+    logistics_system_config {
         BIGINT id PK "Snowflake"
         VARCHAR group
         VARCHAR key
@@ -510,12 +510,12 @@ erDiagram
         DATETIME updated_at
     }
 
-    erik_admin_user ||--o{ erik_admin_user_role : "user_id"
-    erik_admin_role ||--o{ erik_admin_user_role : "role_id"
-    erik_admin_role ||--o{ erik_admin_role_permission : "role_id"
-    erik_admin_permission ||--o{ erik_admin_role_permission : "permission_id"
-    erik_admin_user ||--o{ erik_operation_log : "user_id"
-    erik_admin_permission ||--o{ erik_admin_permission : "parent_id"
+    logistics_admin_user ||--o{ logistics_admin_user_role : "user_id"
+    logistics_admin_role ||--o{ logistics_admin_user_role : "role_id"
+    logistics_admin_role ||--o{ logistics_admin_role_permission : "role_id"
+    logistics_admin_permission ||--o{ logistics_admin_role_permission : "permission_id"
+    logistics_admin_user ||--o{ logistics_operation_log : "user_id"
+    logistics_admin_permission ||--o{ logistics_admin_permission : "parent_id"
 ```
 
 ---
@@ -667,8 +667,8 @@ flowchart TB
     end
 
     subgraph "डेटा परत"
-        MYSQL["MySQL 8.0<br/>मास्टर-स्लेव रेप्लिकेशन<br/>erik_ प्रीफ़िक्स"]
-        ES["Elasticsearch 8.x<br/>3 नोड क्लस्टर<br/>erik_ प्रीफ़िक्स"]
+        MYSQL["MySQL 8.0<br/>मास्टर-स्लेव रेप्लिकेशन<br/>logistics_ प्रीफ़िक्स"]
+        ES["Elasticsearch 8.x<br/>3 नोड क्लस्टर<br/>logistics_ प्रीफ़िक्स"]
         REDIS["Redis 7.x<br/>सेंटिनल मोड<br/>poster:captcha:*"]
     end
 

@@ -32,7 +32,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### ব্যাকএন্ড
 - PHP 8.3+, webman v2 (workerman/webman)
-- ডেটাবেস: MySQL 8.0+，টেবিল প্রিফিক্স `erik_`
+- ডেটাবেস: MySQL 8.0+，টেবিল প্রিফিক্স `logistics_`
 - প্রাইমারি কী: BIGINT নন-অটো-ইনক্রিমেন্ট，`erikwang2013/snowflake-php` দ্বারা উৎপন্ন
 - API লেয়ার ID এনক্রিপশন/ডিক্রিপশন: `erikwang2013/hashids`
 - JWT অথেনটিকেশন: `erikwang2013/jwt-webman`
@@ -181,7 +181,7 @@ Redis স্লাইডিং উইন্ডো（Lua অ্যাটমিক
 - সব নতুন তৈরি `.php` ফাইলের হেডারে কপিরাইট ঘোষণা থাকতে হবে
 
 ### ডেটাবেস
-- টেবিল প্রিফিক্স: `erik_`
+- টেবিল প্রিফিক্স: `logistics_`
 - প্রাইমারি কী `id`: BIGINT টাইপ，নন-অটো-ইনক্রিমেন্ট，snowflake দ্বারা উৎপন্ন
 - সংবেদনশীল ফিল্ড `erikwang2013/encryptable` trait দিয়ে স্বয়ংক্রিয় এনক্রিপশন/ডিক্রিপশন
 - মাইগ্রেশন ফাইল SQL ফরম্যাট ব্যবহার করে

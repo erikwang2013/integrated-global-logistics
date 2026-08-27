@@ -66,7 +66,7 @@
 
     <rect x="858" y="188" width="170" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
     <text x="943" y="210" text-anchor="middle" font-weight="bold">저장 + 캐시 기록</text>
-    <text x="943" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">erik_tracking_query</text>
+    <text x="943" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">logistics_tracking_query</text>
     <line x1="1028" y1="213" x2="1084" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
     <rect x="1088" y="196" width="60" height="34" rx="8" fill="#17A2B8"/>
     <text x="1118" y="217" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#FFFFFF">반환</text>
@@ -95,7 +95,7 @@
 
     <rect x="638" y="394" width="140" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="708" y="416" text-anchor="middle" font-weight="bold">이벤트 저장</text>
-    <text x="708" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">erik_tracking_event</text>
+    <text x="708" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">logistics_tracking_event</text>
     <line x1="778" y1="419" x2="820" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
 
     <rect x="826" y="394" width="150" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
@@ -108,9 +108,9 @@
   <g font-size="12.5" fill="#6C757D">
     <rect x="292" y="466" width="862" height="56" rx="8" fill="#F8F9FA" stroke="#DEE2E6"/>
     <text x="310" y="490" fill="#212529">재시도:</text>
-    <text x="375" y="490">erik_callback_subscription 설정 기준, HMAC + 멱등 키 + 지수 백오프 + 수동 재푸시</text>
+    <text x="375" y="490">logistics_callback_subscription 설정 기준, HMAC + 멱등 키 + 지수 백오프 + 수동 재푸시</text>
     <text x="310" y="510" fill="#212529">갱신:</text>
-    <text x="380" y="510">erik_tracking_query 최신 상태 동기화, 상세는 erik_tracking_event에 유지</text>
+    <text x="380" y="510">logistics_tracking_query 최신 상태 동기화, 상세는 logistics_tracking_event에 유지</text>
   </g>
 
   <g font-size="12.5" fill="#6C757D">

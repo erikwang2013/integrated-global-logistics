@@ -133,34 +133,34 @@ Controller::method()
 ### 3.1 ER 関係
 
 ```
-erik_admin_user ──┬── erik_admin_user_role ──┬── erik_admin_role
+logistics_admin_user ──┬── logistics_admin_user_role ──┬── logistics_admin_role
   (用户)           │    (用户-角色关联)         │     (角色)
                   │                          │
-                  │                    erik_admin_role_permission
+                  │                    logistics_admin_role_permission
                   │                     (角色-权限关联)
                   │                          │
                   │                          ▼
-                  │                    erik_admin_permission
+                  │                    logistics_admin_permission
                   │                      (权限/菜单)
                   │
                   ▼
-           erik_operation_log
+           logistics_operation_log
              (操作日志)
 
-erik_system_config (系统配置) — 独立表
+logistics_system_config (系统配置) — 独立表
 ```
 
 ### 3.2 コアテーブル構造
 
 | テーブル名 | フィールド数 | 説明 |
 |------|-------|------|
-| `erik_admin_user` | 14 | 管理ユーザー、phone/email/id_card は暗号化保存、ソフト削除対応 |
-| `erik_admin_role` | 7 | ロール、slug 一意 |
-| `erik_admin_permission` | 10 | 権限ツリー（parent_id 自己参照）、type: 1=メニュー 2=ボタン 3=API |
-| `erik_admin_user_role` | 2 | ユーザー-ロール多対多中間テーブル |
-| `erik_admin_role_permission` | 2 | ロール-権限多対多中間テーブル |
-| `erik_system_config` | 8 | キーバリュー設定、group+key 複合ユニーク |
-| `erik_operation_log` | 9 | 操作監査ログ（source ソース端含む） |
+| `logistics_admin_user` | 14 | 管理ユーザー、phone/email/id_card は暗号化保存、ソフト削除対応 |
+| `logistics_admin_role` | 7 | ロール、slug 一意 |
+| `logistics_admin_permission` | 10 | 権限ツリー（parent_id 自己参照）、type: 1=メニュー 2=ボタン 3=API |
+| `logistics_admin_user_role` | 2 | ユーザー-ロール多対多中間テーブル |
+| `logistics_admin_role_permission` | 2 | ロール-権限多対多中間テーブル |
+| `logistics_system_config` | 8 | キーバリュー設定、group+key 複合ユニーク |
+| `logistics_operation_log` | 9 | 操作監査ログ（source ソース端含む） |
 
 ### 3.3 主キー規約
 
