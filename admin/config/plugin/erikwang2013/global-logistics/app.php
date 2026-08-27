@@ -28,9 +28,6 @@ declare(strict_types=1);
  */
 
 return [
-    // webman 插件开关：false 时整份配置不加载（Config::loadFromDir 检查）
-    'enable' => true,
-
     // 可选：自定义 PSR-18 HTTP 客户端实例（null 则自动构建 Guzzle）
     'http_client' => null,
 

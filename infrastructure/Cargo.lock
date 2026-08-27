@@ -5590,10 +5590,12 @@ dependencies = [
  "ecat-middleware",
  "ecat-transport-http",
  "prometheus",
- "reqwest",
+ "prost",
  "serde",
  "serde_json",
  "tokio",
+ "tonic",
+ "tonic-build",
  "tower 0.5.3",
  "tracing",
 ]

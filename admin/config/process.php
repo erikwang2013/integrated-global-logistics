@@ -39,6 +39,19 @@ return [
             'publicPath' => public_path()
         ]
     ],
+    // 内部 gRPC（e-cat 查询网关 → PHP worker；h2c unary，仅内网监听）
+    'internal_grpc' => [
+        'handler' => app\process\InternalGrpcWorker::class,
+        'workerClass' => app\process\InternalGrpcWorker::class,
+        'listen' => 'tcp://0.0.0.0:8792',
+        'count' => 4,
+        'user' => '',
+        'group' => '',
+        'reusePort' => false,
+        'eventLoop' => '',
+        'context' => [],
+        'constructor' => [],
+    ],
     // File update detection and automatic reload
     'monitor' => [
         'handler' => app\process\Monitor::class,

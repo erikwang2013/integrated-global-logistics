@@ -4,7 +4,7 @@
   "internal_token": "lg-internal-8f3a2c9e6b1d4f7a",
   "key_prefix": "logistics:",
   "api_keys": ["demo-api-key"],
-  "workers": ["http://127.0.0.1:8787"],
+  "workers": ["http://127.0.0.1:8792"],
   "timeout_ms": 15000,
   "rate_limit": { "max_requests": 100, "window_secs": 60 },
   "cache": { "default_ttl_secs": 300 },

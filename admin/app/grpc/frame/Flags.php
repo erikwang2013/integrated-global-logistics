@@ -1,0 +1,51 @@
+<?php
+declare(strict_types=1);
+
+namespace frame;
+
+
+use exception\InvalidFrameException;
+use parse\Http2Parser;
+
+class Flags implements \IteratorAggregate, \Countable
+{
+    protected $valid_flags = [];
+    protected $flags = [];
+
+    public function __construct(int ...$valid_flags)
+    {
+        $this->valid_flags = array_combine($valid_flags, $valid_flags);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        // PHP 8.1+ 要求 IteratorAggregate::getIterator 返回 Traversable
+        return new \ArrayIterator($this->flags);
+    }
+
+    public function add($flag)
+    {
+        if (isset($this->valid_flags[$flag])) {
+            return $this->flags[$flag] = $flag;
+        }
+        $mag = sprintf("UnknownFrameError: Unknown frame type 0x%X received, length %d bytes", $flag, $this->valid_flags);
+        throw new InvalidFrameException($mag, Http2Parser::PROTOCOL_ERROR);
+    }
+
+    public function remove($flag)
+    {
+        if (isset($this->flags[$flag])) {
+            unset($this->flags[$flag]);
+        }
+    }
+
+    public function hasFlag($flag)
+    {
+        return isset($this->flags[$flag]);
+    }
+
+    public function count(): int
+    {
+        return count($this->flags);
+    }
+}

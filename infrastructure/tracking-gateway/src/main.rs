@@ -1,6 +1,6 @@
 // Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // M2 查询网关：对外 /v1（X-API-Key）→ 限流 → Redis 缓存 → 按 carrier 熔断
-// → RoundRobin 转发 PHP worker（/internal/*，X-Internal-Token）→ 写缓存返回。
+// → RoundRobin gRPC 转发 PHP worker（internal.v1.InternalService，x-internal-token）→ 写缓存返回。
 use axum::{
     Json, Router,
     extract::{Path, State},
@@ -29,10 +29,16 @@ use std::{
     error::Error,
     future::Future,
     pin::Pin,
+    str::FromStr,
     sync::{Arc, Mutex, OnceLock},
     time::Duration,
 };
+use tonic::transport::Channel;
 use tower::{Layer, Service, ServiceBuilder};
+
+pub mod pb {
+    tonic::include_proto!("internal.v1");
+}
 
 // ── 配置 ──
 
@@ -136,8 +142,12 @@ impl std::fmt::Display for UpstreamError {
 
 impl std::error::Error for UpstreamError {}
 
-impl From<reqwest::Error> for UpstreamError {
-    fn from(e: reqwest::Error) -> Self { Self(e.to_string()) }
+impl From<tonic::Status> for UpstreamError {
+    fn from(e: tonic::Status) -> Self { Self(e.to_string()) }
+}
+
+impl From<tonic::transport::Error> for UpstreamError {
+    fn from(e: tonic::transport::Error) -> Self { Self(e.to_string()) }
 }
 
 impl From<std::io::Error> for UpstreamError {
@@ -145,7 +155,7 @@ impl From<std::io::Error> for UpstreamError {
 }
 
 type BreakerInner = tower::util::ServiceFn<
-    fn(ForwardReq) -> Pin<Box<dyn Future<Output = Result<reqwest::Response, UpstreamError>> + Send>>,
+    fn(ForwardReq) -> Pin<Box<dyn Future<Output = Result<pb::QueryResponse, UpstreamError>> + Send>>,
 >;
 
 type BreakerService = CircuitBreakerService<BreakerInner>;
@@ -157,7 +167,8 @@ struct AppState {
     rate: Arc<dyn RateLimitStore>,
     resolver: Arc<dyn ServiceResolver>,
     balancer: Arc<dyn LoadBalancer>,
-    client: reqwest::Client,
+    /// worker endpoint → 复用连接的 tonic Channel（worker 列表稳定，惰性建立）
+    channels: Arc<Mutex<HashMap<String, Channel>>>,
     breakers: Arc<Breakers>,
 }
 
@@ -175,8 +186,8 @@ impl Breakers {
             .window(Duration::from_secs(cfg.breaker.window_secs))
             .half_open_probes(cfg.breaker.half_open_probes)
             .open_duration(Duration::from_secs(cfg.breaker.open_secs))
-            // HTTP 非 2xx 计入失败窗口；业务错误（200 + code!=0）不算上游故障
-            .classify(|r: &reqwest::Response| r.status().is_server_error());
+            // 传输失败（Err）计入失败窗口；业务错误（Ok + code!=0）不算上游故障
+            .classify(|r: &Result<pb::QueryResponse, UpstreamError>| r.is_err());
         Self { layer, map: Mutex::new(HashMap::new()) }
     }
 
@@ -188,25 +199,56 @@ impl Breakers {
     }
 }
 
-/// 熔断内层服务：RoundRobin 选 worker → POST /internal/tracking/query。
+/// 熔断内层服务：RoundRobin 选 worker → gRPC Query。
 /// 传输失败（超时/连接拒绝）返回 Err，由熔断器计入失败窗口。
 fn forward_worker(
     req: ForwardReq,
-) -> Pin<Box<dyn Future<Output = Result<reqwest::Response, UpstreamError>> + Send>> {
+) -> Pin<Box<dyn Future<Output = Result<pb::QueryResponse, UpstreamError>> + Send>> {
     Box::pin(async move {
         let endpoint = pick_worker(&req.state).await?;
-        let body = json!({ "carrier_code": req.carrier, "tracking_no": req.tracking_no });
-        let resp = req
-            .state
-            .client
-            .post(format!("{endpoint}/internal/tracking/query"))
-            .header("X-Internal-Token", &req.state.cfg.internal_token)
-            .json(&body)
-            .timeout(req.state.cfg.timeout())
-            .send()
-            .await?;
+        let mut client = pb::internal_service_client::InternalServiceClient::new(
+            channel_for(&req.state, &endpoint).await?,
+        );
+        let resp = client
+            .query(grpc_req(&req.state, pb::QueryRequest {
+                carrier_code: req.carrier,
+                tracking_no: req.tracking_no,
+                credential_id: String::new(),
+            }))
+            .await
+            .map_err(UpstreamError::from)?
+            .into_inner();
         Ok(resp)
     })
+}
+
+/// worker endpoint → 复用连接的 Channel。首次使用建立连接（持锁 await，
+/// 创建仅一次，后续 clone 走 Arc 共享）。
+async fn channel_for(state: &AppState, endpoint: &str) -> Result<Channel, UpstreamError> {
+    {
+        let map = state.channels.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(ch) = map.get(endpoint) {
+            return Ok(ch.clone());
+        }
+    }
+    let ch = tonic::transport::Endpoint::from_shared(endpoint.to_string())
+        .map_err(UpstreamError::from)?
+        .timeout(state.cfg.timeout())
+        .connect()
+        .await
+        .map_err(UpstreamError::from)?;
+    let mut map = state.channels.lock().unwrap_or_else(|e| e.into_inner());
+    map.entry(endpoint.to_string()).or_insert_with(|| ch.clone());
+    Ok(ch)
+}
+
+/// 统一注入共享密钥头 x-internal-token（与 PHP worker 端校验一致）
+fn grpc_req<T>(state: &AppState, msg: T) -> tonic::Request<T> {
+    let mut req = tonic::Request::new(msg);
+    if let Ok(v) = tonic::metadata::MetadataValue::from_str(&state.cfg.internal_token) {
+        req.metadata_mut().insert("x-internal-token", v);
+    }
+    req
 }
 
 async fn pick_worker(state: &AppState) -> Result<String, UpstreamError> {
@@ -423,7 +465,7 @@ async fn tracking_query(
         }
     };
 
-    match parse_worker(resp).await {
+    match parse_query(resp) {
         Ok(data) => {
             let ttl = ttl_for(&state, &carrier);
             let query_no = data.get("query_no").and_then(Value::as_str).map(str::to_string);
@@ -440,7 +482,7 @@ async fn tracking_query(
 }
 
 /// carrier_code 缺省时：查 cache:detect:{no}（短 TTL），未命中转发
-/// POST /internal/tracking/detect（不走熔断——无 carrier 维度）。
+/// gRPC Detect（不走熔断——无 carrier 维度）。
 async fn detect(state: AppState, tracking_no: String) -> Result<String, Response> {
     let cache_key = format!("{}cache:detect:{tracking_no}", state.cfg.key_prefix);
     if let Some(data) = cache_get(&state, &cache_key).await {
@@ -451,17 +493,19 @@ async fn detect(state: AppState, tracking_no: String) -> Result<String, Response
     let endpoint = pick_worker(&state).await.map_err(|_| {
         err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure")
     })?;
-    let body = json!({ "tracking_no": tracking_no });
-    let resp = state
-        .client
-        .post(format!("{endpoint}/internal/tracking/detect"))
-        .header("X-Internal-Token", &state.cfg.internal_token)
-        .json(&body)
-        .timeout(state.cfg.timeout())
-        .send()
+    let mut client = pb::internal_service_client::InternalServiceClient::new(
+        channel_for(&state, &endpoint)
+            .await
+            .map_err(|_| err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure"))?,
+    );
+    let resp = match client
+        .detect(grpc_req(&state, pb::DetectRequest { tracking_no }))
         .await
-        .map_err(|_| err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure"))?;
-    let data = parse_worker(resp).await?;
+    {
+        Ok(r) => r.into_inner(),
+        Err(_) => return Err(err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure")),
+    };
+    let data = parse_detect(resp)?;
     let carrier = data
         .get("carrier_code")
         .and_then(Value::as_str)
@@ -471,31 +515,59 @@ async fn detect(state: AppState, tracking_no: String) -> Result<String, Response
     Ok(carrier)
 }
 
-/// 解析 worker 响应：2xx + code==0 → data；否则透传 PHP 结构化错误码
-/// （code 为数值，message 不泄露内部细节）；无结构化信息才落 502。
-async fn parse_worker(resp: reqwest::Response) -> Result<Value, Response> {
-    let status = resp.status();
-    let body: Value = resp
-        .json()
-        .await
-        .map_err(|_| err_json(StatusCode::BAD_GATEWAY, 502, "invalid upstream response"))?;
-    let code = body
-        .get("code")
-        .and_then(|c| c.as_i64().or_else(|| c.as_str().and_then(|s| s.parse().ok())))
-        .unwrap_or(if status.is_success() { -1 } else { 502 });
-    if status.is_success() && code == 0 {
-        return Ok(body.get("data").cloned().unwrap_or(Value::Null));
+/// 解析 gRPC Query 响应：code==0 → 旧 HTTP 契约的 data JSON；否则透传
+/// PHP 结构化错误码（code 为数值，message 不泄露内部细节）。
+fn parse_query(resp: pb::QueryResponse) -> Result<Value, Response> {
+    if resp.code == 0 {
+        return Ok(json!({
+            "query_no": resp.query_no,
+            "carrier_code": resp.carrier_code,
+            "tracking_no": resp.tracking_no,
+            "status": resp.status,
+            "delivered_at": resp.delivered_at,
+            "estimated_delivery_at": resp.estimated_delivery_at,
+            "latest_description": resp.latest_description,
+            "raw_status": resp.raw_status,
+            "events": resp.events.iter().map(|e| json!({
+                "occurred_at": e.occurred_at,
+                "location": e.location,
+                "description": e.description,
+                "status": e.status,
+            })).collect::<Vec<_>>(),
+        }));
     }
-    let message = body
-        .get("message")
-        .and_then(Value::as_str)
-        .unwrap_or("upstream worker failure")
-        .to_string();
+    Err(worker_error(resp.code, &resp.message))
+}
+
+fn parse_detect(resp: pb::DetectResponse) -> Result<Value, Response> {
+    if resp.code == 0 {
+        return Ok(json!({
+            "carrier_code": resp.carrier_code,
+            "channel": resp.channel,
+            "confidence": resp.confidence,
+        }));
+    }
+    Err(worker_error(resp.code, &resp.message))
+}
+
+fn parse_carriers(resp: pb::CarriersResponse) -> Result<Value, Response> {
+    if resp.code == 0 {
+        return Ok(json!(resp
+            .carriers
+            .iter()
+            .map(|c| json!({ "carrier_code": c.carrier_code, "channel": c.channel }))
+            .collect::<Vec<_>>()));
+    }
+    Err(worker_error(resp.code, &resp.message))
+}
+
+/// 业务错误码 → HTTP 状态（4xx/5xx 原样映射，其余落 502）
+fn worker_error(code: i32, message: &str) -> Response {
     let http = match StatusCode::from_u16(code as u16) {
         Ok(s) if s.is_client_error() || s.is_server_error() => s,
         _ => StatusCode::BAD_GATEWAY,
     };
-    Err(err_json(http, code, message))
+    err_json(http, code as i64, message)
 }
 
 async fn tracking_detail(State(state): State<AppState>, Path(query_no): Path<String>) -> Response {
@@ -514,18 +586,18 @@ async fn carriers_list(State(state): State<AppState>) -> Response {
         Ok(e) => e,
         Err(_) => return err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure"),
     };
-    let resp = match state
-        .client
-        .get(format!("{endpoint}/internal/carriers"))
-        .header("X-Internal-Token", &state.cfg.internal_token)
-        .timeout(state.cfg.timeout())
-        .send()
-        .await
-    {
-        Ok(r) => r,
+    let mut client = match channel_for(&state, &endpoint).await {
+        Ok(ch) => pb::internal_service_client::InternalServiceClient::new(ch),
         Err(_) => return err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure"),
     };
-    match parse_worker(resp).await {
+    let resp = match client
+        .carriers(grpc_req(&state, pb::CarriersRequest {}))
+        .await
+    {
+        Ok(r) => r.into_inner(),
+        Err(_) => return err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure"),
+    };
+    match parse_carriers(resp) {
         Ok(data) => {
             cache_set(
                 &state,
@@ -560,10 +632,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         StaticResolver::new().add_service("workers", cfg.workers.clone())
     }));
     let balancer: Arc<dyn LoadBalancer> = Arc::new(RoundRobin::new());
-    let client = reqwest::Client::builder()
-        // 不跟随重定向：防止上游把内网地址暴露给客户端（SSRF 风格）
-        .redirect(reqwest::redirect::Policy::none())
-        .build()?;
 
     let state = AppState {
         cfg: cfg.clone(),
@@ -571,7 +639,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         rate,
         resolver,
         balancer,
-        client,
+        channels: Arc::new(Mutex::new(HashMap::new())),
         breakers: Arc::new(Breakers::new(&cfg)),
     };
 

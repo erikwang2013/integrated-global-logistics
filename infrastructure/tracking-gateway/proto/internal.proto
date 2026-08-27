@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package internal.v1;
+
+option php_namespace = "Internal\\Grpc";
+option php_metadata_namespace = "GPBMetadata\\Internal";
+
+// e-cat 查询网关 → PHP worker 池的内部契约（仅内网，共享密钥头 x-internal-token）
+// 字段与旧 HTTP/JSON 契约一一对应；code/message/error_code/error_message 语义不变
+service InternalService {
+  rpc Query(QueryRequest) returns (QueryResponse);
+  rpc Detect(DetectRequest) returns (DetectResponse);
+  rpc Carriers(CarriersRequest) returns (CarriersResponse);
+}
+
+message QueryRequest {
+  string carrier_code = 1;
+  string tracking_no = 2;
+  // 多凭证场景指定 credential_id（空串 = 使用承运商默认凭证）
+  string credential_id = 3;
+}
+
+message QueryResponse {
+  // 0 成功；400/404 参数与未注册；5001 carrier_error；500 内部错误（与对外契约一致）
+  int32 code = 1;
+  string message = 2;
+  string error_code = 3;
+  string error_message = 4;
+  string query_no = 5;
+  string carrier_code = 6;
+  string tracking_no = 7;
+  // TrackStatus 统一状态值（pending/in_transit/out_for_delivery/delivered/exception/returned/unknown）
+  string status = 8;
+  string delivered_at = 9;
+  string estimated_delivery_at = 10;
+  string latest_description = 11;
+  string raw_status = 12;
+  repeated TrackingEvent events = 13;
+}
+
+message TrackingEvent {
+  string occurred_at = 1;
+  string location = 2;
+  string description = 3;
+  string status = 4;
+}
+
+message DetectRequest {
+  string tracking_no = 1;
+}
+
+message DetectResponse {
+  int32 code = 1;
+  string message = 2;
+  string error_code = 3;
+  string error_message = 4;
+  string carrier_code = 5;
+  // domestic / international
+  string channel = 6;
+  double confidence = 7;
+}
+
+message CarriersRequest {}
+
+message CarrierEntry {
+  string carrier_code = 1;
+  string channel = 2;
+}
+
+message CarriersResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated CarrierEntry carriers = 3;
+}
