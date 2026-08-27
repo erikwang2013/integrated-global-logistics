@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace proto;
 
 use app\common\SnowflakeService;
+use app\model\CallbackSubscription;
 use app\model\Carrier;
 use app\model\CarrierCredential;
 use app\model\TrackingQuery;
@@ -26,6 +27,8 @@ use Internal\Grpc\DetectRequest;
 use Internal\Grpc\DetectResponse;
 use Internal\Grpc\QueryRequest;
 use Internal\Grpc\QueryResponse;
+use Internal\Grpc\SubscribeRequest;
+use Internal\Grpc\SubscribeResponse;
 use Internal\Grpc\TrackingEvent;
 use Throwable;
 
@@ -52,19 +55,22 @@ class InternalService
             '/internal.v1.InternalService/Query',
             '/internal.v1.InternalService/Detect',
             '/internal.v1.InternalService/Carriers',
+            '/internal.v1.InternalService/Subscribe',
         ],
     ];
 
     public static $Route = [
-        '/internal.v1.InternalService/Query'    => [self::class, 'query'],
-        '/internal.v1.InternalService/Detect'   => [self::class, 'detect'],
-        '/internal.v1.InternalService/Carriers' => [self::class, 'carriers'],
+        '/internal.v1.InternalService/Query'     => [self::class, 'query'],
+        '/internal.v1.InternalService/Detect'    => [self::class, 'detect'],
+        '/internal.v1.InternalService/Carriers'  => [self::class, 'carriers'],
+        '/internal.v1.InternalService/Subscribe' => [self::class, 'subscribe'],
     ];
 
     public static $Parameter = [
-        '/internal.v1.InternalService/Query'    => QueryRequest::class,
-        '/internal.v1.InternalService/Detect'   => DetectRequest::class,
-        '/internal.v1.InternalService/Carriers' => CarriersRequest::class,
+        '/internal.v1.InternalService/Query'     => QueryRequest::class,
+        '/internal.v1.InternalService/Detect'    => DetectRequest::class,
+        '/internal.v1.InternalService/Carriers'  => CarriersRequest::class,
+        '/internal.v1.InternalService/Subscribe' => SubscribeRequest::class,
     ];
 
     public static function query(QueryRequest $request, array $headers): QueryResponse
@@ -198,6 +204,48 @@ class InternalService
                 }
             }
             return $response->setCode(0)->setMessage('ok')->setCarriers($list);
+        } catch (Throwable $e) {
+            return self::error($response, 500, 'internal error', 'INTERNAL_ERROR', $e->getMessage());
+        }
+    }
+
+    public static function subscribe(SubscribeRequest $request, array $headers): SubscribeResponse
+    {
+        $response = new SubscribeResponse();
+        try {
+            if (!self::authorized($headers)) {
+                return self::error($response, 401, 'unauthorized', 'UNAUTHORIZED', 'invalid x-internal-token');
+            }
+            $code = trim((string) $request->getCarrierCode());
+            $url = trim((string) $request->getCallbackUrl());
+            if ($code === '') {
+                return self::error($response, 400, 'carrier_code is required', 'INVALID_PARAMS', 'carrier_code is required');
+            }
+            if (strlen($url) > 500 || !filter_var($url, FILTER_VALIDATE_URL)
+                || !in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true)) {
+                return self::error($response, 400, 'invalid callback_url', 'INVALID_PARAMS', 'invalid callback_url');
+            }
+            $carrier = Carrier::where('code', $code)->where('status', 1)->first();
+            if (!$carrier) {
+                return self::error($response, 404, "carrier \"{$code}\" not found", 'CARRIER_NOT_FOUND', "carrier \"{$code}\" not found");
+            }
+
+            $eventType = trim((string) $request->getEventType());
+            $subscription = CallbackSubscription::create([
+                'id'           => SnowflakeService::generate(),
+                'carrier_id'   => $carrier->id,
+                'callback_url' => $url,
+                'secret'       => bin2hex(random_bytes(16)),
+                'event_type'   => $eventType !== '' ? $eventType : 'tracking.update',
+                'status'       => 1,
+                'max_retry'    => 3,
+            ]);
+
+            return $response
+                ->setCode(0)
+                ->setMessage('ok')
+                ->setSubscriptionId((int) $subscription->id)
+                ->setSecret($subscription->secret);
         } catch (Throwable $e) {
             return self::error($response, 500, 'internal error', 'INTERNAL_ERROR', $e->getMessage());
         }

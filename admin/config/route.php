@@ -61,6 +61,9 @@ TXT
 // API 文档（全局，无需认证）
 Route::get('/api/docs', [app\admin\controller\DocsController::class, 'index']);
 
+// 承运商 webhook 回调（全局路由、不挂中间件组，由控制器内自行校验白名单/签名）
+Route::post('/api/callback/{carrier}', [app\admin\controller\CallbackController::class, 'receive']);
+
 // ============================================================
 // 管理端路由
 // ============================================================
@@ -112,8 +115,12 @@ Route::group('/admin', function () {
     // 物流聚合 — 轨迹查询记录
     Route::get('/tracking/query', [app\admin\controller\TrackingQueryController::class, 'index']);
 
+    // 物流聚合 — 统计报表
+    Route::get('/tracking/statistics', [app\admin\controller\StatisticsController::class, 'index']);
+
     // 物流聚合 — 回调订阅
     Route::resource('/callback/subscription', app\admin\controller\CallbackSubscriptionController::class);
+    Route::post('/callback/subscription/retry/{event_id}', [app\admin\controller\CallbackSubscriptionController::class, 'retry']);
 })->middleware([
     app\middleware\AdminAuth::class,
     app\middleware\AdminPermission::class,

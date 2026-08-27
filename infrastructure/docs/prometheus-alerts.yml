@@ -1,0 +1,90 @@
+# Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+# M4 可观测性：Prometheus 告警规则（与 grafana-dashboard.json 配套）
+#
+# 指标来源（均已核实，勿臆造）：
+#   - 网关 tracking-gateway（:8080/metrics）：
+#       ecat_http_requests_total{method,path,status}      (MetricsLayer 自动)
+#       ecat_http_request_duration_seconds{method,path,status}
+#       tracking_queries_total{result}  result ∈ {ok,hit,limited,breaker,upstream}
+#     ecat-circuit-breaker 当前不导出独立熔断 gauge，故熔断用
+#     tracking_queries_total{result="breaker"}（即 503 响应）近似。
+#   - 管理后台（:8791/metrics, MetricsController.php）：
+#       open_admin_active_users / open_admin_total_users
+#       open_admin_db_up / open_admin_redis_up (1=正常, 0=故障)
+#     MetricsController 当前未输出内存 gauge，内存告警暂缺（需先补指标）。
+#
+# ── Prometheus scrape_configs 示例（加入 prometheus.yml）──
+# scrape_configs:
+#   - job_name: tracking-gateway
+#     scrape_interval: 15s
+#     static_configs:
+#       - targets: ['gateway:8080']   # compose 网络内主机名；本地部署改 127.0.0.1
+#   - job_name: open-admin
+#     scrape_interval: 15s
+#     metrics_path: /metrics
+#     static_configs:
+#       - targets: ['app:8791']
+#
+# ── Grafana 导入方法 ──
+# 1. 先在 Prometheus 配置中加入上面 scrape_configs 并重载。
+# 2. Grafana → Connections → Data sources 添加 Prometheus（设为默认，或记下 uid）。
+# 3. Dashboards → New → Import → 上传 grafana-dashboard.json。
+# 4. 导入时数据源选择处填入该 Prometheus（或把面板 datasource uid
+#    统一改为你的实例 uid；面板默认用 ${DS_PROMETHEUS} 变量占位）。
+# 5. 告警规则：Prometheus → Alerts → Rules 上传本文件（或复制 rules 内容
+#    到现有 rules 文件后重载配置）。
+
+groups:
+  - name: logistics-gateway
+    rules:
+      # 网关 5xx（含熔断 503、上游 502）占比 > 20% 持续 5m
+      - alert: Gateway5xxRatioHigh
+        expr: |
+          100 * sum(rate(ecat_http_requests_total{status=~"5.."}[5m])) by (job)
+            / clamp_min(sum(rate(ecat_http_requests_total[5m])) by (job), 1e-9) > 20
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "网关 5xx 错误率过高 ({{ $labels.job }}: {{ $value | humanize }}%)"
+          description: "tracking-gateway 近 5 分钟 5xx 占比超过 20%，上游 worker 或熔断可能异常。"
+
+      # 熔断器持续产生 503（无独立 breaker gauge，以 result="breaker" 速率近似）
+      - alert: BreakerOpenApprox
+        expr: sum(rate(tracking_queries_total{result="breaker"}[5m])) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "熔断器疑似 OPEN ({{ $value | humanize }} 503/s)"
+          description: "tracking_queries_total{result=\"breaker\"} 持续产生 503，说明存在 carrier 熔断 OPEN，请检查对应上游。"
+
+  - name: open-admin
+    rules:
+      # 管理后台数据库连接断开持续 1m
+      - alert: OpenAdminDbDown
+        expr: open_admin_db_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "管理后台数据库连接失败"
+          description: "open_admin_db_up=0 持续 1 分钟，MySQL 不可达，管理后台不可用。"
+
+      # 管理后台 Redis 连接断开持续 1m
+      - alert: OpenAdminRedisDown
+        expr: open_admin_redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "管理后台 Redis 连接失败"
+          description: "open_admin_redis_up=0 持续 1 分钟，Redis 不可达，限流/缓存受影响。"
+
+# 注：任务原定的"内存 > 90% 持续 10m"告警未实现——PHP 侧 MetricsController
+# 与网关均未注册内存 gauge 指标，无数据可查。若需要，先在
+# MetricsController.php 增加 open_admin_memory_usage_bytes 后补充规则：
+#   - alert: OpenAdminMemoryHigh
+#     expr: open_admin_memory_usage_bytes / 1048576 > 90
+#     for: 10m
+#     labels: { severity: warning }

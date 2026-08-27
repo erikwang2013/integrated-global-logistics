@@ -10,8 +10,11 @@ namespace app\admin\controller;
 use app\common\EncryptionService;
 use app\model\CallbackSubscription;
 use app\model\Carrier;
+use app\model\TrackingEvent;
 use support\Request;
 use support\Response;
+use Webman\RedisQueue\Client as QueueClient;
+use Webman\RedisQueue\Redis;
 use Webman\Validation\Validator;
 
 /**
@@ -83,7 +86,7 @@ class CallbackSubscriptionController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'carrier_id' => 'required|string',
-            'callback_url' => 'required|url|max:500',
+            'callback_url' => 'required|string|max:500',
             'secret' => 'string|max:255',
             'event_type' => 'string|max:50',
             'status' => 'in:0,1',
@@ -91,6 +94,9 @@ class CallbackSubscriptionController extends BaseController
         ]);
         if ($validator->fails()) {
             return $this->fail($validator->errors()->first(), 422);
+        }
+        if (!$this->validCallbackUrl($request->input('callback_url'))) {
+            return $this->fail('callback_url 必须为 http/https 且不超过 500 字符', 422);
         }
 
         $carrierId = $this->decodeId($request->input('carrier_id'));
@@ -151,7 +157,7 @@ class CallbackSubscriptionController extends BaseController
         }
 
         $validator = Validator::make($request->all(), [
-            'callback_url' => 'url|max:500',
+            'callback_url' => 'string|max:500',
             'secret' => 'string|max:255',
             'event_type' => 'string|max:50',
             'status' => 'in:0,1',
@@ -159,6 +165,9 @@ class CallbackSubscriptionController extends BaseController
         ]);
         if ($validator->fails()) {
             return $this->fail($validator->errors()->first(), 422);
+        }
+        if ($request->input('callback_url') !== null && !$this->validCallbackUrl($request->input('callback_url'))) {
+            return $this->fail('callback_url 必须为 http/https 且不超过 500 字符', 422);
         }
 
         foreach (['callback_url', 'event_type'] as $field) {
@@ -199,5 +208,50 @@ class CallbackSubscriptionController extends BaseController
         $subscription->delete();
 
         return $this->success([], '删除成功');
+    }
+
+    /**
+     * @Apidoc\Title("重推事件")
+     * @Apidoc\Group("回调订阅管理")
+     * @Apidoc\Method("POST")
+     * @Apidoc\Url("/admin/callback/subscription/retry/{event_id}")
+     * @Apidoc\Desc("将指定轨迹事件重新入队推送；已推送成功的订阅由消费者幂等跳过")
+     * @Apidoc\Param("event_id", type="string", require=true, desc="事件ID")
+     */
+    public function retry(Request $request, string $event_id): Response
+    {
+        $event = TrackingEvent::find($event_id);
+        if (!$event) {
+            return $this->fail('事件不存在', 404);
+        }
+
+        $carrierId = Carrier::where('code', $event->carrier_code)->value('id');
+        $subscriptions = CallbackSubscription::where('carrier_id', $carrierId)->where('status', 1)->get();
+        $count = 0;
+        foreach ($subscriptions as $sub) {
+            // 清除幂等键，避免手动重推被消费者跳过
+            Redis::del("logistics:push:{$event->id}:{$sub->id}");
+            QueueClient::send('tracking_event_push', [
+                'event_id'       => (string) $event->id,
+                'subscription_id'=> $sub->id,
+                'carrier_code'   => $event->carrier_code,
+                'tracking_no'    => $event->tracking_no,
+                'event_code'     => $event->event_code,
+                'event_desc'     => $event->event_desc,
+                'location'       => $event->location,
+                'event_time'     => (string) $event->event_time,
+            ]);
+            $count++;
+        }
+
+        return $this->success(['queued' => $count], '已重新入队');
+    }
+
+    /** callback_url 统一校验：http/https 协议白名单 + 长度 ≤500（与 gRPC Subscribe 及 Rust 侧一致） */
+    private function validCallbackUrl(mixed $url): bool
+    {
+        return is_string($url) && $url !== '' && strlen($url) <= 500
+            && filter_var($url, FILTER_VALIDATE_URL)
+            && in_array(parse_url($url, PHP_URL_SCHEME), ['http', 'https'], true);
     }
 }

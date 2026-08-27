@@ -62,7 +62,9 @@ INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `ty
 ('21000000000000091', '0', '导出Excel', 'post.admin/export/excel', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000092', '0', '导出PDF', 'post.admin/export/pdf', 3, '', '', 2, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000093', '0', '导入用户', 'post.admin/import/users', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
-('21000000000000094', '0', '文件上传', 'post.admin/upload', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42');
+('21000000000000094', '0', '文件上传', 'post.admin/upload', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
+('21000000000000104', '0', '统计报表', 'tracking-statistics', 1, 'chart', '/admin/tracking/statistics', 7, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
+('21000000000000151', '21000000000000104', '查看统计', 'get.admin/tracking/statistics', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42');
 
 DROP TABLE IF EXISTS `logistics_admin_role`;
 
@@ -129,7 +131,9 @@ INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUE
 ('10000000000000001', '21000000000000091'),
 ('10000000000000001', '21000000000000092'),
 ('10000000000000001', '21000000000000093'),
-('10000000000000001', '21000000000000094');
+('10000000000000001', '21000000000000094'),
+('10000000000000001', '21000000000000104'),
+('10000000000000001', '21000000000000151');
 
 DROP TABLE IF EXISTS `logistics_admin_user`;
 
@@ -197,6 +201,25 @@ CREATE TABLE `logistics_system_config` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_group_key` (`group`,`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
+
+DROP TABLE IF EXISTS `logistics_tracking_event`;
+
+CREATE TABLE `logistics_tracking_event` (
+  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
+  `tracking_no` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '运单号',
+  `carrier_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '承运商代码',
+  `event_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '事件代码，如 SIGNED',
+  `event_desc` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '事件描述',
+  `location` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '事件地点',
+  `event_time` datetime NOT NULL COMMENT '事件发生时间',
+  `raw_payload` text COLLATE utf8mb4_unicode_ci COMMENT '原始回调数据',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_tracking_no` (`tracking_no`),
+  KEY `idx_carrier_code` (`carrier_code`),
+  KEY `idx_created_at` (`created_at`),
+  UNIQUE KEY `uk_tracking_event` (`tracking_no`,`event_code`,`event_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物流轨迹事件表';
 
 -- -------------------------------------------
 -- 默认管理员账号 admin / admin888

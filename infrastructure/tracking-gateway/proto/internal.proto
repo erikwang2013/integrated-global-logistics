@@ -11,6 +11,7 @@ service InternalService {
   rpc Query(QueryRequest) returns (QueryResponse);
   rpc Detect(DetectRequest) returns (DetectResponse);
   rpc Carriers(CarriersRequest) returns (CarriersResponse);
+  rpc Subscribe(SubscribeRequest) returns (SubscribeResponse);
 }
 
 message QueryRequest {
@@ -71,4 +72,20 @@ message CarriersResponse {
   int32 code = 1;
   string message = 2;
   repeated CarrierEntry carriers = 3;
+}
+
+message SubscribeRequest {
+  string carrier_code = 1;
+  string callback_url = 2;
+  // 订阅事件类型（空串 = tracking.update）
+  string event_type = 3;
+}
+
+message SubscribeResponse {
+  // 0 成功；其余为业务错误（与 QueryResponse 语义一致）
+  int32 code = 1;
+  string message = 2;
+  // 订阅 ID 与回调验签密钥（code==0 时返回，HMAC 验签用）
+  int64 subscription_id = 3;
+  string secret = 4;
 }

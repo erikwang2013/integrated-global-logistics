@@ -18,7 +18,7 @@ class CallbackSubscription extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'carrier_id', 'callback_url', 'secret', 'event_type',
+        'id', 'carrier_id', 'callback_url', 'secret', 'event_type',
         'status', 'max_retry', 'last_push_at', 'last_success_at',
     ];
 

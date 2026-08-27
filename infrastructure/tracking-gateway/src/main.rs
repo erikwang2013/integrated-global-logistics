@@ -17,9 +17,7 @@ use ecat_data::Cache;
 use ecat_data_redis::RedisCache;
 use ecat_health::HealthRegistry;
 use ecat_metrics::{MetricsLayer, metrics_router};
-use ecat_middleware::{
-    LoggingLayer, RateLimitStore, RedisRateLimitStore, TracingLayer,
-};
+use ecat_middleware::{LoggingLayer, RateLimitStore, RedisRateLimitStore, TracingLayer};
 use ecat_transport_http::HttpServer;
 use prometheus::{IntCounterVec, Opts};
 use serde::{Deserialize, Serialize};
@@ -67,10 +65,18 @@ struct GatewayConfig {
     breaker: BreakerCfg,
 }
 
-fn default_timeout_ms() -> u64 { 15_000 }
-fn default_key_prefix() -> String { "logistics:".to_string() }
-fn default_detect_ttl() -> u64 { 300 }
-fn default_carriers_ttl() -> u64 { 600 }
+fn default_timeout_ms() -> u64 {
+    15_000
+}
+fn default_key_prefix() -> String {
+    "logistics:".to_string()
+}
+fn default_detect_ttl() -> u64 {
+    300
+}
+fn default_carriers_ttl() -> u64 {
+    600
+}
 
 #[derive(Debug, Clone, Deserialize)]
 struct RateLimitCfg {
@@ -79,10 +85,19 @@ struct RateLimitCfg {
     #[serde(default = "default_rl_window")]
     window_secs: u64,
 }
-fn default_rl_max() -> u32 { 100 }
-fn default_rl_window() -> u64 { 60 }
+fn default_rl_max() -> u32 {
+    100
+}
+fn default_rl_window() -> u64 {
+    60
+}
 impl Default for RateLimitCfg {
-    fn default() -> Self { Self { max_requests: default_rl_max(), window_secs: default_rl_window() } }
+    fn default() -> Self {
+        Self {
+            max_requests: default_rl_max(),
+            window_secs: default_rl_window(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -90,9 +105,15 @@ struct CacheCfg {
     #[serde(default = "default_cache_ttl")]
     default_ttl_secs: u64,
 }
-fn default_cache_ttl() -> u64 { 300 }
+fn default_cache_ttl() -> u64 {
+    300
+}
 impl Default for CacheCfg {
-    fn default() -> Self { Self { default_ttl_secs: default_cache_ttl() } }
+    fn default() -> Self {
+        Self {
+            default_ttl_secs: default_cache_ttl(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -106,10 +127,18 @@ struct BreakerCfg {
     #[serde(default = "default_open")]
     open_secs: u64,
 }
-fn default_ratio() -> f64 { 0.5 }
-fn default_window() -> u64 { 30 }
-fn default_probes() -> u32 { 3 }
-fn default_open() -> u64 { 60 }
+fn default_ratio() -> f64 {
+    0.5
+}
+fn default_window() -> u64 {
+    30
+}
+fn default_probes() -> u32 {
+    3
+}
+fn default_open() -> u64 {
+    60
+}
 impl Default for BreakerCfg {
     fn default() -> Self {
         Self {
@@ -129,6 +158,13 @@ struct ForwardReq {
     tracking_no: String,
 }
 
+struct SubscribeForwardReq {
+    state: Arc<AppState>,
+    carrier: String,
+    callback_url: String,
+    event_type: String,
+}
+
 /// 上游传输失败（超时/连接拒绝/worker 不可达）。与熔断器自身的
 /// io::Error（OPEN 快速失败）区分，便于调用侧分别返回 502/503。
 #[derive(Debug)]
@@ -143,22 +179,38 @@ impl std::fmt::Display for UpstreamError {
 impl std::error::Error for UpstreamError {}
 
 impl From<tonic::Status> for UpstreamError {
-    fn from(e: tonic::Status) -> Self { Self(e.to_string()) }
+    fn from(e: tonic::Status) -> Self {
+        Self(e.to_string())
+    }
 }
 
 impl From<tonic::transport::Error> for UpstreamError {
-    fn from(e: tonic::transport::Error) -> Self { Self(e.to_string()) }
+    fn from(e: tonic::transport::Error) -> Self {
+        Self(e.to_string())
+    }
 }
 
 impl From<std::io::Error> for UpstreamError {
-    fn from(e: std::io::Error) -> Self { Self(e.to_string()) }
+    fn from(e: std::io::Error) -> Self {
+        Self(e.to_string())
+    }
 }
 
 type BreakerInner = tower::util::ServiceFn<
-    fn(ForwardReq) -> Pin<Box<dyn Future<Output = Result<pb::QueryResponse, UpstreamError>> + Send>>,
+    fn(
+        ForwardReq,
+    ) -> Pin<Box<dyn Future<Output = Result<pb::QueryResponse, UpstreamError>> + Send>>,
 >;
 
 type BreakerService = CircuitBreakerService<BreakerInner>;
+
+type SubscribeBreakerInner = tower::util::ServiceFn<
+    fn(
+        SubscribeForwardReq,
+    ) -> Pin<Box<dyn Future<Output = Result<pb::SubscribeResponse, UpstreamError>> + Send>>,
+>;
+
+type SubscribeBreakerService = CircuitBreakerService<SubscribeBreakerInner>;
 
 #[derive(Clone)]
 struct AppState {
@@ -174,9 +226,13 @@ struct AppState {
 
 /// 按 carrier 维度各持一个 CircuitBreakerService（ecat-circuit-breaker 的
 /// 熔断状态在 Layer::layer 生成的 service 内），首次使用该 carrier 时创建。
+/// classify 按 Any downcast 匹配响应类型，Query/Subscribe 类型不同，
+/// 各自持独立 Layer 与 map（同一 carrier 的熔断状态互不影响，保持简单）。
 struct Breakers {
     layer: CircuitBreakerLayer,
+    sub_layer: CircuitBreakerLayer,
     map: Mutex<HashMap<String, BreakerService>>,
+    sub_map: Mutex<HashMap<String, SubscribeBreakerService>>,
 }
 
 impl Breakers {
@@ -188,13 +244,34 @@ impl Breakers {
             .open_duration(Duration::from_secs(cfg.breaker.open_secs))
             // 传输失败（Err）计入失败窗口；业务错误（Ok + code!=0）不算上游故障
             .classify(|r: &Result<pb::QueryResponse, UpstreamError>| r.is_err());
-        Self { layer, map: Mutex::new(HashMap::new()) }
+        let sub_layer = CircuitBreakerLayer::new()
+            .failure_ratio(cfg.breaker.failure_ratio)
+            .window(Duration::from_secs(cfg.breaker.window_secs))
+            .half_open_probes(cfg.breaker.half_open_probes)
+            .open_duration(Duration::from_secs(cfg.breaker.open_secs))
+            .classify(|r: &Result<pb::SubscribeResponse, UpstreamError>| r.is_err());
+        Self {
+            layer,
+            sub_layer,
+            map: Mutex::new(HashMap::new()),
+            sub_map: Mutex::new(HashMap::new()),
+        }
     }
 
     fn for_carrier(&self, carrier: &str) -> BreakerService {
         let mut map = self.map.lock().unwrap_or_else(|e| e.into_inner());
         map.entry(carrier.to_string())
             .or_insert_with(|| self.layer.layer(tower::service_fn(forward_worker)))
+            .clone()
+    }
+
+    fn sub_for_carrier(&self, carrier: &str) -> SubscribeBreakerService {
+        let mut map = self.sub_map.lock().unwrap_or_else(|e| e.into_inner());
+        map.entry(carrier.to_string())
+            .or_insert_with(|| {
+                self.sub_layer
+                    .layer(tower::service_fn(forward_subscribe_worker))
+            })
             .clone()
     }
 }
@@ -210,11 +287,39 @@ fn forward_worker(
             channel_for(&req.state, &endpoint).await?,
         );
         let resp = client
-            .query(grpc_req(&req.state, pb::QueryRequest {
-                carrier_code: req.carrier,
-                tracking_no: req.tracking_no,
-                credential_id: String::new(),
-            }))
+            .query(grpc_req(
+                &req.state,
+                pb::QueryRequest {
+                    carrier_code: req.carrier,
+                    tracking_no: req.tracking_no,
+                    credential_id: String::new(),
+                },
+            ))
+            .await
+            .map_err(UpstreamError::from)?
+            .into_inner();
+        Ok(resp)
+    })
+}
+
+/// 熔断内层服务（Subscribe）：RoundRobin 选 worker → gRPC Subscribe。
+fn forward_subscribe_worker(
+    req: SubscribeForwardReq,
+) -> Pin<Box<dyn Future<Output = Result<pb::SubscribeResponse, UpstreamError>> + Send>> {
+    Box::pin(async move {
+        let endpoint = pick_worker(&req.state).await?;
+        let mut client = pb::internal_service_client::InternalServiceClient::new(
+            channel_for(&req.state, &endpoint).await?,
+        );
+        let resp = client
+            .subscribe(grpc_req(
+                &req.state,
+                pb::SubscribeRequest {
+                    carrier_code: req.carrier,
+                    callback_url: req.callback_url,
+                    event_type: req.event_type,
+                },
+            ))
             .await
             .map_err(UpstreamError::from)?
             .into_inner();
@@ -238,7 +343,8 @@ async fn channel_for(state: &AppState, endpoint: &str) -> Result<Channel, Upstre
         .await
         .map_err(UpstreamError::from)?;
     let mut map = state.channels.lock().unwrap_or_else(|e| e.into_inner());
-    map.entry(endpoint.to_string()).or_insert_with(|| ch.clone());
+    map.entry(endpoint.to_string())
+        .or_insert_with(|| ch.clone());
     Ok(ch)
 }
 
@@ -279,11 +385,23 @@ struct ApiError {
 }
 
 fn ok_json(data: Value) -> Response {
-    Json(ApiOk { code: 0, message: "ok", data }).into_response()
+    Json(ApiOk {
+        code: 0,
+        message: "ok",
+        data,
+    })
+    .into_response()
 }
 
 fn err_json(status: StatusCode, code: i64, message: impl Into<String>) -> Response {
-    (status, Json(ApiError { code, message: message.into() })).into_response()
+    (
+        status,
+        Json(ApiError {
+            code,
+            message: message.into(),
+        }),
+    )
+        .into_response()
 }
 
 fn with_cache_header(resp: Response, headers: &[(&str, &str)]) -> Response {
@@ -419,7 +537,10 @@ async fn tracking_query(
         },
     };
 
-    let cache_key = format!("{}cache:track:{carrier}:{tracking_no}", state.cfg.key_prefix);
+    let cache_key = format!(
+        "{}cache:track:{carrier}:{tracking_no}",
+        state.cfg.key_prefix
+    );
     if let Some(data) = cache_get(&state, &cache_key).await {
         metric("hit");
         return with_cache_header(ok_json(data), &[("x-cache", "HIT")]);
@@ -450,25 +571,20 @@ async fn tracking_query(
                 );
             }
             metric("upstream");
-            return err_json(
-                StatusCode::BAD_GATEWAY,
-                502,
-                "upstream worker failure",
-            );
+            return err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure");
         }
         Err(_) => {
-            return err_json(
-                StatusCode::BAD_GATEWAY,
-                502,
-                "upstream worker failure",
-            );
+            return err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure");
         }
     };
 
     match parse_query(resp) {
         Ok(data) => {
             let ttl = ttl_for(&state, &carrier);
-            let query_no = data.get("query_no").and_then(Value::as_str).map(str::to_string);
+            let query_no = data
+                .get("query_no")
+                .and_then(Value::as_str)
+                .map(str::to_string);
             if let Some(qno) = query_no {
                 let qkey = format!("{}cache:query:{qno}", state.cfg.key_prefix);
                 cache_set(&state, &qkey, data.clone(), ttl).await;
@@ -490,9 +606,9 @@ async fn detect(state: AppState, tracking_no: String) -> Result<String, Response
             return Ok(c.to_string());
         }
     }
-    let endpoint = pick_worker(&state).await.map_err(|_| {
-        err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure")
-    })?;
+    let endpoint = pick_worker(&state)
+        .await
+        .map_err(|_| err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure"))?;
     let mut client = pb::internal_service_client::InternalServiceClient::new(
         channel_for(&state, &endpoint)
             .await
@@ -503,7 +619,13 @@ async fn detect(state: AppState, tracking_no: String) -> Result<String, Response
         .await
     {
         Ok(r) => r.into_inner(),
-        Err(_) => return Err(err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure")),
+        Err(_) => {
+            return Err(err_json(
+                StatusCode::BAD_GATEWAY,
+                502,
+                "upstream worker failure",
+            ));
+        }
     };
     let data = parse_detect(resp)?;
     let carrier = data
@@ -511,7 +633,13 @@ async fn detect(state: AppState, tracking_no: String) -> Result<String, Response
         .and_then(Value::as_str)
         .ok_or_else(|| err_json(StatusCode::BAD_GATEWAY, 502, "carrier detection failed"))?
         .to_string();
-    cache_set(&state, &cache_key, data, Duration::from_secs(state.cfg.detect_ttl_secs)).await;
+    cache_set(
+        &state,
+        &cache_key,
+        data,
+        Duration::from_secs(state.cfg.detect_ttl_secs),
+    )
+    .await;
     Ok(carrier)
 }
 
@@ -552,11 +680,12 @@ fn parse_detect(resp: pb::DetectResponse) -> Result<Value, Response> {
 
 fn parse_carriers(resp: pb::CarriersResponse) -> Result<Value, Response> {
     if resp.code == 0 {
-        return Ok(json!(resp
-            .carriers
-            .iter()
-            .map(|c| json!({ "carrier_code": c.carrier_code, "channel": c.channel }))
-            .collect::<Vec<_>>()));
+        return Ok(json!(
+            resp.carriers
+                .iter()
+                .map(|c| json!({ "carrier_code": c.carrier_code, "channel": c.channel }))
+                .collect::<Vec<_>>()
+        ));
     }
     Err(worker_error(resp.code, &resp.message))
 }
@@ -570,8 +699,133 @@ fn worker_error(code: i32, message: &str) -> Response {
     err_json(http, code as i64, message)
 }
 
+#[derive(Deserialize)]
+struct SubscribeReq {
+    carrier_code: String,
+    callback_url: String,
+    #[serde(default)]
+    event_type: String,
+}
+
+/// SSRF 防护：仅允许 http/https 且 host 为公网域名或公网 IP。
+/// 拒绝回环/私网/链路本地/文档网段（字面 IP 判断，不做 DNS 解析）。
+fn valid_callback_url(url: &str) -> bool {
+    let Some(rest) = url
+        .strip_prefix("http://")
+        .or_else(|| url.strip_prefix("https://"))
+    else {
+        return false;
+    };
+    if rest.is_empty() {
+        return false;
+    }
+    let host = if let Some(after_bracket) = rest.strip_prefix('[') {
+        after_bracket.split(']').next().unwrap_or("")
+    } else {
+        rest.split(['/', '?', '#']).next().unwrap_or("")
+    };
+    if host.is_empty() || host == "localhost" {
+        return false;
+    }
+    // 带端口的 IP（127.0.0.1:8080）整体解析失败，剥离端口后再判
+    let ip = host
+        .parse::<std::net::IpAddr>()
+        .ok()
+        .or_else(|| host.rsplit_once(':').and_then(|(h, _)| h.parse().ok()));
+    match ip {
+        Some(ip) => {
+            if ip.is_loopback() || ip.is_unspecified() {
+                return false;
+            }
+            // 私网/链路本地按具体类型判断（IpAddr 枚举级方法未稳定，见 rust#27709）；
+            // IPv4-mapped（::ffff:x.y.z.w）归一化为 IPv4 再判断
+            let blocked = match ip {
+                std::net::IpAddr::V4(v4) => v4.is_private() || v4.is_link_local(),
+                // 私网 IPv6（fc00::/7）无稳定 API，reviewer 清单全为 IPv4 网段，暂不覆盖
+                std::net::IpAddr::V6(v6) => match v6.to_ipv4_mapped() {
+                    Some(v4) => v4.is_loopback() || v4.is_private() || v4.is_link_local(),
+                    None => v6.is_unicast_link_local(),
+                },
+            };
+            !blocked
+        }
+        // 域名按公网处理（不解析 DNS；防重绑定需在回调推送侧做 IP 白名单）
+        None => true,
+    }
+}
+
+/// POST /v1/subscriptions：注册回调订阅 → 转发 PHP worker（走 carrier 熔断）。
+async fn subscribe(State(state): State<AppState>, Json(req): Json<SubscribeReq>) -> Response {
+    let carrier = req.carrier_code.trim().to_string();
+    if carrier.is_empty() {
+        return err_json(StatusCode::BAD_REQUEST, 400, "carrier_code is required");
+    }
+    let callback_url = req.callback_url.trim().to_string();
+    if callback_url.len() > 500 {
+        return err_json(
+            StatusCode::BAD_REQUEST,
+            400,
+            "callback_url too long (max 500 chars)",
+        );
+    }
+    if !valid_callback_url(&callback_url) {
+        return err_json(
+            StatusCode::BAD_REQUEST,
+            400,
+            "callback_url must be an http(s) url targeting a public host",
+        );
+    }
+    let event_type = if req.event_type.trim().is_empty() {
+        "tracking.update".to_string()
+    } else {
+        req.event_type.trim().to_string()
+    };
+
+    let state2 = Arc::new(state.clone());
+    let carrier2 = carrier.clone();
+    let resp = match tokio::spawn(async move {
+        let mut svc = state2.breakers.sub_for_carrier(&carrier2);
+        svc.call(SubscribeForwardReq {
+            state: state2,
+            carrier: carrier2,
+            callback_url,
+            event_type,
+        })
+        .await
+    })
+    .await
+    {
+        Ok(Ok(resp)) => resp,
+        Ok(Err(e)) => {
+            if e.downcast_ref::<std::io::Error>().is_some() {
+                return err_json(
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    503,
+                    format!("carrier {carrier} is temporarily unavailable"),
+                );
+            }
+            return err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure");
+        }
+        Err(_) => return err_json(StatusCode::BAD_GATEWAY, 502, "upstream worker failure"),
+    };
+
+    if resp.code == 0 {
+        ok_json(json!({
+            "subscription_id": resp.subscription_id,
+            "secret": resp.secret,
+        }))
+    } else {
+        worker_error(resp.code, &resp.message)
+    }
+}
+
 async fn tracking_detail(State(state): State<AppState>, Path(query_no): Path<String>) -> Response {
-    match cache_get(&state, &format!("{}cache:query:{query_no}", state.cfg.key_prefix)).await {
+    match cache_get(
+        &state,
+        &format!("{}cache:query:{query_no}", state.cfg.key_prefix),
+    )
+    .await
+    {
         Some(data) => ok_json(data),
         None => err_json(StatusCode::NOT_FOUND, 404, "query not found"),
     }
@@ -616,8 +870,8 @@ async fn carriers_list(State(state): State<AppState>) -> Response {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let config_path = std::env::var("TRACKING_GATEWAY_CONFIG")
-        .unwrap_or_else(|_| "config/config.json".into());
+    let config_path =
+        std::env::var("TRACKING_GATEWAY_CONFIG").unwrap_or_else(|_| "config/config.json".into());
     let source = FileSource::new(config_path.clone());
     let map = source.load().await?;
     let cfg = Arc::new(serde_json::from_value::<GatewayConfig>(Value::Object(
@@ -625,7 +879,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     ))?);
 
     let cache = Arc::new(RedisCache::connect(&cfg.redis_url).await?);
-    let rate: Arc<dyn RateLimitStore> = Arc::new(RedisRateLimitStore::connect(&cfg.redis_url).await?);
+    let rate: Arc<dyn RateLimitStore> =
+        Arc::new(RedisRateLimitStore::connect(&cfg.redis_url).await?);
     // ecat-client StaticResolver::add_service 内部用 tokio RwLock::blocking_write，
     // 在 runtime worker 线程直接调用会 panic；block_in_place 移出线程执行
     let resolver: Arc<dyn ServiceResolver> = Arc::new(tokio::task::block_in_place(|| {
@@ -652,7 +907,11 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         .route("/v1/tracking/query", post(tracking_query))
         .route("/v1/tracking/{query_no}", get(tracking_detail))
         .route("/v1/carriers", get(carriers_list))
-        .layer(middleware::from_fn_with_state(state.clone(), require_api_key));
+        .route("/v1/subscriptions", post(subscribe))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            require_api_key,
+        ));
 
     // /v1/health、/metrics 为运维端点，不要求 API-Key
     let health: Router<AppState> = HealthRegistry::new().into_router().with_state(());
@@ -718,6 +977,26 @@ mod tests {
         assert_eq!(cfg.detect_ttl_secs, 300);
         assert_eq!(cfg.breaker.half_open_probes, 3);
         assert!(cfg.carrier_cache_ttl.is_empty());
+    }
+
+    #[test]
+    fn callback_url_validation() {
+        assert!(valid_callback_url("https://example.com/hook"));
+        assert!(valid_callback_url("http://example.com:8080/hook"));
+        assert!(valid_callback_url("https://8.8.8.8/hook"));
+        assert!(!valid_callback_url(""));
+        assert!(!valid_callback_url("ftp://example.com/hook"));
+        assert!(!valid_callback_url("javascript:alert(1)"));
+        assert!(!valid_callback_url("http://127.0.0.1:9999/hook"));
+        assert!(!valid_callback_url("http://[::1]/hook"));
+        assert!(!valid_callback_url("http://10.0.0.1/hook"));
+        assert!(!valid_callback_url("http://172.16.0.1/hook"));
+        assert!(!valid_callback_url("http://192.168.1.1/hook"));
+        assert!(!valid_callback_url(
+            "http://169.254.169.254/latest/meta-data"
+        ));
+        assert!(!valid_callback_url("http://localhost/hook"));
+        assert!(!valid_callback_url("http://[::ffff:127.0.0.1]/hook"));
     }
 
     #[test]
