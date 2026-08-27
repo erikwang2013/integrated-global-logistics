@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="24" font-weight="bold" fill="#1F4E79">물류 통합 플랫폼 (Integrated Global Logistics)</text>
+  <text x="600" y="78" text-anchor="middle" font-size="15" fill="#212529">관리 콘솔 · 고빈도 게이트웨이 · 209개 운송사 통합 파사드 — 하나의 진입점으로 세계 조회</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">admin 관리 콘솔</text>
+    <text x="220" y="196" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#2E86DE">PHP webman v2 상주 프로세스 + Flutter 관리</text>
+    <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC 권한 · JWT 인증 · 운영 감사</text>
+    <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">운송사 프로필 / 키 암호화 관리</text>
+    <text x="220" y="296" text-anchor="middle" font-size="13" fill="#212529">조회 기록 / 통계 리포트 / 콜백 구독</text>
+    <text x="220" y="338" text-anchor="middle" font-size="13" fill="#6C757D">18계층 심층 방어 · Excel/PDF 내보내기</text>
+    <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis 캐시 · Elasticsearch 검색</text>
+    <text x="220" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">관리면과 PHP worker 풀 담당</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFFFFF">tracking-gateway 고빈도 게이트웨이</text>
+    <text x="600" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">Rust e-cat 프레임워크 상주 프로세스</text>
+    <text x="600" y="232" text-anchor="middle" font-size="13.5" fill="#212529">캐시 히트 시 즉시 반환 (X-Cache: HIT)</text>
+    <text x="600" y="264" text-anchor="middle" font-size="13.5" fill="#212529">API-Key 인증 · 키별 속도 제한</text>
+    <text x="600" y="296" text-anchor="middle" font-size="13.5" fill="#212529">운송사별 서킷 브레이커 (반개 탐지)</text>
+    <text x="600" y="328" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin worker 풀 로드 밸런싱</text>
+    <text x="600" y="368" text-anchor="middle" font-size="13" fill="#6C757D">/metrics Prometheus · /health 헬스 체크</text>
+    <text x="600" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">고빈도만 담당, 운송사 프로토콜 무지</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFFFFF">global-logistics 통합 파사드</text>
+    <text x="980" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">209개 운송사 PHP 어댑터</text>
+    <text x="980" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track 단일 진입점 자동 식별</text>
+    <text x="980" y="264" text-anchor="middle" font-size="13.5" fill="#212529">국내 45개 + 국제 164개</text>
+    <text x="980" y="296" text-anchor="middle" font-size="13.5" fill="#212529">운송장 번호 규칙 187개 (순서 민감)</text>
+    <text x="980" y="328" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus 7가지 통합 상태 시맨틱</text>
+    <text x="980" y="368" text-anchor="middle" font-size="13" fill="#6C757D">PSR-18 · OAuth2 · 실패 시 자동 재시도</text>
+    <text x="980" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">테스트 1663개 / 단언 6662개 전부 통과</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="16" font-weight="bold" fill="#FFFFFF">핵심 지표</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">209개</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB">연결된 운송사</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA">국내 + 국제 채널</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">187개</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB">운송장 번호 자동 식별 규칙</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">7가지</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA">통합 상태 시맨틱 TrackStatus</text>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="24.0" font-weight="bold" fill="#1F4E79">लॉजिस्टिक्स एग्रीगेशन प्लेटफ़ॉर्म (Integrated Global Logistics)</text>
+  <text x="600" y="78" text-anchor="middle" font-size="15.0" fill="#212529">एडमिन पैनल · हाई-फ़्रीक्वेंसी गेटवे · 209 कैरियर्स का एकीकृत फ़ेसड — एक एंट्री से पूरी दुनिया</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="20.0" font-weight="bold" fill="#FFFFFF">एडमिन पैनल</text>
+    <text x="220" y="196" text-anchor="middle" font-size="13.7" font-weight="bold" fill="#2E86DE">PHP webman v2 रेज़िडेंट प्रोसेस + Flutter पैनल</text>
+    <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC · JWT प्रमाणीकरण · ऑडिट</text>
+    <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">कैरियर रजिस्ट्री / एन्क्रिप्टेड कुंजियाँ</text>
+    <text x="220" y="296" text-anchor="middle" font-size="13.5" fill="#212529">क्वेरी लॉग / रिपोर्ट / कॉलबैक सब्सक्रिप्शन</text>
+    <text x="220" y="338" text-anchor="middle" font-size="13.0" fill="#6C757D">18-परत डीप डिफेंस · Excel/PDF निर्यात</text>
+    <text x="220" y="368" text-anchor="middle" font-size="13.0" fill="#6C757D">Redis कैश · Elasticsearch खोज</text>
+    <text x="220" y="404" text-anchor="middle" font-size="13.0" fill="#17A2B8">एडमिन + PHP वर्कर पूल</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="16.1" font-weight="bold" fill="#FFFFFF">हाई-फ़्रीक्वेंसी गेटवे tracking-gateway</text>
+    <text x="600" y="196" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#2E86DE">Rust e-cat फ्रेमवर्क रेज़िडेंट प्रोसेस</text>
+    <text x="600" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Redis कैश: तुरंत जवाब (X-Cache: HIT)</text>
+    <text x="600" y="264" text-anchor="middle" font-size="13.5" fill="#212529">API-Key प्रमाणीकरण · प्रति-कुंजी रेट लिमिट</text>
+    <text x="600" y="296" text-anchor="middle" font-size="13.5" fill="#212529">प्रति-कैरियर सर्किट ब्रेकर (half-open)</text>
+    <text x="600" y="328" text-anchor="middle" font-size="13.5" fill="#212529">वर्कर पूल में RoundRobin लोड बैलेंसिंग</text>
+    <text x="600" y="368" text-anchor="middle" font-size="13.0" fill="#6C757D">/metrics Prometheus · /health हेल्थ चेक</text>
+    <text x="600" y="404" text-anchor="middle" font-size="13.0" fill="#17A2B8">सिर्फ़ हाई-फ़्रीक्वेंसी; प्रोटोकॉल नहीं जानता</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="20.0" font-weight="bold" fill="#FFFFFF">एकीकृत फ़ेसड global-logistics</text>
+    <text x="980" y="196" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#2E86DE">209 कैरियर्स के PHP एडेप्टर</text>
+    <text x="980" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track: एक एंट्री, ऑटो-पहचान</text>
+    <text x="980" y="264" text-anchor="middle" font-size="13.5" fill="#212529">45 घरेलू + 164 अंतर्राष्ट्रीय</text>
+    <text x="980" y="296" text-anchor="middle" font-size="13.5" fill="#212529">187 ट्रैकिंग नियम (क्रम-संवेदनशील)</text>
+    <text x="980" y="328" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 एकीकृत स्थितियाँ</text>
+    <text x="980" y="368" text-anchor="middle" font-size="13.0" fill="#6C757D">PSR-18 · OAuth2 · ऑटो-रिट्राई</text>
+    <text x="980" y="404" text-anchor="middle" font-size="13.0" fill="#17A2B8">1663 टेस्ट केस / 6662 एसर्शन पास</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="16.0" font-weight="bold" fill="#FFFFFF">मुख्य मेट्रिक्स</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">209</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB" font-size="13.0">कैरियर जुड़े हुए</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA" font-size="13.0">घरेलू + अंतर्राष्ट्रीय चैनल</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">187</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB" font-size="13.0">ट्रैकिंग-नंबर पहचान नियम</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">7</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA" font-size="13.0">एकीकृत स्थितियाँ TrackStatus</text>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="21.6" font-weight="bold" fill="#1F4E79">Plataforma logística (Integrated Global Logistics)</text>
+  <text x="600" y="78" text-anchor="middle" font-size="12.3" fill="#212529">Backend de admin · pasarela de alta frecuencia · fachada unificada de 209 transportistas – una entrada para todo el mundo</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="16.4" font-weight="bold" fill="#FFFFFF">admin Backend de administración</text>
+    <text x="220" y="196" text-anchor="middle" font-size="11.6" font-weight="bold" fill="#2E86DE">Proceso residente PHP webman v2 + admin Flutter</text>
+    <text x="220" y="232" text-anchor="middle" font-size="11.1" fill="#212529">Permisos RBAC · Auth JWT · Auditoría</text>
+    <text x="220" y="264" text-anchor="middle" font-size="11.1" fill="#212529">Perfiles de transportistas / claves cifradas</text>
+    <text x="220" y="296" text-anchor="middle" font-size="11.1" fill="#212529">Historial / estadísticas / suscripciones callback</text>
+    <text x="220" y="338" text-anchor="middle" font-size="11" fill="#6C757D"><tspan x="220">18 capas de defensa en profundidad · export</tspan><tspan x="220" dy="13">Excel/PDF</tspan></text>
+    <text x="220" y="368" text-anchor="middle" font-size="11.7" fill="#6C757D">Caché Redis · búsqueda Elasticsearch</text>
+    <text x="220" y="404" text-anchor="middle" font-size="11" fill="#17A2B8">Interfaz de admin y pool de workers PHP</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="15.1" font-weight="bold" fill="#FFFFFF"><tspan x="600">tracking-gateway pasarela de alta</tspan><tspan x="600" dy="13">frecuencia</tspan></text>
+    <text x="600" y="196" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#2E86DE">Proceso residente del framework Rust e-cat</text>
+    <text x="600" y="232" text-anchor="middle" font-size="11" fill="#212529"><tspan x="600">Hit de caché Redis devuelto al instante (X-Cache:</tspan><tspan x="600" dy="13">HIT)</tspan></text>
+    <text x="600" y="264" text-anchor="middle" font-size="11.1" fill="#212529">Auth API-Key · rate-limit por clave</text>
+    <text x="600" y="296" text-anchor="middle" font-size="11.1" fill="#212529">Circuit breaker por transportista (half-open)</text>
+    <text x="600" y="328" text-anchor="middle" font-size="11.1" fill="#212529">Balanceo RoundRobin al pool de workers</text>
+    <text x="600" y="368" text-anchor="middle" font-size="11.7" fill="#6C757D">/metrics Prometheus · /health healthcheck</text>
+    <text x="600" y="404" text-anchor="middle" font-size="11" fill="#17A2B8">Solo alta frecuencia, ignora protocolos</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="15.1" font-weight="bold" fill="#FFFFFF">global-logistics fachada unificada</text>
+    <text x="980" y="196" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#2E86DE">209 adaptadores PHP de transportistas</text>
+    <text x="980" y="232" text-anchor="middle" font-size="11.1" fill="#212529">Logistics::track: una entrada, auto-detección</text>
+    <text x="980" y="264" text-anchor="middle" font-size="11.1" fill="#212529">45 nacional + 164 internacional</text>
+    <text x="980" y="296" text-anchor="middle" font-size="11.1" fill="#212529">187 reglas de números (sensibles al orden)</text>
+    <text x="980" y="328" text-anchor="middle" font-size="11.1" fill="#212529">TrackStatus: 7 semánticas de estado unificadas</text>
+    <text x="980" y="368" text-anchor="middle" font-size="11" fill="#6C757D">PSR-18 · OAuth2 · reintento automático</text>
+    <text x="980" y="404" text-anchor="middle" font-size="11" fill="#17A2B8">1663 tests / 6662 aserciones en verde</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="13.1" font-weight="bold" fill="#FFFFFF">Métricas clave</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">209</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB">transportistas integrados</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA">canales nacional + internacional</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">187</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB">reglas de números de seguimiento</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">7</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA">semánticas de estado TrackStatus</text>
+  </g>
+</svg>

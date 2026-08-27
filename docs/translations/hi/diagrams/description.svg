@@ -1,0 +1,70 @@
+<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#1F4E79">परियोजना विवरण: छह मुख्य क्षमताएँ</text>
+  <text x="600" y="72" text-anchor="middle" font-size="14.0" fill="#212529">एकीकृत फ़ेसड · ऑटो-पहचान · एकीकृत स्थितियाँ · हाई-परफ़ॉर्मेंस गेटवे · रेज़िलिएंट गवर्नेंस · सुरक्षा</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">एकीकृत फ़ेसड</text>
+    <text x="220" y="186" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track: एक ही एंट्री</text>
+    <text x="220" y="214" text-anchor="middle" font-size="13.5" fill="#212529">चैनल व कैरियर की ऑटो-पहचान</text>
+    <text x="220" y="242" text-anchor="middle" font-size="13.5" fill="#212529">बिज़नेस को प्रोटोकॉल अंतर से फ़र्क नहीं</text>
+    <text x="220" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">सिग्नेचर / OAuth2 / XML / JSON / स्टेटस मैपिंग</text>
+    <text x="220" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">एक डेटा मॉडल, एक इंटीग्रेशन</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">ऑटो-पहचान</text>
+    <text x="600" y="186" text-anchor="middle" font-size="13.5" fill="#212529">187 regex नियम चैनल व कैरियर पहचानते हैं</text>
+    <text x="600" y="214" text-anchor="middle" font-size="13.5" fill="#212529">क्रम-संवेदनशील; घरेलू को प्राथमिकता</text>
+    <text x="600" y="242" text-anchor="middle" font-size="13.5" fill="#212529">जैसे STO (77) 13-अंकीय नियम से पहले</text>
+    <text x="600" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">स्पष्ट चैनल: domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">न पहचानने पर प्राथमिकता फ़ॉलबैक</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">एकीकृत स्थितियाँ</text>
+    <text x="980" y="186" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 स्थितियाँ</text>
+    <text x="980" y="214" text-anchor="middle" font-size="12.5" fill="#212529">पिकअप प्रतीक्षा → ट्रांज़िट → डिलीवरी में → डिलीवर्ड</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">असामान्य: EXCEPTION · वापसी: RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">न पहचाना गया: UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">सभी मूल स्टेटस मैप होकर एक रूप देते हैं</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">हाई-परफ़ॉर्मेंस गेटवे</text>
+    <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Rust e-cat रेज़िडेंट, कम लेटेंसी</text>
+    <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">कैश हिट पर सीधा जवाब, PHP में नहीं</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">स्टेटलेस वर्कर, हॉरिज़ॉन्टल स्केलिंग</text>
+    <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">छोटा इंटरनल कॉन्ट्रैक्ट: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="11.0" fill="#17A2B8">क्रॉस-लैंग्वेज कपलिंग नियंत्रित; क्रेडेंशियल गेटवे से बाहर</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">रेज़िलिएंट गवर्नेंस</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Redis कैश (TTL 5–60 मिनट)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">API-Key/IP रेट लिमिट (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">प्रति-कैरियर सर्किट ब्रेकर (503)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin लोड बैलेंसिंग</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">RetryingClient: 2 ऑटो-रिट्राई</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">सुरक्षा और अनुपालन</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">क्रेडेंशियल Encryptable से एन्क्रिप्टेड</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">कॉलबैक HMAC सिग्नेचर जाँच</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">एंड-टू-एंड ऑपरेशन ऑडिट</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18-परत डिफेंस · ज़ीरो हार्डकोडेड कुंजियाँ</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">इंटरनल API: इंट्रानेट + शेयर्ड कुंजी हेडर</text>
+  </g>
+</svg>

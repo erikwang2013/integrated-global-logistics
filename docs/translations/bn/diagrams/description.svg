@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="20" font-weight="bold" fill="#1F4E79">প্রকল্প ব্যাখ্যা: ছয়টি মূল ক্ষমতা</text>
+  <text x="600" y="72" text-anchor="middle" font-size="12" fill="#212529">ইউনিফাইড ফেসেড · স্বয়ংক্রিয় শনাক্তকরণ · ইউনিফাইড স্ট্যাটাস · হাই-পারফরম্যান্স গেটওয়ে · ইলাস্টিক গভর্নেন্স · সিকিউরিটি কমপ্লায়েন্স</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">ইউনিফাইড ফেসেড</text>
+    <text x="220" y="186" text-anchor="middle" font-size="12.5" fill="#212529">Logistics::track এক প্রবেশপথ</text>
+    <text x="220" y="214" text-anchor="middle" font-size="11.5" fill="#212529">চ্যানেল ও ক্যারিয়ার স্বয়ংক্রিয় শনাক্ত</text>
+    <text x="220" y="242" text-anchor="middle" font-size="11.5" fill="#212529">ব্যবসা পক্ষকে প্রোটোকল পার্থক্য নিয়ে ভাবতে হয় না</text>
+    <text x="220" y="278" text-anchor="middle" font-size="11.5" fill="#6C757D">সিগনেচার / OAuth2 / XML / JSON / স্ট্যাটাস ম্যাপিং</text>
+    <text x="220" y="308" text-anchor="middle" font-size="11.5" fill="#17A2B8">একটি ডেটা মডেল, এক রকম ইন্টিগ্রেশন</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">স্বয়ংক্রিয় শনাক্তকরণ</text>
+    <text x="600" y="186" text-anchor="middle" font-size="11.5" fill="#212529">187টি রেজেক্স নিয়মে চ্যানেল ও ক্যারিয়ার নির্ধারণ</text>
+    <text x="600" y="214" text-anchor="middle" font-size="11.5" fill="#212529">ক্রম-সংবেদনশীল, দেশীয় নিয়মকে অগ্রাধিকার</text>
+    <text x="600" y="242" text-anchor="middle" font-size="11.5" fill="#212529">যেমন, 申通 (77 দিয়ে শুরু) খাঁটি 13-ডিজিট নিয়মের আগে মেলে</text>
+    <text x="600" y="278" text-anchor="middle" font-size="11.5" fill="#6C757D">স্পষ্ট চ্যানেল কল domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">শনাক্ত না হলে অগ্রাধিকার অনুযায়ী ফেরত</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">ইউনিফাইড স্ট্যাটাস</text>
+    <text x="980" y="186" text-anchor="middle" font-size="11.5" fill="#212529">TrackStatus 7 প্রকার সেম্যান্টিক্স</text>
+    <text x="980" y="214" text-anchor="middle" font-size="12" fill="#212529">পিকআপ অপেক্ষা → পরিবহনে → ডেলিভারিতে → গৃহীত</text>
+    <text x="980" y="242" text-anchor="middle" font-size="12.5" fill="#212529">অস্বাভাবিক EXCEPTION · ফেরত RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="11.5" fill="#6C757D">শনাক্ত না হলে UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">সব ক্যারিয়ারের কাঁচা স্ট্যাটাস ইউনিফাইড ম্যাপ, ব্যবসা স্তর শুধু এক প্রকারের সাথে কাজ করে</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">হাই-পারফরম্যান্স গেটওয়ে</text>
+    <text x="220" y="436" text-anchor="middle" font-size="11.5" fill="#212529">Rust e-cat স্থায়ী প্রসেসে কম লেটেন্সি</text>
+    <text x="220" y="464" text-anchor="middle" font-size="11.5" fill="#212529">ক্যাশ হিট মানেই ফেরত, PHP-তে যায় না</text>
+    <text x="220" y="492" text-anchor="middle" font-size="11.5" fill="#212529">ওয়ার্কার স্টেটলেস, অনুভূমিক স্কেল করা যায়</text>
+    <text x="220" y="528" text-anchor="middle" font-size="11" fill="#6C757D">অভ্যন্তরীণ কন্ট্রাক্ট সারফেস ছোট: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="11" fill="#17A2B8">ক্রস-ল্যাঙ্গুয়েজ কাপলিং নিয়ন্ত্রণযোগ্য, ক্রেডেনশিয়াল গেটওয়েতে যায় না</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">ইলাস্টিক গভর্নেন্স</text>
+    <text x="600" y="436" text-anchor="middle" font-size="12.5" fill="#212529">Redis ক্যাশ (TTL 5~60 মিনিট)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="12.5" fill="#212529">API-Key/IP অনুযায়ী রেট লিমিট (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="11.5" fill="#212529">ক্যারিয়ারভিত্তিক সার্কিট ব্রেকার (503 ফাস্ট-ফেইল)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="12.5" fill="#212529">RoundRobin লোড ব্যালেন্সিং</text>
+    <text x="600" y="558" text-anchor="middle" font-size="11.5" fill="#17A2B8">প্যাকেজের RetryingClient-এ 2টি রিট্রাই</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">সিকিউরিটি কমপ্লায়েন্স</text>
+    <text x="980" y="436" text-anchor="middle" font-size="11.5" fill="#212529">ক্রেডেনশিয়াল Encryptable এনক্রিপ্টেড সংরক্ষণ</text>
+    <text x="980" y="464" text-anchor="middle" font-size="11.5" fill="#212529">কলব্যাক HMAC সিগনেচার যাচাই</text>
+    <text x="980" y="492" text-anchor="middle" font-size="11.5" fill="#212529">অপারেশন অডিটের সম্পূর্ণ চেইন রেকর্ড</text>
+    <text x="980" y="528" text-anchor="middle" font-size="11" fill="#6C757D">18 স্তরের প্রতিরক্ষা · কী-তে শূন্য হার্ডকোড</text>
+    <text x="980" y="558" text-anchor="middle" font-size="11" fill="#17A2B8">অভ্যন্তরীণ API শুধু ইন্টারনাল নেটওয়ার্ক + শেয়ার্ড কী হেডার</text>
+  </g>
+</svg>

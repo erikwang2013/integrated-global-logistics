@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">Описание проекта: шесть ключевых возможностей</text>
+  <text x="600" y="72" text-anchor="middle" font-size="14" fill="#212529">Единый фасад · автопоиск · единый статус · быстрый шлюз · устойчивость · безопасность</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Единый фасад</text>
+    <text x="220" y="186" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track — одна точка входа</text>
+    <text x="220" y="214" text-anchor="middle" font-size="13.5" fill="#212529">Автопоиск канала и перевозчика</text>
+    <text x="220" y="242" text-anchor="middle" font-size="13.5" fill="#212529">Протоколы перевозчиков не важны</text>
+    <text x="220" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">подпись / OAuth2 / XML / JSON / маппинг</text>
+    <text x="220" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">Одна модель данных, одна форма связи</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Автопоиск</text>
+    <text x="600" y="186" text-anchor="middle" font-size="13.5" fill="#212529">187 regex-правил: канал и перевозчик</text>
+    <text x="600" y="214" text-anchor="middle" font-size="13.5" fill="#212529">Порядок важен, внутренние — первыми</text>
+    <text x="600" y="242" text-anchor="middle" font-size="13" fill="#212529">Напр.: STO с 77 раньше 13-значного</text>
+    <text x="600" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">Явный канал: domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">Не распознан — возврат по приоритету</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Единый статус</text>
+    <text x="980" y="186" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 статусов</text>
+    <text x="980" y="214" text-anchor="middle" font-size="13" fill="#212529">Забор → В пути → Доставка → Вручено</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">Исключение → EXCEPTION · возврат → RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">Не распознан → UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">Все статусы едины — один формат для бизнеса</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Быстрый шлюз</text>
+    <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Низкая задержка: процесс Rust e-cat</text>
+    <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Попадание в кэш — минуя PHP</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Worker без состояния, горизонт. рост</text>
+    <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">Малый контракт: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">Связность ограничена, ключей в шлюзе нет</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Устойчивость</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Redis-кэш (TTL 5–60 мин)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Лимит по API-Key/IP (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Размыкание цепи по перевозчику (503)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">Балансировка RoundRobin</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">RetryingClient: 2 повтора в пакете</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Безопасность</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Ключи шифруются через Encryptable</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Проверка подписи HMAC колбэков</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Сквозной аудит действий</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18 уровней защиты · без хардкода</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">Внутренние API: интранет + общий секрет</text>
+  </g>
+</svg>

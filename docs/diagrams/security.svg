@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="42" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">安全防护：分层纵深防御</text>
+
+  <!-- 第一层：网关层 -->
+  <rect x="40" y="70" width="1120" height="240" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="40" y="70" width="220" height="240" rx="8" fill="#1F4E79"/>
+  <text x="150" y="110" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFFFFF">网关层</text>
+  <text x="150" y="134" text-anchor="middle" font-size="12.5" fill="#D7E5F3">tracking-gateway（Rust）</text>
+  <text x="150" y="154" text-anchor="middle" font-size="12.5" fill="#D7E5F3">第一道防线</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="290" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="390" y="118" text-anchor="middle" font-weight="bold">API-Key 鉴权</text>
+    <text x="390" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">X-API-Key 头，key 加密存储</text>
+    <rect x="510" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="610" y="118" text-anchor="middle" font-weight="bold">Redis 限流</text>
+    <text x="610" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">按 API-Key / IP 滑动窗口</text>
+    <rect x="730" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="830" y="118" text-anchor="middle" font-weight="bold">熔断</text>
+    <text x="830" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">按承运商半开探测快速失败</text>
+    <rect x="950" y="96" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="1045" y="118" text-anchor="middle" font-weight="bold">防 SSRF</text>
+    <text x="1045" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">worker 端点白名单解析</text>
+
+    <rect x="290" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="390" y="190" text-anchor="middle" font-weight="bold">凭证隔离</text>
+    <text x="390" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">e-cat 不持凭证明文</text>
+    <rect x="510" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="610" y="190" text-anchor="middle" font-weight="bold">内部契约防护</text>
+    <text x="610" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">/internal 仅内网 + 共享密钥头</text>
+    <rect x="730" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="830" y="190" text-anchor="middle" font-weight="bold">统一错误码</text>
+    <text x="830" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">carrier_error 不泄露内部细节</text>
+    <rect x="950" y="168" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="1045" y="190" text-anchor="middle" font-weight="bold">可观测</text>
+    <text x="1045" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">/metrics · 结构化日志 · 追踪</text>
+  </g>
+
+  <!-- 第二层：应用层 -->
+  <rect x="40" y="330" width="1120" height="280" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="40" y="330" width="220" height="280" rx="8" fill="#2E86DE"/>
+  <text x="150" y="370" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFFFFF">应用层</text>
+  <text x="150" y="394" text-anchor="middle" font-size="12.5" fill="#E9F2FB">admin 管理后台（PHP）</text>
+  <text x="150" y="414" text-anchor="middle" font-size="12.5" fill="#E9F2FB">18 层纵深防御</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="290" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="378" text-anchor="middle" font-weight="bold">JWT + 黑名单</text>
+    <text x="390" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">2h access / 14d refresh</text>
+    <rect x="510" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="378" text-anchor="middle" font-weight="bold">RBAC 权限</text>
+    <text x="610" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">method.path 粒度 + 权限缓存</text>
+    <rect x="730" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="378" text-anchor="middle" font-weight="bold">操作审计</text>
+    <text x="830" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">全链路日志 + 来源端检测</text>
+    <rect x="950" y="356" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="378" text-anchor="middle" font-weight="bold">安全过滤</text>
+    <text x="1045" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">HTTP 方法限制 / CSP</text>
+
+    <rect x="290" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="450" text-anchor="middle" font-weight="bold">XSS / SQL 注入</text>
+    <text x="390" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">SecurityFilter 拦截</text>
+    <rect x="510" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="450" text-anchor="middle" font-weight="bold">CSRF</text>
+    <text x="610" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">令牌校验</text>
+    <rect x="730" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="450" text-anchor="middle" font-weight="bold">命令注入 / 路径遍历</text>
+    <text x="830" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">输入边界过滤</text>
+    <rect x="950" y="428" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="450" text-anchor="middle" font-weight="bold">Encryptable 加密</text>
+    <text x="1045" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">敏感字段密文落库 + 脱敏</text>
+
+    <rect x="290" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="522" text-anchor="middle" font-weight="bold">账号锁定</text>
+    <text x="390" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">5 次失败锁定 15 分钟</text>
+    <rect x="510" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="522" text-anchor="middle" font-weight="bold">点击验证码</text>
+    <text x="610" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">登录防爆破</text>
+    <rect x="730" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="522" text-anchor="middle" font-weight="bold">回调验签</text>
+    <text x="830" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">HMAC 签名 + 白名单路由</text>
+    <rect x="950" y="500" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="522" text-anchor="middle" font-weight="bold">密钥安全</text>
+    <text x="1045" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">环境变量注入 · 零硬编码</text>
+  </g>
+</svg>

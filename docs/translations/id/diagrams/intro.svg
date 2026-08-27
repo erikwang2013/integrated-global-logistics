@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="23" font-weight="bold" fill="#1F4E79">Platform Logistik Terpadu (Integrated Global Logistics)</text>
+  <text x="600" y="78" text-anchor="middle" font-size="13" fill="#212529">Admin backend · Gateway frekuensi tinggi · Facade terpadu 209 operator — satu pintu masuk ke seluruh dunia</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">admin backend</text>
+    <text x="220" y="196" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E86DE">Proses menetap PHP webman v2 + aplikasi manajemen Flutter</text>
+    <text x="220" y="232" text-anchor="middle" font-size="12.5" fill="#212529">Izin RBAC · Autentikasi JWT · Audit operasi</text>
+    <text x="220" y="264" text-anchor="middle" font-size="11.5" fill="#212529">Profil operator / manajemen kunci terenkripsi</text>
+    <text x="220" y="296" text-anchor="middle" font-size="11.5" fill="#212529">Catatan query / laporan statistik / langganan callback</text>
+    <text x="220" y="338" text-anchor="middle" font-size="12" fill="#6C757D">18 lapis pertahanan · Ekspor Excel/PDF</text>
+    <text x="220" y="368" text-anchor="middle" font-size="12" fill="#6C757D">Cache Redis · Pencarian Elasticsearch</text>
+    <text x="220" y="404" text-anchor="middle" font-size="11" fill="#17A2B8">Menangani sisi manajemen dan kumpulan worker PHP</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">tracking-gateway gateway frekuensi tinggi</text>
+    <text x="600" y="196" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E86DE">Proses menetap framework Rust e-cat</text>
+    <text x="600" y="232" text-anchor="middle" font-size="12.5" fill="#212529">Hit cache Redis langsung balik (X-Cache: HIT)</text>
+    <text x="600" y="264" text-anchor="middle" font-size="11.5" fill="#212529">Autentikasi API-Key · Rate limit per key</text>
+    <text x="600" y="296" text-anchor="middle" font-size="11.5" fill="#212529">Circuit breaker per operator (probe setengah terbuka)</text>
+    <text x="600" y="328" text-anchor="middle" font-size="12.5" fill="#212529">Load balancing RoundRobin ke kumpulan worker</text>
+    <text x="600" y="368" text-anchor="middle" font-size="12" fill="#6C757D">/metrics Prometheus · /health pemeriksaan kesehatan</text>
+    <text x="600" y="404" text-anchor="middle" font-size="11" fill="#17A2B8">Hanya sisi frekuensi tinggi, tidak memahami protokol operator</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="19" font-weight="bold" fill="#FFFFFF">global-logistics facade terpadu</text>
+    <text x="980" y="196" text-anchor="middle" font-size="13" font-weight="bold" fill="#2E86DE">209 adapter PHP operator</text>
+    <text x="980" y="232" text-anchor="middle" font-size="11.5" fill="#212529">Logistics::track satu pintu masuk identifikasi otomatis</text>
+    <text x="980" y="264" text-anchor="middle" font-size="12.5" fill="#212529">Domestik 45 + internasional 164</text>
+    <text x="980" y="296" text-anchor="middle" font-size="12.5" fill="#212529">187 aturan nomor resi (prioritas hit urutan)</text>
+    <text x="980" y="328" text-anchor="middle" font-size="11.5" fill="#212529">Semantik status terpadu TrackStatus 7 macam</text>
+    <text x="980" y="368" text-anchor="middle" font-size="12" fill="#6C757D">PSR-18 · OAuth2 · Retry otomatis saat gagal</text>
+    <text x="980" y="404" text-anchor="middle" font-size="12" fill="#17A2B8">1663 kasus uji / 6662 asersi semua hijau</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">Metrik utama</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">209 operator</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB" font-size="11.5">>Operator terhubung</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA" font-size="11.5">>Jalur domestik + internasional</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">187 aturan</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB" font-size="11.5">>Aturan identifikasi otomatis nomor resi</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">7 macam</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA" font-size="12">>Status terpadu TrackStatus</text>
+  </g>
+</svg>

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Projektbeschreibung: Sechs Kernfähigkeiten</text>
+  <text x="600" y="72" text-anchor="middle" font-size="11.5" fill="#212529">Einheitliche Fassade · Auto-Erkennung · Einheitlicher Status · Hochleistungs-Gateway · Resilienz · Security</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Einheitliche Fassade</text>
+    <text x="220" y="186" text-anchor="middle" font-size="12.2" fill="#212529">Logistics::track – ein Einstieg</text>
+    <text x="220" y="214" text-anchor="middle" font-size="11.1" fill="#212529">Erkennt Kanal &amp; Carrier automatisch</text>
+    <text x="220" y="242" text-anchor="middle" font-size="11.1" fill="#212529">Business muss Protokollunterschiede nicht kennen</text>
+    <text x="220" y="278" text-anchor="middle" font-size="11" fill="#6C757D">Signaturen / OAuth2 / XML / JSON / Status-Mapping</text>
+    <text x="220" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">Ein Datenmodell, eine Schnittstelle</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Auto-Erkennung</text>
+    <text x="600" y="186" text-anchor="middle" font-size="11.1" fill="#212529">187 Regex-Regeln erkennen Kanal &amp; Carrier</text>
+    <text x="600" y="214" text-anchor="middle" font-size="11.1" fill="#212529">Reihenfolgesensitiv, Inland zuerst</text>
+    <text x="600" y="242" text-anchor="middle" font-size="11.1" fill="#212529">z.B. STO ab „77“ vor reinen 13-Ziffern-Regeln</text>
+    <text x="600" y="278" text-anchor="middle" font-size="11.2" fill="#6C757D">Expliziter Kanal: domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">Fallback nach Priorität, falls unerkannt</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Einheitlicher Status</text>
+    <text x="980" y="186" text-anchor="middle" font-size="11.1" fill="#212529">TrackStatus – 7 Semantiken</text>
+    <text x="980" y="214" text-anchor="middle" font-size="11" fill="#212529">Abholung → Transport → Zustellung → Zugestellt</text>
+    <text x="980" y="242" text-anchor="middle" font-size="12.2" fill="#212529">Anomalie → EXCEPTION · Retoure → RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="11.2" fill="#6C757D">Unbekannt → UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="11" fill="#17A2B8"><tspan x="980">Rohstatus vereinheitlicht; Business nutzt eine</tspan><tspan x="980" dy="13">Semantik</tspan></text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Hochleistungs-Gateway</text>
+    <text x="220" y="436" text-anchor="middle" font-size="11.1" fill="#212529">Rust-e-cat-Daemon, niedrige Latenz</text>
+    <text x="220" y="464" text-anchor="middle" font-size="11.1" fill="#212529">Cache-Treffer ohne PHP-Umweg</text>
+    <text x="220" y="492" text-anchor="middle" font-size="11.1" fill="#212529">Stateless Worker, horizontal skalierbar</text>
+    <text x="220" y="528" text-anchor="middle" font-size="11" fill="#6C757D">Kleiner interner Contract: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="11" fill="#17A2B8"><tspan x="220">Beherrschbare Cross-Lang-Kopplung, keine</tspan><tspan x="220" dy="13">Credentials im Gateway</tspan></text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Resilienz-Governance</text>
+    <text x="600" y="436" text-anchor="middle" font-size="12.2" fill="#212529">Redis-Cache (TTL 5–60 min)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="11.1" fill="#212529">Rate-Limit je API-Key/IP (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="11.1" fill="#212529">Circuit Breaker je Carrier (503 Fast-Fail)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="11.1" fill="#212529">RoundRobin-Lastverteilung</text>
+    <text x="600" y="558" text-anchor="middle" font-size="11.2" fill="#17A2B8">RetryingClient im Paket: 2 Retries</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Security &amp; Compliance</text>
+    <text x="980" y="436" text-anchor="middle" font-size="11.1" fill="#212529">Credentials per Encryptable verschlüsselt</text>
+    <text x="980" y="464" text-anchor="middle" font-size="11.1" fill="#212529">Callback-HMAC-Signaturprüfung</text>
+    <text x="980" y="492" text-anchor="middle" font-size="11.1" fill="#212529">Audit-Trail über die ganze Kette</text>
+    <text x="980" y="528" text-anchor="middle" font-size="11" fill="#6C757D">18 Ebenen Defense-in-Depth · keine Hardcoded-Keys</text>
+    <text x="980" y="558" text-anchor="middle" font-size="11" fill="#17A2B8">Interne APIs nur intern + Shared-Secret-Header</text>
+  </g>
+</svg>

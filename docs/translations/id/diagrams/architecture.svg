@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#17A2B8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="42" text-anchor="middle" font-size="21" font-weight="bold" fill="#1F4E79">Arsitektur Proyek: Gateway e-cat + Kumpulan Worker PHP + 209 Operator</text>
+
+  <!-- 客户端 -->
+  <rect x="40" y="76" width="1120" height="72" rx="8" fill="#1F4E79"/>
+  <text x="600" y="106" text-anchor="middle" font-size="16" font-weight="bold" fill="#FFFFFF">Klien (Merchant / Pengguna C)</text>
+  <text x="600" y="130" text-anchor="middle" font-size="13" fill="#D7E5F3">POST /v1/tracking/query · GET /v1/tracking/{no} · GET /v1/carriers · POST /v1/subscriptions</text>
+  <line x1="600" y1="148" x2="600" y2="176" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="612" y="168" font-size="11" fill="#6C757D">Autentikasi API-Key</text>
+
+  <!-- e-cat 网关 -->
+  <rect x="240" y="182" width="720" height="132" rx="8" fill="#FFFFFF" stroke="#2E86DE" stroke-width="2"/>
+  <rect x="240" y="182" width="720" height="40" rx="8" fill="#2E86DE"/>
+  <rect x="240" y="212" width="720" height="10" fill="#2E86DE"/>
+  <text x="600" y="208" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">Gateway query e-cat tracking-gateway (proses menetap Rust)</text>
+  <g font-size="12.5" fill="#212529" text-anchor="middle">
+    <rect x="264" y="234" width="150" height="60" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="339" y="256" font-weight="bold" fill="#1F4E79" font-size="12">>Cache Redis</text>
+    <text x="339" y="276" font-size="11" fill="#6C757D">Hit langsung balik X-Cache: HIT</text>
+    <rect x="428" y="234" width="150" height="60" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="503" y="256" font-weight="bold" fill="#1F4E79" font-size="11.5">>Rate limit</text>
+    <text x="503" y="276" font-size="11" fill="#6C757D">Window per API-Key/IP</text>
+    <rect x="592" y="234" width="150" height="60" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="667" y="256" font-weight="bold" fill="#1F4E79" font-size="11.5">>Circuit breaker</text>
+    <text x="667" y="276" font-size="11" fill="#6C757D">Probe setengah terbuka per operator</text>
+    <rect x="756" y="234" width="180" height="60" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="846" y="256" font-weight="bold" fill="#1F4E79" font-size="11.5">>Load balancing</text>
+    <text x="846" y="276" font-size="11" fill="#6C757D">RoundRobin → kumpulan worker</text>
+  </g>
+  <line x1="600" y1="314" x2="600" y2="342" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="612" y="334" font-size="11" fill="#6C757D">POST /internal/tracking/query (hanya internal + header kunci bersama)</text>
+
+  <!-- PHP worker 池 -->
+  <rect x="240" y="348" width="720" height="110" rx="8" fill="#FFFFFF" stroke="#17A2B8" stroke-width="2"/>
+  <rect x="240" y="348" width="720" height="40" rx="8" fill="#17A2B8"/>
+  <rect x="240" y="378" width="720" height="10" fill="#17A2B8"/>
+  <text x="600" y="374" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">Kumpulan worker PHP admin (proses menetap webman, stateless, skala horizontal)</text>
+  <g font-size="12.5" fill="#212529" text-anchor="middle">
+    <rect x="264" y="400" width="210" height="44" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="369" y="420" font-weight="bold" fill="#1F4E79" font-size="12">>Facade Logistics</text>
+    <text x="369" y="436" font-size="11" fill="#6C757D">Identifikasi otomatis domestic/intl</text>
+    <rect x="490" y="400" width="220" height="44" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="600" y="420" font-weight="bold" fill="#1F4E79" font-size="11.5">>Baca kredensial</text>
+    <text x="600" y="436" font-size="11" fill="#6C757D">Penyimpanan terenkripsi Encryptable</text>
+    <rect x="726" y="400" width="210" height="44" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="831" y="420" font-weight="bold" fill="#1F4E79" font-size="11.5">>Simpan</text>
+    <text x="831" y="436" font-size="11" fill="#6C757D">erik_tracking_query JSON standar</text>
+  </g>
+  <line x1="600" y1="458" x2="600" y2="486" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="612" y="478" font-size="11" fill="#6C757D">Guzzle (RetryingClient menyertakan 2 percobaan ulang)</text>
+
+  <!-- 209 家承运商 -->
+  <rect x="300" y="492" width="600" height="60" rx="8" fill="#1F4E79"/>
+  <text x="600" y="518" text-anchor="middle" font-size="15" font-weight="bold" fill="#FFFFFF">API hulu 209 operator (45 domestik + 164 internasional)</text>
+  <text x="600" y="540" text-anchor="middle" font-size="12.5" fill="#D7E5F3">顺丰 / 中通 / 圆通 / DHL / FedEx / UPS / Pos negara S10 …</text>
+
+  <!-- 回调 -->
+  <line x1="960" y1="522" x2="1060" y2="522" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
+  <text x="1010" y="512" text-anchor="middle" font-size="11" fill="#17A2B8" font-weight="bold">Callback webhook</text>
+  <rect x="990" y="492" width="180" height="60" rx="8" fill="#FFFFFF" stroke="#17A2B8"/>
+  <text x="1080" y="518" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79">/api/callback/{carrier}</text>
+  <text x="1080" y="538" text-anchor="middle" font-size="11" fill="#6C757D">Verifikasi → simpan → push merchant via antrian</text>
+
+  <!-- 管理面 -->
+  <rect x="40" y="182" width="150" height="276" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="40" y="182" width="150" height="40" rx="8" fill="#6C757D"/>
+  <rect x="40" y="212" width="150" height="10" fill="#6C757D"/>
+  <text x="115" y="208" text-anchor="middle" font-size="12" font-weight="bold" fill="#FFFFFF">Sisi manajemen (browser)</text>
+  <g font-size="12" fill="#212529" text-anchor="middle">
+    <rect x="56" y="232" width="118" height="34" rx="8" fill="#F8F9FA" stroke="#6C757D"/>
+    <text x="115" y="253" fill="#1F4E79" font-weight="bold" font-size="11.5">>Autentikasi JWT</text>
+    <rect x="56" y="276" width="118" height="34" rx="8" fill="#F8F9FA" stroke="#6C757D"/>
+    <text x="115" y="297" fill="#1F4E79" font-weight="bold" font-size="12">>Izin RBAC</text>
+    <rect x="56" y="320" width="118" height="34" rx="8" fill="#F8F9FA" stroke="#6C757D"/>
+    <text x="115" y="341" fill="#1F4E79" font-weight="bold" font-size="11.5">>Audit operasi</text>
+    <rect x="56" y="364" width="118" height="34" rx="8" fill="#F8F9FA" stroke="#6C757D"/>
+    <text x="115" y="385" fill="#1F4E79" font-weight="bold">/admin/*</text>
+    <rect x="56" y="408" width="118" height="34" rx="8" fill="#F8F9FA" stroke="#6C757D"/>
+    <text x="115" y="429" font-size="11" fill="#6C757D">carrier / credential /</text>
+  </g>
+  <line x1="190" y1="320" x2="236" y2="320" stroke="#6C757D" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- 基础设施 -->
+  <rect x="40" y="492" width="180" height="60" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <text x="130" y="518" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79">Redis</text>
+  <text x="130" y="538" text-anchor="middle" font-size="11" fill="#6C757D">Cache · Rate limit · Antrian</text>
+  <rect x="620" y="578" width="300" height="40" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <text x="770" y="603" text-anchor="middle" font-size="13" font-weight="bold" fill="#1F4E79">/metrics（Prometheus）· /health</text>
+  <line x1="770" y1="578" x2="770" y2="556" stroke="#6C757D" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="130" y1="492" x2="130" y2="458" stroke="#6C757D" stroke-width="1.5" marker-end="url(#arrow)"/>
+</svg>

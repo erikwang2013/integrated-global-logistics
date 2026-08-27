@@ -1,0 +1,122 @@
+<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#17A2B8"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="42" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#1F4E79">Ciclo de vida: consulta e callback</text>
+
+  <!-- 泳道一：查询链路 -->
+  <rect x="30" y="70" width="1140" height="278" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="30" y="70" width="240" height="278" rx="8" fill="#1F4E79"/>
+  <text x="150" y="112" text-anchor="middle" font-size="17.0" font-weight="bold" fill="#FFFFFF">Fluxo de consulta</text>
+  <text x="150" y="136" text-anchor="middle" font-size="12.5" fill="#D7E5F3">Síncrono · cliente → e-cat → PHP</text>
+  <text x="150" y="156" text-anchor="middle" font-size="12.5" fill="#D7E5F3">→ 209 transportadoras → persistência</text>
+  <text x="150" y="196" text-anchor="middle" font-size="12.5" fill="#E9F2FB">POST /v1/tracking/query</text>
+  <text x="150" y="216" text-anchor="middle" font-size="12.5" fill="#E9F2FB">GET /v1/tracking/{no}</text>
+  <text x="150" y="266" text-anchor="middle" font-size="12.5" fill="#17A2B8" font-weight="bold">Cache: resposta imediata</text>
+  <text x="150" y="286" text-anchor="middle" font-size="12.5" fill="#17A2B8" font-weight="bold">X-Cache: HIT</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="292" y="96" width="106" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="345" y="118" text-anchor="middle" font-weight="bold" font-size="13.0">Cliente</text>
+    <text x="345" y="136" text-anchor="middle" font-size="11.0" fill="#6C757D">Comerciante / usuário</text>
+    <line x1="398" y1="121" x2="440" y2="121" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="446" y="96" width="118" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="505" y="118" text-anchor="middle" font-weight="bold" font-size="13.0">Auth API-Key</text>
+    <text x="505" y="136" text-anchor="middle" font-size="11.0" fill="#6C757D">Cabeçalho X-API-Key</text>
+    <line x1="564" y1="121" x2="606" y2="121" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="612" y="96" width="118" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="671" y="118" text-anchor="middle" font-weight="bold" font-size="12.9">Rate limit Redis</text>
+    <text x="671" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">Por chave + janela</text>
+    <line x1="730" y1="121" x2="772" y2="121" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="778" y="96" width="118" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="837" y="118" text-anchor="middle" font-weight="bold" font-size="13.0">Busca em cache</text>
+    <text x="837" y="136" text-anchor="middle" font-size="11.0" fill="#6C757D">cache:track:{c}:{no}</text>
+    <line x1="896" y1="121" x2="938" y2="121" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="944" y="96" width="112" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="1000" y="118" text-anchor="middle" font-weight="bold" font-size="13.0">Circuit breaker</text>
+    <text x="1000" y="136" text-anchor="middle" font-size="11.3" fill="#6C757D">Por transportadora</text>
+    <line x1="1056" y1="121" x2="1096" y2="121" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+
+  <g font-size="13" fill="#212529">
+    <rect x="292" y="188" width="132" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="358" y="210" text-anchor="middle" font-weight="bold" font-size="13.0">RoundRobin</text>
+    <text x="358" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">Seleciona um worker</text>
+    <line x1="424" y1="213" x2="466" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="472" y="188" width="150" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="547" y="210" text-anchor="middle" font-weight="bold" font-size="12.5">Fachada do worker PHP</text>
+    <text x="547" y="228" text-anchor="middle" font-size="11.0" fill="#6C757D">Logistics::domestic/intl</text>
+    <line x1="622" y1="213" x2="664" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="670" y="188" width="140" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="740" y="210" text-anchor="middle" font-weight="bold" font-size="13.0">209 transportadoras</text>
+    <text x="740" y="228" text-anchor="middle" font-size="11.0" fill="#6C757D">45 domésticas + 164 internacionais</text>
+    <line x1="810" y1="213" x2="852" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="858" y="188" width="170" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="943" y="210" text-anchor="middle" font-weight="bold" font-size="13.0">Persistir + gravar cache</text>
+    <text x="943" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">erik_tracking_query</text>
+    <line x1="1028" y1="213" x2="1084" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
+    <rect x="1088" y="196" width="60" height="34" rx="8" fill="#17A2B8"/>
+    <text x="1118" y="217" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#FFFFFF">Retorno</text>
+  </g>
+
+  <!-- 泳道二：回调链路 -->
+  <rect x="30" y="368" width="1140" height="242" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="30" y="368" width="240" height="242" rx="8" fill="#17A2B8"/>
+  <text x="150" y="410" text-anchor="middle" font-size="17.0" font-weight="bold" fill="#FFFFFF">Fluxo de callback</text>
+  <text x="150" y="434" text-anchor="middle" font-size="11.7" fill="#E8F8FA">Assíncrono · webhook da transportadora</text>
+  <text x="150" y="454" text-anchor="middle" font-size="11.4" fill="#E8F8FA">→ verificar assinatura → persistir → fila</text>
+  <text x="150" y="494" text-anchor="middle" font-size="12.5" fill="#E8F8FA">POST /api/callback/{carrier}</text>
+  <text x="150" y="514" text-anchor="middle" font-size="12.5" fill="#E8F8FA">Rota de allowlist, sem RBAC</text>
+  <text x="150" y="560" text-anchor="middle" font-size="12.1" fill="#FFFFFF" font-weight="bold">at-least-once + chave de idempotência</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="292" y="394" width="140" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="362" y="416" text-anchor="middle" font-weight="bold" font-size="11.0">Webhook da transportadora</text>
+    <text x="362" y="434" text-anchor="middle" font-size="11.0" fill="#6C757D">Push de status de rastreio</text>
+    <line x1="432" y1="419" x2="474" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
+
+    <rect x="480" y="394" width="110" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="535" y="416" text-anchor="middle" font-weight="bold" font-size="11.0">Verificação de assinatura</text>
+    <text x="535" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">HMAC / digest</text>
+    <line x1="590" y1="419" x2="632" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
+
+    <rect x="638" y="394" width="140" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="708" y="416" text-anchor="middle" font-weight="bold" font-size="13.0">Persistir evento</text>
+    <text x="708" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">erik_tracking_event</text>
+    <line x1="778" y1="419" x2="820" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
+
+    <rect x="826" y="394" width="150" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="901" y="416" text-anchor="middle" font-weight="bold" font-size="12.3">Fila de push assíncrono</text>
+    <text x="901" y="434" text-anchor="middle" font-size="11.0" fill="#6C757D">Consumidor de fila webman</text>
+    <line x1="976" y1="419" x2="1020" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
+    <rect x="1024" y="400" width="130" height="38" rx="8" fill="#17A2B8"/>
+    <text x="1089" y="424" text-anchor="middle" font-size="11.0" font-weight="bold" fill="#FFFFFF">Push para URL do comerciante</text>
+  </g>
+  <g font-size="12.5" fill="#6C757D">
+    <rect x="292" y="466" width="862" height="56" rx="8" fill="#F8F9FA" stroke="#DEE2E6"/>
+    <text x="310" y="490" fill="#212529" font-size="12.5">Política de retry:</text>
+    <text x="395" y="490" font-size="12.5">Conforme erik_callback_subscription: HMAC + idempotência + backoff exponencial + reenvio manual</text>
+    <text x="310" y="510" fill="#212529" font-size="12.5">Atualização:</text>
+    <text x="380" y="510" font-size="12.5">Atualiza o status em erik_tracking_query; detalhes ficam em erik_tracking_event</text>
+  </g>
+
+  <g font-size="12.5" fill="#6C757D">
+    <rect x="292" y="536" width="862" height="56" rx="8" fill="#FFFFFF" stroke="#DEE2E6"/>
+    <text x="310" y="558" fill="#212529" font-size="12.5">Nota:</text>
+    <text x="385" y="558" font-size="12.5">V1 do push fica na fila PHP: parsing e dados estão no PHP; eventos entre linguagens não compensam</text>
+    <text x="385" y="578" font-size="12.5">Se o throughput virar gargalo (&gt;10k/min), migre o consumidor para e-cat (ecat-mq); contrato externo não muda</text>
+  </g>
+</svg>

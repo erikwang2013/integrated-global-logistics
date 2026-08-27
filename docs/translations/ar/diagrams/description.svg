@@ -1,0 +1,70 @@
+<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#1F4E79">وصف المشروع: ست قدرات أساسية</text>
+  <text x="600" y="72" text-anchor="middle" font-size="14.0" fill="#212529">واجهة موحدة · تعرّف تلقائي · حالات موحدة · بوابة عالية الأداء · حوكمة مرنة · أمن وامتثال</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">واجهة موحدة</text>
+    <text x="220" y="186" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track: مدخل واحد</text>
+    <text x="220" y="214" text-anchor="middle" font-size="13.5" fill="#212529">تعرّف تلقائي للقناة والشركة</text>
+    <text x="220" y="242" text-anchor="middle" font-size="13.5" fill="#212529">الأعمال لا تهمها اختلافات البروتوكولات</text>
+    <text x="220" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">توقيع / OAuth2 / XML / JSON / تخطيط الحالات</text>
+    <text x="220" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">نموذج بيانات واحد، تكامل واحد</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">تعرّف تلقائي</text>
+    <text x="600" y="186" text-anchor="middle" font-size="13.5" fill="#212529">187 قاعدة regex تحدّد القناة والشركة</text>
+    <text x="600" y="214" text-anchor="middle" font-size="13.5" fill="#212529">حساسة للترتيب؛ المحلية أولاً</text>
+    <text x="600" y="242" text-anchor="middle" font-size="13.5" fill="#212529">مثل STO (77) قبل قواعد الـ 13 رقمًا</text>
+    <text x="600" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">قناة صريحة: domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">بديل حسب الأولوية عند عدم التعرّف</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">حالات موحدة</text>
+    <text x="980" y="186" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 حالات</text>
+    <text x="980" y="214" text-anchor="middle" font-size="13.0" fill="#212529">بانتظار الاستلام ← قيد النقل ← قيد التوصيل ← تم التسليم</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">استثناء: EXCEPTION · إرجاع: RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">غير معروف: UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">تخطيط جميع الحالات الأصلية إلى صيغة واحدة</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">بوابة عالية الأداء</text>
+    <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">عملية Rust e-cat مقيمة بزمن استجابة منخفض</text>
+    <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">ذاكرة التخزين تجيب دون المرور بـ PHP</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">عمال بلا حالة وقابلون للتوسع الأفقي</text>
+    <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">عقد داخلي صغير: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">اقتران عبر اللغات مضبوط؛ الاعتمادات خارج البوابة</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">حوكمة مرنة</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">ذاكرة Redis (TTL 5–60 دقيقة)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">تحديد معدل بـ API-Key/IP (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">قاطع دائرة لكل شركة (503)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">موازنة أحمال RoundRobin</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">RetryingClient مع محاولتين</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">الأمن والامتثال</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">اعتمادات مشفّرة بـ Encryptable</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">تحقق HMAC للاستدعاءات</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">تدقيق شامل للعمليات</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18 طبقة دفاع · صفر مفاتيح مدمجة</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">واجهات داخلية: إنترانت + مفتاح مشترك</text>
+  </g>
+</svg>

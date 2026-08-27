@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 760" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1100" height="760" fill="#F8F9FA"/>
+  <text x="550" y="44" text-anchor="middle" font-size="19.8" font-weight="bold" fill="#1F4E79">Projektstruktur (integrated-global-logistics)</text>
+
+  <!-- 根节点 -->
+  <rect x="330" y="66" width="440" height="46" rx="8" fill="#1F4E79"/>
+  <text x="550" y="95" text-anchor="middle" font-size="16" font-weight="bold" fill="#FFFFFF">integrated-global-logistics/</text>
+
+  <!-- 主干连线 -->
+  <line x1="550" y1="112" x2="550" y2="132" stroke="#1F4E79" stroke-width="2"/>
+  <line x1="250" y1="132" x2="850" y2="132" stroke="#1F4E79" stroke-width="2"/>
+  <line x1="250" y1="132" x2="250" y2="140" stroke="#1F4E79" stroke-width="2"/>
+  <line x1="550" y1="132" x2="550" y2="140" stroke="#1F4E79" stroke-width="2"/>
+  <line x1="850" y1="132" x2="850" y2="140" stroke="#1F4E79" stroke-width="2"/>
+
+  <!-- admin -->
+  <rect x="80" y="140" width="340" height="54" rx="8" fill="#2E86DE"/>
+  <text x="110" y="165" font-size="15" font-weight="bold" fill="#FFFFFF">admin/</text>
+  <text x="110" y="184" font-size="12" fill="#E9F2FB">webman-v2-Admin + PHP-Worker-Pool</text>
+  <line x1="250" y1="194" x2="250" y2="210" stroke="#2E86DE" stroke-width="1.5"/>
+  <line x1="110" y1="210" x2="390" y2="210" stroke="#2E86DE" stroke-width="1.5"/>
+  <line x1="110" y1="210" x2="110" y2="218" stroke="#2E86DE" stroke-width="1.5"/>
+  <line x1="155" y1="210" x2="155" y2="218" stroke="#2E86DE" stroke-width="1.5"/>
+  <line x1="250" y1="210" x2="250" y2="218" stroke="#2E86DE" stroke-width="1.5"/>
+  <line x1="345" y1="210" x2="345" y2="218" stroke="#2E86DE" stroke-width="1.5"/>
+  <rect x="96" y="218" width="118" height="44" rx="8" fill="#FFFFFF" stroke="#2E86DE"/>
+  <text x="155" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">app/admin/controller</text>
+  <text x="155" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Admin-Controller</text>
+  <rect x="141" y="218" width="118" height="44" rx="8" fill="#FFFFFF" stroke="#2E86DE"/>
+  <text x="200" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">app/model</text>
+  <text x="200" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Datenmodelle</text>
+  <rect x="186" y="218" width="118" height="44" rx="8" fill="#FFFFFF" stroke="#2E86DE"/>
+  <text x="245" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">app/middleware</text>
+  <text x="245" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Auth · Limit · Audit</text>
+  <rect x="231" y="218" width="118" height="44" rx="8" fill="#FFFFFF" stroke="#2E86DE"/>
+  <text x="290" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">config</text>
+  <text x="290" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Konfiguration (zh)</text>
+  <rect x="276" y="218" width="118" height="44" rx="8" fill="#FFFFFF" stroke="#2E86DE"/>
+  <text x="335" y="238" text-anchor="middle" font-size="12" font-weight="bold" fill="#1F4E79">database/</text>
+  <text x="335" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Script install.sql</text>
+
+  <!-- infrastructure -->
+  <rect x="380" y="140" width="340" height="54" rx="8" fill="#17A2B8"/>
+  <text x="410" y="165" font-size="15" font-weight="bold" fill="#FFFFFF">infrastructure/</text>
+  <text x="410" y="184" font-size="11" fill="#E8F8FA">Rust-e-cat-Mikroservice-Framework + Gateway</text>
+  <line x1="550" y1="194" x2="550" y2="210" stroke="#17A2B8" stroke-width="1.5"/>
+  <line x1="410" y1="210" x2="690" y2="210" stroke="#17A2B8" stroke-width="1.5"/>
+  <line x1="410" y1="210" x2="410" y2="218" stroke="#17A2B8" stroke-width="1.5"/>
+  <line x1="467" y1="210" x2="467" y2="218" stroke="#17A2B8" stroke-width="1.5"/>
+  <line x1="524" y1="210" x2="524" y2="218" stroke="#17A2B8" stroke-width="1.5"/>
+  <line x1="604" y1="210" x2="604" y2="218" stroke="#17A2B8" stroke-width="1.5"/>
+  <line x1="661" y1="210" x2="661" y2="218" stroke="#17A2B8" stroke-width="1.5"/>
+  <rect x="396" y="218" width="142" height="44" rx="8" fill="#FFFFFF" stroke="#17A2B8"/>
+  <text x="467" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">ecat</text>
+  <text x="467" y="254" text-anchor="middle" font-size="11" fill="#6C757D">App-Gerüst-Crate</text>
+  <rect x="410" y="218" width="142" height="44" rx="8" fill="#FFFFFF" stroke="#17A2B8"/>
+  <text x="481" y="238" text-anchor="middle" font-size="12" font-weight="bold" fill="#1F4E79">ecat-transport-http</text>
+  <text x="481" y="254" text-anchor="middle" font-size="11" fill="#6C757D">axum-HTTP</text>
+  <rect x="453" y="218" width="142" height="44" rx="8" fill="#FFFFFF" stroke="#17A2B8"/>
+  <text x="524" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">ecat-data-redis</text>
+  <text x="524" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Cache + Limit-Store</text>
+  <rect x="533" y="218" width="142" height="44" rx="8" fill="#FFFFFF" stroke="#17A2B8"/>
+  <text x="604" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">ecat-client</text>
+  <text x="604" y="254" text-anchor="middle" font-size="11" fill="#6C757D">RoundRobin-Lastverteilung</text>
+  <rect x="590" y="218" width="142" height="44" rx="8" fill="#FFFFFF" stroke="#17A2B8"/>
+  <text x="661" y="238" text-anchor="middle" font-size="12" font-weight="bold" fill="#1F4E79">tracking-gateway</text>
+  <text x="661" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Query-Gateway (WS)</text>
+
+  <!-- docs -->
+  <rect x="680" y="140" width="340" height="54" rx="8" fill="#6C757D"/>
+  <text x="710" y="165" font-size="15" font-weight="bold" fill="#FFFFFF">docs/</text>
+  <text x="710" y="184" font-size="11" fill="#F1F3F5">Plattform-Planung &amp; Diagramme</text>
+  <line x1="850" y1="194" x2="850" y2="210" stroke="#6C757D" stroke-width="1.5"/>
+  <line x1="790" y1="210" x2="910" y2="210" stroke="#6C757D" stroke-width="1.5"/>
+  <line x1="790" y1="210" x2="790" y2="218" stroke="#6C757D" stroke-width="1.5"/>
+  <line x1="910" y1="210" x2="910" y2="218" stroke="#6C757D" stroke-width="1.5"/>
+  <rect x="776" y="218" width="128" height="44" rx="8" fill="#FFFFFF" stroke="#6C757D"/>
+  <text x="840" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">diagrams/</text>
+  <text x="840" y="254" text-anchor="middle" font-size="11" fill="#6C757D">SVG-Diagramme (hier)</text>
+  <rect x="846" y="218" width="128" height="44" rx="8" fill="#FFFFFF" stroke="#6C757D"/>
+  <text x="910" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">translations/</text>
+  <text x="910" y="254" text-anchor="middle" font-size="11" fill="#6C757D">README in 12 Sprachen</text>
+
+  <!-- 底部注释 -->
+  <rect x="80" y="300" width="940" height="150" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <text x="110" y="334" font-size="12.3" font-weight="bold" fill="#1F4E79">Komponenten-Rollen</text>
+  <text x="110" y="364" font-size="11.1" fill="#212529">admin – Admin-Oberfläche &amp; PHP-Worker-Pool: Carrier-Profile, Schlüsselverschlüsselung, Query-Protokoll, Callback-Abos, RBAC</text>
+  <text x="110" y="392" font-size="11.1" fill="#212529">infrastructure – High-Performance-Ebene: e-cat-Gateway nutzt 209 PHP-Adapter, Redis-Cache/Rate-Limit/Breaker/Load-Balancing</text>
+  <text x="110" y="420" font-size="11.1" fill="#212529">docs – Planung &amp; Visualisierung: Architektur, Datenfluss, Security-Design, Basis für 12 Sprachübersetzungen</text>
+
+  <!-- 底部数据条 -->
+  <rect x="80" y="480" width="940" height="110" rx="8" fill="#1F4E79"/>
+  <text x="550" y="516" text-anchor="middle" font-size="12.3" font-weight="bold" fill="#FFFFFF">Ökosystem &amp; Qualität</text>
+  <g font-size="13" fill="#FFFFFF" text-anchor="middle">
+    <rect x="120" y="536" width="200" height="36" rx="8" fill="#2E86DE"/>
+    <text x="220" y="559" font-size="12.2" font-weight="bold">209 Carrier</text>
+    <rect x="340" y="536" width="200" height="36" rx="8" fill="#17A2B8"/>
+    <text x="440" y="559" font-size="11.1" font-weight="bold">187 Sendungsnummern-Regeln</text>
+    <rect x="560" y="536" width="200" height="36" rx="8" fill="#2E86DE"/>
+    <text x="660" y="559" font-size="12.2" font-weight="bold">1663 Tests grün</text>
+    <rect x="780" y="536" width="200" height="36" rx="8" fill="#17A2B8"/>
+    <text x="880" y="559" font-size="11.1" font-weight="bold">55+ Crates Full-Stack-Framework</text>
+  </g>
+</svg>

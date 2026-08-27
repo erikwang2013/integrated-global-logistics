@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="24" font-weight="bold" fill="#1F4E79">物流聚合平台（Integrated Global Logistics）</text>
+  <text x="600" y="78" text-anchor="middle" font-size="15" fill="#212529">管理后台 · 高频网关 · 209 家承运商统一门面 —— 一条入口查遍全球</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">admin 管理后台</text>
+    <text x="220" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">PHP webman v2 常驻进程 + Flutter 管理端</text>
+    <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC 权限 · JWT 鉴权 · 操作审计</text>
+    <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">承运商档案 / 密钥加密管理</text>
+    <text x="220" y="296" text-anchor="middle" font-size="13.5" fill="#212529">查询记录 / 统计报表 / 回调订阅</text>
+    <text x="220" y="338" text-anchor="middle" font-size="13" fill="#6C757D">18 层纵深防御 · Excel/PDF 导出</text>
+    <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis 缓存 · Elasticsearch 检索</text>
+    <text x="220" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">承载管理面与 PHP worker 池</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">tracking-gateway 高频网关</text>
+    <text x="600" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">Rust e-cat 框架常驻进程</text>
+    <text x="600" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Redis 缓存命中即返（X-Cache: HIT）</text>
+    <text x="600" y="264" text-anchor="middle" font-size="13.5" fill="#212529">API-Key 鉴权 · 按 key 限流</text>
+    <text x="600" y="296" text-anchor="middle" font-size="13.5" fill="#212529">按承运商熔断（半开探测）</text>
+    <text x="600" y="328" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin 负载均衡到 worker 池</text>
+    <text x="600" y="368" text-anchor="middle" font-size="13" fill="#6C757D">/metrics Prometheus · /health 健康检查</text>
+    <text x="600" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">只做高频面，不懂承运商协议</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">global-logistics 统一门面</text>
+    <text x="980" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">209 家承运商 PHP 适配器</text>
+    <text x="980" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track 一条入口自动识别</text>
+    <text x="980" y="264" text-anchor="middle" font-size="13.5" fill="#212529">国内 45 家 + 国际 164 家</text>
+    <text x="980" y="296" text-anchor="middle" font-size="13.5" fill="#212529">187 条单号规则（顺序敏感优先命中）</text>
+    <text x="980" y="328" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus 7 种统一状态语义</text>
+    <text x="980" y="368" text-anchor="middle" font-size="13" fill="#6C757D">PSR-18 · OAuth2 · 失败自动重试</text>
+    <text x="980" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">1663 测试用例 / 6662 断言全绿</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="16" font-weight="bold" fill="#FFFFFF">核心指标</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">209 家</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB">已接入承运商</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA">国内 + 国际通道</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">187 条</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB">单号自动识别规则</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">7 种</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA">统一状态语义 TrackStatus</text>
+  </g>
+</svg>

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">Project Overview: Six Core Capabilities</text>
+  <text x="600" y="72" text-anchor="middle" font-size="14" fill="#212529">Unified Facade · Auto Detection · Unified Status · High-Performance Gateway · Resilient Governance · Security</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Unified Facade</text>
+    <text x="220" y="186" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track single entry</text>
+    <text x="220" y="214" text-anchor="middle" font-size="13.5" fill="#212529">Auto-detects channel &amp;carrier</text>
+    <text x="220" y="242" text-anchor="middle" font-size="13" fill="#212529">No need to care about protocol differences</text>
+    <text x="220" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">signature / OAuth2 / XML / JSON / status mapping</text>
+    <text x="220" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">One data model, one integration shape</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Auto Detection</text>
+    <text x="600" y="186" text-anchor="middle" font-size="13.5" fill="#212529">187 regex rules hit channel &amp;carrier</text>
+    <text x="600" y="214" text-anchor="middle" font-size="13.5" fill="#212529">Order-sensitive; domestic rules first</text>
+    <text x="600" y="242" text-anchor="middle" font-size="13" fill="#212529">e.g. 77-prefix STO beats 13-digit rule</text>
+    <text x="600" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">Explicit channel: domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">Fallback return by priority when unknown</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Unified Status</text>
+    <text x="980" y="186" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 statuses</text>
+    <text x="980" y="214" text-anchor="middle" font-size="12.5" fill="#212529">Pickup → Transit → Delivery → Delivered</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">Exception → EXCEPTION · Returned → RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">Unrecognized → UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">Raw statuses unified — one shape for business</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">High-Performance Gateway</text>
+    <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Low-latency Rust e-cat process</text>
+    <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Cache hit returns without touching PHP</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Stateless workers scale horizontally</text>
+    <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">Small internal contract: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="12" fill="#17A2B8">Controlled coupling; no credentials to gateway</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Resilient Governance</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Redis cache (TTL 5–60 min)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Per API-Key/IP rate limiting (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Per-carrier circuit breaking (503 fast-fail)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin load balancing</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">RetryingClient: 2 built-in retries</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Security &amp;Compliance</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Credentials encrypted via Encryptable</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Callback HMAC signature verification</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Full-chain operation audit</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18-layer defense · zero hard-coded keys</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">Internal APIs: intranet + shared secret</text>
+  </g>
+</svg>

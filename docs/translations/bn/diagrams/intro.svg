@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">লজিস্টিক অ্যাগ্রিগেশন প্ল্যাটফর্ম (Integrated Global Logistics)</text>
+  <text x="600" y="78" text-anchor="middle" font-size="13" fill="#212529">ম্যানেজমেন্ট ব্যাকএন্ড · হাই-ফ্রিকোয়েন্সি গেটওয়ে · 209 ক্যারিয়ারের ইউনিফাইড ফেসেড —— এক প্রবেশপথে সারা বিশ্ব</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">admin ম্যানেজমেন্ট ব্যাকএন্ড</text>
+    <text x="220" y="196" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E86DE">PHP webman v2 স্থায়ী প্রসেস + Flutter ম্যানেজমেন্ট অ্যাপ</text>
+    <text x="220" y="232" text-anchor="middle" font-size="12.5" fill="#212529">RBAC পারমিশন · JWT অথেনটিকেশন · অপারেশন অডিট</text>
+    <text x="220" y="264" text-anchor="middle" font-size="11.5" fill="#212529">ক্যারিয়ার প্রোফাইল / এনক্রিপ্টেড কী ম্যানেজমেন্ট</text>
+    <text x="220" y="296" text-anchor="middle" font-size="11.5" fill="#212529">কুয়েরি রেকর্ড / পরিসংখ্যান রিপোর্ট / কলব্যাক সাবস্ক্রিপশন</text>
+    <text x="220" y="338" text-anchor="middle" font-size="12" fill="#6C757D">18 স্তরের প্রতিরক্ষা · Excel/PDF এক্সপোর্ট</text>
+    <text x="220" y="368" text-anchor="middle" font-size="12" fill="#6C757D">Redis ক্যাশ · Elasticsearch সার্চ</text>
+    <text x="220" y="404" text-anchor="middle" font-size="11" fill="#17A2B8">ম্যানেজমেন্ট পৃষ্ঠা ও PHP ওয়ার্কার পুল বহন করে</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="18" font-weight="bold" fill="#FFFFFF">tracking-gateway হাই-ফ্রিকোয়েন্সি গেটওয়ে</text>
+    <text x="600" y="196" text-anchor="middle" font-size="12" font-weight="bold" fill="#2E86DE">Rust e-cat ফ্রেমওয়ার্ক স্থায়ী প্রসেস</text>
+    <text x="600" y="232" text-anchor="middle" font-size="12.5" fill="#212529">Redis ক্যাশ হিট মানেই ফেরত (X-Cache: HIT)</text>
+    <text x="600" y="264" text-anchor="middle" font-size="11.5" fill="#212529">API-Key অথেনটিকেশন · কী অনুযায়ী রেট লিমিট</text>
+    <text x="600" y="296" text-anchor="middle" font-size="11.5" fill="#212529">ক্যারিয়ারভিত্তিক সার্কিট ব্রেকার (অর্ধ-খোলা প্রোব)</text>
+    <text x="600" y="328" text-anchor="middle" font-size="11.5" fill="#212529">RoundRobin দিয়ে ওয়ার্কার পুলে লোড ব্যালেন্সিং</text>
+    <text x="600" y="368" text-anchor="middle" font-size="12" fill="#6C757D">/metrics Prometheus · /health হেলথ চেক</text>
+    <text x="600" y="404" text-anchor="middle" font-size="11" fill="#17A2B8">শুধু হাই-ফ্রিকোয়েন্সি পৃষ্ঠা, ক্যারিয়ার প্রোটোকল বোঝে না</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="19" font-weight="bold" fill="#FFFFFF">global-logistics ইউনিফাইড ফেসেড</text>
+    <text x="980" y="196" text-anchor="middle" font-size="13" font-weight="bold" fill="#2E86DE">209 ক্যারিয়ারের PHP অ্যাডাপ্টার</text>
+    <text x="980" y="232" text-anchor="middle" font-size="11.5" fill="#212529">Logistics::track এক প্রবেশপথে স্বয়ংক্রিয় শনাক্তকরণ</text>
+    <text x="980" y="264" text-anchor="middle" font-size="12.5" fill="#212529">দেশীয় 45 + আন্তর্জাতিক 164</text>
+    <text x="980" y="296" text-anchor="middle" font-size="11.5" fill="#212529">187টি ট্র্যাকিং নম্বর নিয়ম (ক্রম-অগ্রাধিকার হিট)</text>
+    <text x="980" y="328" text-anchor="middle" font-size="11.5" fill="#212529">TrackStatus 7 প্রকারের ইউনিফাইড স্ট্যাটাস সেম্যান্টিক্স</text>
+    <text x="980" y="368" text-anchor="middle" font-size="12" fill="#6C757D">PSR-18 · OAuth2 · ব্যর্থ হলে অটো রিট্রাই</text>
+    <text x="980" y="404" text-anchor="middle" font-size="12" fill="#17A2B8">1663 টেস্ট কেস / 6662 অ্যাসারশন সবুজ</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="14" font-weight="bold" fill="#FFFFFF">মূল মেট্রিক</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">209 কোম্পানি</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB" font-size="11.5">>যুক্ত হওয়া ক্যারিয়ার</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA" font-size="11.5">>দেশীয় + আন্তর্জাতিক চ্যানেল</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">187টি</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB" font-size="11.5">>ট্র্যাকিং নম্বর স্বয়ংক্রিয় শনাক্তকরণ নিয়ম</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">7 প্রকার</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA" font-size="12">>ইউনিফাইড স্ট্যাটাস TrackStatus</text>
+  </g>
+</svg>

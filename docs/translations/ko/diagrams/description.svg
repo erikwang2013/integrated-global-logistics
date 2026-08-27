@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">프로젝트 설명: 6대 핵심 역량</text>
+  <text x="600" y="72" text-anchor="middle" font-size="14" fill="#212529">통합 파사드 · 자동 식별 · 통합 상태 · 고성능 게이트웨이 · 탄력적 거버넌스 · 보안</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">통합 파사드</text>
+    <text x="220" y="186" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track 하나의 진입점</text>
+    <text x="220" y="214" text-anchor="middle" font-size="13.5" fill="#212529">채널과 운송사 자동 식별</text>
+    <text x="220" y="242" text-anchor="middle" font-size="13" fill="#212529">운송사 프로토콜 차이를 신경 쓸 필요 없음</text>
+    <text x="220" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">서명 / OAuth2 / XML / JSON / 상태 매핑</text>
+    <text x="220" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">하나의 데이터 모델, 하나의 연동 형태</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">자동 식별</text>
+    <text x="600" y="186" text-anchor="middle" font-size="13.5" fill="#212529">정규식 187개로 채널·운송사 매칭</text>
+    <text x="600" y="214" text-anchor="middle" font-size="13.5" fill="#212529">순서 민감, 국내 규칙 우선 매칭</text>
+    <text x="600" y="242" text-anchor="middle" font-size="13" fill="#212529">예: 77로 시작하는 STO가 13자리 규칙보다 우선</text>
+    <text x="600" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">명시적 채널: domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">미식별 시 우선순위 폴백 반환</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">통합 상태</text>
+    <text x="980" y="186" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus 7가지 의미</text>
+    <text x="980" y="214" text-anchor="middle" font-size="13" fill="#212529">수거 대기 → 운송 중 → 배송 중 → 배달 완료</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">예외는 EXCEPTION · 반송은 RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">미식별은 UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">원시 상태 통합 매핑, 비즈니스는 한 형태만</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">고성능 게이트웨이</text>
+    <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">저지연 Rust e-cat 상주 프로세스</text>
+    <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">캐시 히트 시 PHP 미경유 즉시 반환</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">worker 무상태 수평 확장 가능</text>
+    <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">내부 계약 최소화: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="12" fill="#17A2B8">언어 간 결합 통제, 게이트웨이에 자격 증명 미전달</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">탄력적 거버넌스</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Redis 캐시 (TTL 5~60분)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">API-Key/IP별 속도 제한 (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">운송사별 서킷 브레이킹 (503 빠른 실패)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin 로드 밸런싱</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">RetryingClient 재시도 2회 내장</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">보안 컴플라이언스</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">자격 증명 Encryptable 암호화 저장</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">콜백 HMAC 서명 검증</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">운영 감사 전 구간 기록</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18계층 심층 방어 · 키 하드코딩 제로</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">내부 API: 내부망 + 공유 비밀 키 헤더</text>
+  </g>
+</svg>

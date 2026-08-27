@@ -1,0 +1,73 @@
+<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="24.0" font-weight="bold" fill="#1F4E79">منصة تجميع اللوجستيات (Integrated Global Logistics)</text>
+  <text x="600" y="78" text-anchor="middle" font-size="15.0" fill="#212529">لوحة الإدارة · بوابة عالية التردد · واجهة موحدة لـ 209 شركات شحن — مدخل واحد لكل العالم</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="20.0" font-weight="bold" fill="#FFFFFF">لوحة الإدارة</text>
+    <text x="220" y="196" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#2E86DE">عملية PHP webman v2 مقيمة + لوحة Flutter</text>
+    <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC · مصادقة JWT · تدقيق العمليات</text>
+    <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">سجل الشركات / مفاتيح مشفّرة</text>
+    <text x="220" y="296" text-anchor="middle" font-size="13.5" fill="#212529">سجل الاستعلامات / التقارير / اشتراك الاستدعاءات</text>
+    <text x="220" y="338" text-anchor="middle" font-size="13.0" fill="#6C757D">دفاع متعمق (18 طبقة) · تصدير Excel/PDF</text>
+    <text x="220" y="368" text-anchor="middle" font-size="13.0" fill="#6C757D">ذاكرة Redis · بحث Elasticsearch</text>
+    <text x="220" y="404" text-anchor="middle" font-size="13.0" fill="#17A2B8">لوحة الإدارة + مجموعة عمال PHP</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="20.0" font-weight="bold" fill="#FFFFFF">بوابة عالية التردد tracking-gateway</text>
+    <text x="600" y="196" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#2E86DE">عملية مقيمة بإطار Rust e-cat</text>
+    <text x="600" y="232" text-anchor="middle" font-size="13.5" fill="#212529">ذاكرة Redis: رد فوري (X-Cache: HIT)</text>
+    <text x="600" y="264" text-anchor="middle" font-size="13.5" fill="#212529">مصادقة API-Key · تحديد معدل بالمفتاح</text>
+    <text x="600" y="296" text-anchor="middle" font-size="13.5" fill="#212529">قاطع دائرة لكل شركة (half-open)</text>
+    <text x="600" y="328" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin لمجموعة العمال</text>
+    <text x="600" y="368" text-anchor="middle" font-size="13.0" fill="#6C757D">/metrics Prometheus · فحص /health</text>
+    <text x="600" y="404" text-anchor="middle" font-size="13.0" fill="#17A2B8">للمرور العالي فقط؛ لا يفهم البروتوكولات</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="20.0" font-weight="bold" fill="#FFFFFF">الواجهة الموحدة global-logistics</text>
+    <text x="980" y="196" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#2E86DE">محولات PHP لـ 209 شركات شحن</text>
+    <text x="980" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track: مدخل واحد وتعرّف تلقائي</text>
+    <text x="980" y="264" text-anchor="middle" font-size="13.5" fill="#212529">45 محلية + 164 دولية</text>
+    <text x="980" y="296" text-anchor="middle" font-size="13.5" fill="#212529">187 قاعدة تتبع (حساسة للترتيب)</text>
+    <text x="980" y="328" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 حالات موحدة</text>
+    <text x="980" y="368" text-anchor="middle" font-size="13.0" fill="#6C757D">PSR-18 · OAuth2 · إعادة محاولة تلقائية</text>
+    <text x="980" y="404" text-anchor="middle" font-size="13.0" fill="#17A2B8">1663 اختبار / 6662 تأكيد ناجح</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="16.0" font-weight="bold" fill="#FFFFFF">المؤشرات الرئيسية</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">209</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB" font-size="13.0">شركة شحن مدمجة</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA" font-size="13.0">قنوات محلية + دولية</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">187</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB" font-size="13.0">قواعد تعرّف أرقام التتبع</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#FFFFFF">7</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA" font-size="13.0">حالات موحدة TrackStatus</text>
+  </g>
+</svg>

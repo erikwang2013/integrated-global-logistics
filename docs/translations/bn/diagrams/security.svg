@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1F4E79">নিরাপত্তা প্রতিরক্ষা: স্তরভিত্তিক গভীর প্রতিরক্ষা</text>
+
+  <!-- 第一层：网关层 -->
+  <rect x="40" y="70" width="1120" height="240" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="40" y="70" width="220" height="240" rx="8" fill="#1F4E79"/>
+  <text x="150" y="110" text-anchor="middle" font-size="15" font-weight="bold" fill="#FFFFFF">গেটওয়ে স্তর</text>
+  <text x="150" y="134" text-anchor="middle" font-size="12.5" fill="#D7E5F3">tracking-gateway（Rust）</text>
+  <text x="150" y="154" text-anchor="middle" font-size="11" fill="#D7E5F3">প্রথম প্রতিরক্ষা লাইন</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="290" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="390" y="118" text-anchor="middle" font-weight="bold" font-size="11.5">>API-Key অথেনটিকেশন</text>
+    <text x="390" y="136" text-anchor="middle" font-size="11" fill="#6C757D">X-API-Key হেডার, কী এনক্রিপ্টেড সংরক্ষণ</text>
+    <rect x="510" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="610" y="118" text-anchor="middle" font-weight="bold" font-size="11.5">>Redis রেট লিমিট</text>
+    <text x="610" y="136" text-anchor="middle" font-size="11" fill="#6C757D">API-Key / IP অনুযায়ী স্লাইডিং উইন্ডো</text>
+    <rect x="730" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="830" y="118" text-anchor="middle" font-weight="bold" font-size="11.5">>সার্কিট ব্রেকার</text>
+    <text x="830" y="136" text-anchor="middle" font-size="11" fill="#6C757D">ক্যারিয়ার অনুযায়ী অর্ধ-খোলা প্রোব ফাস্ট-ফেইল</text>
+    <rect x="950" y="96" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="1045" y="118" text-anchor="middle" font-weight="bold" font-size="11.5">>SSRF প্রতিরোধ</text>
+    <text x="1045" y="136" text-anchor="middle" font-size="11" fill="#6C757D">ওয়ার্কার এন্ডপয়েন্ট হোয়াইটলিস্ট রেজোলিউশন</text>
+
+    <rect x="290" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="390" y="190" text-anchor="middle" font-weight="bold" font-size="11.5">>ক্রেডেনশিয়াল আইসোলেশন</text>
+    <text x="390" y="208" text-anchor="middle" font-size="11" fill="#6C757D">e-cat ক্রেডেনশিয়াল প্লেইনটেক্সট রাখে না</text>
+    <rect x="510" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="610" y="190" text-anchor="middle" font-weight="bold" font-size="11.5">>অভ্যন্তরীণ কন্ট্রাক্ট সুরক্ষা</text>
+    <text x="610" y="208" text-anchor="middle" font-size="11" fill="#6C757D">/internal শুধু ইন্টারনাল নেটওয়ার্ক + শেয়ার্ড কী হেডার</text>
+    <rect x="730" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="830" y="190" text-anchor="middle" font-weight="bold" font-size="11.5">>ইউনিফাইড এরর কোড</text>
+    <text x="830" y="208" text-anchor="middle" font-size="11" fill="#6C757D">carrier_error অভ্যন্তরীণ বিবরণ ফাঁস করে না</text>
+    <rect x="950" y="168" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="1045" y="190" text-anchor="middle" font-weight="bold" font-size="11.5">>অবজারভেবিলিটি</text>
+    <text x="1045" y="208" text-anchor="middle" font-size="11" fill="#6C757D">/metrics · স্ট্রাকচার্ড লগ · ট্রেসিং</text>
+  </g>
+
+  <!-- 第二层：应用层 -->
+  <rect x="40" y="330" width="1120" height="280" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="40" y="330" width="220" height="280" rx="8" fill="#2E86DE"/>
+  <text x="150" y="370" text-anchor="middle" font-size="15" font-weight="bold" fill="#FFFFFF">অ্যাপ্লিকেশন স্তর</text>
+  <text x="150" y="394" text-anchor="middle" font-size="11" fill="#E9F2FB">admin ম্যানেজমেন্ট ব্যাকএন্ড (PHP)</text>
+  <text x="150" y="414" text-anchor="middle" font-size="11" fill="#E9F2FB">18 স্তরের গভীর প্রতিরক্ষা</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="290" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="378" text-anchor="middle" font-weight="bold" font-size="11.5">>JWT + ব্ল্যাকলিস্ট</text>
+    <text x="390" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">2h access / 14d refresh</text>
+    <rect x="510" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="378" text-anchor="middle" font-weight="bold" font-size="12">>RBAC পারমিশন</text>
+    <text x="610" y="396" text-anchor="middle" font-size="11" fill="#6C757D">method.path গ্রানুলারিটি + পারমিশন ক্যাশ</text>
+    <rect x="730" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="378" text-anchor="middle" font-weight="bold" font-size="11.5">>অপারেশন অডিট</text>
+    <text x="830" y="396" text-anchor="middle" font-size="11" fill="#6C757D">সম্পূর্ণ চেইন লগ + উৎস শনাক্তকরণ</text>
+    <rect x="950" y="356" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="378" text-anchor="middle" font-weight="bold" font-size="11.5">>সিকিউরিটি ফিল্টার</text>
+    <text x="1045" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">HTTP মেথড সীমা / CSP</text>
+
+    <rect x="290" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="450" text-anchor="middle" font-weight="bold" font-size="12">>XSS / SQL ইনজেকশন</text>
+    <text x="390" y="468" text-anchor="middle" font-size="11" fill="#6C757D">SecurityFilter ব্লক করে</text>
+    <rect x="510" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="450" text-anchor="middle" font-weight="bold">CSRF</text>
+    <text x="610" y="468" text-anchor="middle" font-size="11" fill="#6C757D">টোকেন যাচাই</text>
+    <rect x="730" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="450" text-anchor="middle" font-weight="bold" font-size="11.5">>কমান্ড ইনজেকশন / পাথ ট্রাভার্সাল</text>
+    <text x="830" y="468" text-anchor="middle" font-size="11" fill="#6C757D">ইনপুট বাউন্ডারি ফিল্টার</text>
+    <rect x="950" y="428" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="450" text-anchor="middle" font-weight="bold" font-size="12">>Encryptable এনক্রিপশন</text>
+    <text x="1045" y="468" text-anchor="middle" font-size="11" fill="#6C757D">সংবেদনশীল ফিল্ড সাইফারটেক্সট সংরক্ষণ + মাস্কিং</text>
+
+    <rect x="290" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="522" text-anchor="middle" font-weight="bold" font-size="11.5">>অ্যাকাউন্ট লক</text>
+    <text x="390" y="540" text-anchor="middle" font-size="11" fill="#6C757D">5 বার ব্যর্থে 15 মিনিট লক</text>
+    <rect x="510" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="522" text-anchor="middle" font-weight="bold" font-size="12">>ক্লিক ক্যাপচা</text>
+    <text x="610" y="540" text-anchor="middle" font-size="11" fill="#6C757D">লগইন ব্রুট-ফোর্স প্রতিরোধ</text>
+    <rect x="730" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="522" text-anchor="middle" font-weight="bold" font-size="11.5">>কলব্যাক সিগনেচার যাচাই</text>
+    <text x="830" y="540" text-anchor="middle" font-size="11" fill="#6C757D">HMAC সিগনেচার + হোয়াইটলিস্ট রুট</text>
+    <rect x="950" y="500" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="522" text-anchor="middle" font-weight="bold" font-size="11.5">>কী নিরাপত্তা</text>
+    <text x="1045" y="540" text-anchor="middle" font-size="11" fill="#6C757D">এনভায়রনমেন্ট ভেরিয়েবল ইনজেকশন · শূন্য হার্ডকোড</text>
+  </g>
+</svg>

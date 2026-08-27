@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="48" text-anchor="middle" font-size="24" font-weight="bold" fill="#1F4E79">Logistics Aggregation Platform (Integrated Global Logistics)</text>
+  <text x="600" y="78" text-anchor="middle" font-size="15" fill="#212529">Admin Console · High-Frequency Gateway · Unified Facade for 209 Carriers — one entry to query the world</text>
+
+  <!-- 支柱一：admin -->
+  <g>
+    <rect x="40" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
+    <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
+    <text x="220" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">admin Admin Console</text>
+    <text x="220" y="196" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#2E86DE">PHP webman v2 resident process + Flutter admin</text>
+    <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC permissions · JWT auth · audit trail</text>
+    <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">Carrier profiles / encrypted key management</text>
+    <text x="220" y="296" text-anchor="middle" font-size="13" fill="#212529">Query records / statistics / callback subscriptions</text>
+    <text x="220" y="338" text-anchor="middle" font-size="13" fill="#6C757D">18-layer defense in depth · Excel/PDF export</text>
+    <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis cache · Elasticsearch search</text>
+    <text x="220" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">Hosts the admin plane and PHP worker pool</text>
+  </g>
+
+  <!-- 支柱二：tracking-gateway -->
+  <g>
+    <rect x="420" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="112" width="360" height="56" rx="8" fill="#2E86DE"/>
+    <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
+    <text x="600" y="138" text-anchor="middle" font-size="16" font-weight="bold" fill="#FFFFFF">tracking-gateway High-Frequency Gateway</text>
+    <text x="600" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">Rust e-cat framework resident process</text>
+    <text x="600" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Cache hit returns immediately (X-Cache: HIT)</text>
+    <text x="600" y="264" text-anchor="middle" font-size="13.5" fill="#212529">API-Key auth · per-key rate limiting</text>
+    <text x="600" y="296" text-anchor="middle" font-size="13.5" fill="#212529">Per-carrier circuit breaker (half-open probe)</text>
+    <text x="600" y="328" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin load balancing to worker pool</text>
+    <text x="600" y="368" text-anchor="middle" font-size="13" fill="#6C757D">/metrics Prometheus · /health checks</text>
+    <text x="600" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">High-frequency only; knows no carrier protocols</text>
+  </g>
+
+  <!-- 支柱三：global-logistics -->
+  <g>
+    <rect x="800" y="112" width="360" height="320" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="112" width="360" height="56" rx="8" fill="#17A2B8"/>
+    <rect x="800" y="152" width="360" height="16" fill="#17A2B8"/>
+    <text x="980" y="138" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFFFFF">global-logistics Unified Facade</text>
+    <text x="980" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">209 carrier PHP adapters</text>
+    <text x="980" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track single entry auto-detect</text>
+    <text x="980" y="264" text-anchor="middle" font-size="13.5" fill="#212529">45 domestic + 164 international</text>
+    <text x="980" y="296" text-anchor="middle" font-size="13.5" fill="#212529">187 tracking-number rules (order-sensitive)</text>
+    <text x="980" y="328" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 unified status semantics</text>
+    <text x="980" y="368" text-anchor="middle" font-size="13" fill="#6C757D">PSR-18 · OAuth2 · auto-retry on failure</text>
+    <text x="980" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">1663 test cases / 6662 assertions green</text>
+  </g>
+
+  <!-- 底部数据条 -->
+  <rect x="40" y="460" width="1120" height="140" rx="8" fill="#1F4E79"/>
+  <text x="600" y="494" text-anchor="middle" font-size="16" font-weight="bold" fill="#FFFFFF">Core Metrics</text>
+  <g font-size="13" fill="#FFFFFF">
+    <rect x="80" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="200" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">209</text>
+    <text x="200" y="560" text-anchor="middle" fill="#E9F2FB">carriers onboarded</text>
+    <rect x="340" y="512" width="240" height="64" rx="8" fill="#17A2B8"/>
+    <text x="460" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">45 + 164</text>
+    <text x="460" y="560" text-anchor="middle" fill="#E8F8FA">domestic + international channels</text>
+    <rect x="600" y="512" width="240" height="64" rx="8" fill="#2E86DE"/>
+    <text x="720" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">187</text>
+    <text x="720" y="560" text-anchor="middle" fill="#E9F2FB">tracking-number auto-detect rules</text>
+    <rect x="860" y="512" width="260" height="64" rx="8" fill="#17A2B8"/>
+    <text x="990" y="536" text-anchor="middle" font-size="22" font-weight="bold" fill="#FFFFFF">7</text>
+    <text x="990" y="560" text-anchor="middle" fill="#E8F8FA">unified TrackStatus semantics</text>
+  </g>
+</svg>

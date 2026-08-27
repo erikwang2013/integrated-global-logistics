@@ -1,0 +1,70 @@
+<?xml version="1.0" ?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="22.0" font-weight="bold" fill="#1F4E79">Descrição do projeto: seis capacidades essenciais</text>
+  <text x="600" y="72" text-anchor="middle" font-size="14.0" fill="#212529">Fachada unificada · Detecção automática · Estados unificados · Gateway de alta performance · Governança resiliente · Segurança</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">Fachada unificada</text>
+    <text x="220" y="186" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track: uma única entrada</text>
+    <text x="220" y="214" text-anchor="middle" font-size="13.5" fill="#212529">Detecta canal e transportadora automaticamente</text>
+    <text x="220" y="242" text-anchor="middle" font-size="13.5" fill="#212529">O negócio não se preocupa com protocolos distintos</text>
+    <text x="220" y="278" text-anchor="middle" font-size="11.6" fill="#6C757D">Assinatura / OAuth2 / XML / JSON / mapeamento de estados</text>
+    <text x="220" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">Um modelo de dados, uma forma de integração</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">Detecção automática</text>
+    <text x="600" y="186" text-anchor="middle" font-size="13.3" fill="#212529">187 regras regex identificam canal e transportadora</text>
+    <text x="600" y="214" text-anchor="middle" font-size="13.5" fill="#212529">Sensível à ordem; domésticas têm prioridade</text>
+    <text x="600" y="242" text-anchor="middle" font-size="13.5" fill="#212529">Ex.: STO (77) antes de regras de 13 dígitos</text>
+    <text x="600" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">Canal explícito: domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">Fallback por prioridade quando não reconhecido</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">Estados unificados</text>
+    <text x="980" y="186" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus: 7 estados</text>
+    <text x="980" y="214" text-anchor="middle" font-size="12.1" fill="#212529">Aguardando coleta → Em trânsito → Em entrega → Entregue</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">Exceção: EXCEPTION · Devolução: RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">Não reconhecido: UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="12.3" fill="#17A2B8">Estados originais mapeados; o negócio vê um só formato</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">Gateway de alta performance</text>
+    <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Processo Rust e-cat residente, baixa latência</text>
+    <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Cache responde sem passar pelo PHP</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Workers stateless com escala horizontal</text>
+    <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">Contrato interno enxuto: queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="11.0" fill="#17A2B8">Baixo acoplamento cross-language; credenciais fora do gateway</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">Governança resiliente</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Cache Redis (TTL 5–60 min)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Rate limit por API-Key/IP (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Circuit breaker por transportadora (503)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">Balanceamento RoundRobin</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">RetryingClient com 2 tentativas de retry</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="18.0" font-weight="bold" fill="#1F4E79">Segurança e conformidade</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Credenciais criptografadas (Encryptable)</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">Callbacks: verificação de assinatura HMAC</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">Auditoria de operações ponta a ponta</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18 camadas de defesa · zero chave embutida</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">APIs internas: intranet + cabeçalho de chave</text>
+  </g>
+</svg>

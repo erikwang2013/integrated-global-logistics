@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="21" font-weight="bold" fill="#1F4E79">プロジェクト説明：6つのコア能力</text>
+  <text x="600" y="72" text-anchor="middle" font-size="12" fill="#212529">統一フェース・自動識別・統一ステータス・高性能ゲートウェイ・弾力性ガバナンス・セキュリティコンプライアンス</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="17" font-weight="bold" fill="#1F4E79">統一フェース</text>
+    <text x="220" y="186" text-anchor="middle" font-size="12.5" fill="#212529">Logistics::track 一つの入口</text>
+    <text x="220" y="214" text-anchor="middle" font-size="12.5" fill="#212529">チャネルと運送会社を自動識別</text>
+    <text x="220" y="242" text-anchor="middle" font-size="11.5" fill="#212529">ビジネス側は各社のプロトコル差異を気にする必要なし</text>
+    <text x="220" y="278" text-anchor="middle" font-size="11.5" fill="#6C757D">署名 / OAuth2 / XML / JSON / ステータスマッピング</text>
+    <text x="220" y="308" text-anchor="middle" font-size="11.5" fill="#17A2B8">一つのデータモデル、一種類の接続形状</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">自動識別</text>
+    <text x="600" y="186" text-anchor="middle" font-size="11.5" fill="#212529">187件の正規表現ルールでチャネルと運送会社を判定</text>
+    <text x="600" y="214" text-anchor="middle" font-size="12.5" fill="#212529">順序に敏感、国内ルールを優先ヒット</text>
+    <text x="600" y="242" text-anchor="middle" font-size="12.5" fill="#212529">例：77 始まりの申通は純 13桁ルールに優先</text>
+    <text x="600" y="278" text-anchor="middle" font-size="11.5" fill="#6C757D">明示的チャネル呼び出し domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">識別できない場合は優先度でフォールバック返却</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">統一ステータス</text>
+    <text x="980" y="186" text-anchor="middle" font-size="11.5" fill="#212529">TrackStatus 7種のセマンティクス</text>
+    <text x="980" y="214" text-anchor="middle" font-size="12" fill="#212529">集荷待ち → 輸送中 → 配達中 → 受取済み</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">異常は EXCEPTION・返送は RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">識別不能は UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">各社の生ステータスを統一マッピング、業務層は一種類だけに接続</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">高性能ゲートウェイ</text>
+    <text x="220" y="436" text-anchor="middle" font-size="12.5" fill="#212529">Rust e-cat 常駐プロセスで低遅延</text>
+    <text x="220" y="464" text-anchor="middle" font-size="11.5" fill="#212529">キャッシュヒット即返却、PHP を通らない</text>
+    <text x="220" y="492" text-anchor="middle" font-size="11.5" fill="#212529">worker はステートレスで水平スケール可能</text>
+    <text x="220" y="528" text-anchor="middle" font-size="11.5" fill="#6C757D">内部契約面は最小：queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="11" fill="#17A2B8">言語横断の結合は制御可能、クレデンシャルはゲートウェイに渡さない</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">弾力性ガバナンス</text>
+    <text x="600" y="436" text-anchor="middle" font-size="12.5" fill="#212529">Redis キャッシュ（TTL 5〜60分）</text>
+    <text x="600" y="464" text-anchor="middle" font-size="12.5" fill="#212529">API-Key/IP 別レート制限（429）</text>
+    <text x="600" y="492" text-anchor="middle" font-size="11.5" fill="#212529">運送会社別サーキットブレーカー（503 ファストフェイル）</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin 負荷分散</text>
+    <text x="600" y="558" text-anchor="middle" font-size="11.5" fill="#17A2B8">パッケージ内 RetryingClient が2回リトライ内蔵</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="16" font-weight="bold" fill="#1F4E79">セキュリティコンプライアンス</text>
+    <text x="980" y="436" text-anchor="middle" font-size="11.5" fill="#212529">クレデンシャルは Encryptable で暗号化保存</text>
+    <text x="980" y="464" text-anchor="middle" font-size="12.5" fill="#212529">コールバック HMAC 署名検証</text>
+    <text x="980" y="492" text-anchor="middle" font-size="12.5" fill="#212529">操作監査の全チェーン記録</text>
+    <text x="980" y="528" text-anchor="middle" font-size="11.5" fill="#6C757D">18層の防御・キーのハードコードゼロ</text>
+    <text x="980" y="558" text-anchor="middle" font-size="11.5" fill="#17A2B8">内部APIは内網のみ + 共有キーヘッダー</text>
+  </g>
+</svg>

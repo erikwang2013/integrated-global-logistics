@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">Description : six capacités clés</text>
+  <text x="600" y="72" text-anchor="middle" font-size="11.5" fill="#212529">Façade unifiée · auto-détection · état unifié · passerelle haute perf · gouvernance élastique · sécurité</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Façade unifiée</text>
+    <text x="220" y="186" text-anchor="middle" font-size="11.1" fill="#212529">Logistics::track – un point d'entrée</text>
+    <text x="220" y="214" text-anchor="middle" font-size="11.1" fill="#212529">Détecte canal &amp; transporteur</text>
+    <text x="220" y="242" text-anchor="middle" font-size="11" fill="#212529"><tspan x="220">La logique métier ignore les différences de</tspan><tspan x="220" dy="13">protocole</tspan></text>
+    <text x="220" y="278" text-anchor="middle" font-size="11" fill="#6C757D"><tspan x="220">Signatures / OAuth2 / XML / JSON / mapping</tspan><tspan x="220" dy="13">d'états</tspan></text>
+    <text x="220" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">Un modèle de données, une interface</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Auto-détection</text>
+    <text x="600" y="186" text-anchor="middle" font-size="11.1" fill="#212529">187 règles regex détectent canal &amp; transporteur</text>
+    <text x="600" y="214" text-anchor="middle" font-size="11.1" fill="#212529">Sensible à l'ordre, national d'abord</text>
+    <text x="600" y="242" text-anchor="middle" font-size="11.1" fill="#212529">ex. STO «77» avant les règles 13 chiffres</text>
+    <text x="600" y="278" text-anchor="middle" font-size="11.2" fill="#6C757D">Canal explicite : domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="11" fill="#17A2B8">Fallback par priorité si non reconnu</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">État unifié</text>
+    <text x="980" y="186" text-anchor="middle" font-size="11.1" fill="#212529">TrackStatus – 7 sémantiques</text>
+    <text x="980" y="214" text-anchor="middle" font-size="11" fill="#212529">Ramassage → Transport → Livraison → Livré</text>
+    <text x="980" y="242" text-anchor="middle" font-size="12.2" fill="#212529">Anomalie → EXCEPTION · retour → RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="11" fill="#6C757D">Non reconnu → UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="11" fill="#17A2B8"><tspan x="980">États bruts unifiés ; le métier n'en utilise</tspan><tspan x="980" dy="13">qu'un</tspan></text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Passerelle haute performance</text>
+    <text x="220" y="436" text-anchor="middle" font-size="11.1" fill="#212529">Daemon Rust e-cat, faible latence</text>
+    <text x="220" y="464" text-anchor="middle" font-size="11.1" fill="#212529">Hit cache sans passer par PHP</text>
+    <text x="220" y="492" text-anchor="middle" font-size="11.1" fill="#212529">Workers sans état, scalables horizontalement</text>
+    <text x="220" y="528" text-anchor="middle" font-size="11" fill="#6C757D">Contrat interne minimal : queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="11" fill="#17A2B8"><tspan x="220">Couplage inter-langues maîtrisé, pas de</tspan><tspan x="220" dy="13">credentials</tspan></text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Gouvernance élastique</text>
+    <text x="600" y="436" text-anchor="middle" font-size="12.2" fill="#212529">Cache Redis (TTL 5–60 min)</text>
+    <text x="600" y="464" text-anchor="middle" font-size="12.2" fill="#212529">Rate-limit API-Key/IP (429)</text>
+    <text x="600" y="492" text-anchor="middle" font-size="11.1" fill="#212529">Circuit breaker par transporteur (503 fast-fail)</text>
+    <text x="600" y="520" text-anchor="middle" font-size="11.1" fill="#212529">Load-balancing RoundRobin</text>
+    <text x="600" y="558" text-anchor="middle" font-size="11.2" fill="#17A2B8">RetryingClient intégré : 2 retries</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="14.8" font-weight="bold" fill="#1F4E79">Sécurité &amp; conformité</text>
+    <text x="980" y="436" text-anchor="middle" font-size="11.1" fill="#212529">Credentials chiffrés via Encryptable</text>
+    <text x="980" y="464" text-anchor="middle" font-size="11.1" fill="#212529">Vérification signature HMAC des callbacks</text>
+    <text x="980" y="492" text-anchor="middle" font-size="11.1" fill="#212529">Audit sur toute la chaîne</text>
+    <text x="980" y="528" text-anchor="middle" font-size="11" fill="#6C757D"><tspan x="980">18 couches défense en profondeur · zéro clé en</tspan><tspan x="980" dy="13">dur</tspan></text>
+    <text x="980" y="558" text-anchor="middle" font-size="11" fill="#17A2B8">APIs internes : intranet + en-tête secret partagé</text>
+  </g>
+</svg>

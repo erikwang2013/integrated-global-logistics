@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="42" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">보안: 계층형 심층 방어</text>
+
+  <!-- 第一层：网关层 -->
+  <rect x="40" y="70" width="1120" height="240" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="40" y="70" width="220" height="240" rx="8" fill="#1F4E79"/>
+  <text x="150" y="110" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFFFFF">게이트웨이 계층</text>
+  <text x="150" y="134" text-anchor="middle" font-size="12.5" fill="#D7E5F3">tracking-gateway (Rust)</text>
+  <text x="150" y="154" text-anchor="middle" font-size="12.5" fill="#D7E5F3">첫 번째 방어선</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="290" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="390" y="118" text-anchor="middle" font-weight="bold">API-Key 인증</text>
+    <text x="390" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">X-API-Key, 키 암호화 저장</text>
+    <rect x="510" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="610" y="118" text-anchor="middle" font-weight="bold">Redis 속도 제한</text>
+    <text x="610" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">API-Key/IP 슬라이딩 윈도우</text>
+    <rect x="730" y="96" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="830" y="118" text-anchor="middle" font-weight="bold">서킷 브레이커</text>
+    <text x="830" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">운송사별 반개 탐지 빠른 실패</text>
+    <rect x="950" y="96" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="1045" y="118" text-anchor="middle" font-weight="bold">SSRF 방어</text>
+    <text x="1045" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">worker 엔드포인트 화이트리스트</text>
+
+    <rect x="290" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="390" y="190" text-anchor="middle" font-weight="bold">자격 증명 격리</text>
+    <text x="390" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">e-cat 평문 미보유</text>
+    <rect x="510" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="610" y="190" text-anchor="middle" font-weight="bold">내부 계약 보호</text>
+    <text x="610" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">/internal 내부망 + 공유 비밀</text>
+    <rect x="730" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="830" y="190" text-anchor="middle" font-weight="bold">통합 오류 코드</text>
+    <text x="830" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">carrier_error 내부 정보 숨김</text>
+    <rect x="950" y="168" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
+    <text x="1045" y="190" text-anchor="middle" font-weight="bold">관측 가능성</text>
+    <text x="1045" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">/metrics · 로그 · 트레이스</text>
+  </g>
+
+  <!-- 第二层：应用层 -->
+  <rect x="40" y="330" width="1120" height="280" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+  <rect x="40" y="330" width="220" height="280" rx="8" fill="#2E86DE"/>
+  <text x="150" y="370" text-anchor="middle" font-size="17" font-weight="bold" fill="#FFFFFF">애플리케이션 계층</text>
+  <text x="150" y="394" text-anchor="middle" font-size="12.5" fill="#E9F2FB">admin 관리 콘솔 (PHP)</text>
+  <text x="150" y="414" text-anchor="middle" font-size="12.5" fill="#E9F2FB">18계층 심층 방어</text>
+
+  <g font-size="13" fill="#212529">
+    <rect x="290" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="378" text-anchor="middle" font-weight="bold">JWT + 블랙리스트</text>
+    <text x="390" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">2h access / 14d refresh</text>
+    <rect x="510" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="378" text-anchor="middle" font-weight="bold">RBAC 권한</text>
+    <text x="610" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">method.path + 권한 캐시</text>
+    <rect x="730" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="378" text-anchor="middle" font-weight="bold">운영 감사</text>
+    <text x="830" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">전 구간 로그 + 출처 감지</text>
+    <rect x="950" y="356" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="378" text-anchor="middle" font-weight="bold">보안 필터</text>
+    <text x="1045" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">HTTP 메서드 / CSP</text>
+
+    <rect x="290" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="450" text-anchor="middle" font-size="12.5" font-weight="bold">XSS / SQL 인젝션</text>
+    <text x="390" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">SecurityFilter 차단</text>
+    <rect x="510" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="450" text-anchor="middle" font-weight="bold">CSRF</text>
+    <text x="610" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">토큰 검증</text>
+    <rect x="730" y="428" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="450" text-anchor="middle" font-size="12.5" font-weight="bold">명령 주입 / 경로 탐색</text>
+    <text x="830" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">입력 경계 필터링</text>
+    <rect x="950" y="428" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="450" text-anchor="middle" font-size="12.5" font-weight="bold">Encryptable 암호화</text>
+    <text x="1045" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">암호 저장 + 마스킹</text>
+
+    <rect x="290" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="522" text-anchor="middle" font-weight="bold">계정 잠금</text>
+    <text x="390" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">5회 실패 시 15분 잠금</text>
+    <rect x="510" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="522" text-anchor="middle" font-weight="bold">클릭 캡차</text>
+    <text x="610" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">무차별 공격 방지</text>
+    <rect x="730" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="522" text-anchor="middle" font-weight="bold">콜백 서명 검증</text>
+    <text x="830" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">HMAC + 화이트리스트</text>
+    <rect x="950" y="500" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="522" text-anchor="middle" font-weight="bold">키 보안</text>
+    <text x="1045" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">환경변수 주입 · 하드코딩 제로</text>
+  </g>
+</svg>

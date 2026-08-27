@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" font-family="'PingFang SC','Noto Sans SC','Microsoft YaHei',sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1F4E79"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1200" height="640" fill="#F8F9FA"/>
+  <text x="600" y="44" text-anchor="middle" font-size="22" font-weight="bold" fill="#1F4E79">项目说明：六大核心能力</text>
+  <text x="600" y="72" text-anchor="middle" font-size="14" fill="#212529">统一门面 · 自动识别 · 统一状态 · 高性能网关 · 弹性治理 · 安全合规</text>
+
+  <!-- 卡片行一 -->
+  <g>
+    <rect x="40" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="104" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">统一门面</text>
+    <text x="220" y="186" text-anchor="middle" font-size="13.5" fill="#212529">Logistics::track 一条入口</text>
+    <text x="220" y="214" text-anchor="middle" font-size="13.5" fill="#212529">自动识别通道与承运商</text>
+    <text x="220" y="242" text-anchor="middle" font-size="13.5" fill="#212529">业务方无需关心各家协议差异</text>
+    <text x="220" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">签名 / OAuth2 / XML / JSON / 状态映射</text>
+    <text x="220" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">一套数据模型，一种对接形状</text>
+
+    <rect x="420" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="104" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">自动识别</text>
+    <text x="600" y="186" text-anchor="middle" font-size="13.5" fill="#212529">187 条正则规则命中通道与承运商</text>
+    <text x="600" y="214" text-anchor="middle" font-size="13.5" fill="#212529">顺序敏感，优先命中国内规则</text>
+    <text x="600" y="242" text-anchor="middle" font-size="13.5" fill="#212529">如 77 开头申通先于纯 13 位规则</text>
+    <text x="600" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">显式通道调用 domestic / international</text>
+    <text x="600" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">无法识别时按优先级兜底返回</text>
+
+    <rect x="800" y="104" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="104" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="152" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">统一状态</text>
+    <text x="980" y="186" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus 7 种语义</text>
+    <text x="980" y="214" text-anchor="middle" font-size="13" fill="#212529">待揽收 → 运输中 → 派送中 → 已签收</text>
+    <text x="980" y="242" text-anchor="middle" font-size="13.5" fill="#212529">异常归 EXCEPTION · 退回归 RETURNED</text>
+    <text x="980" y="278" text-anchor="middle" font-size="12.5" fill="#6C757D">无法识别归 UNKNOWN</text>
+    <text x="980" y="308" text-anchor="middle" font-size="12.5" fill="#17A2B8">各家原始状态统一映射，业务层只对接一种</text>
+  </g>
+
+  <!-- 卡片行二 -->
+  <g>
+    <rect x="40" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="40" y="354" width="360" height="10" rx="5" fill="#1F4E79"/>
+    <text x="220" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">高性能网关</text>
+    <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Rust e-cat 常驻进程低延迟</text>
+    <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">缓存命中即返，不进 PHP</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">worker 无状态可水平扩展</text>
+    <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">内部契约面小：queryTrack + registry</text>
+    <text x="220" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">跨语言耦合可控，凭证不下发网关</text>
+
+    <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
+    <text x="600" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">弹性治理</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Redis 缓存（TTL 5~60min）</text>
+    <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">按 API-Key/IP 限流（429）</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">按承运商熔断（503 快速失败）</text>
+    <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin 负载均衡</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">包内 RetryingClient 自带 2 次重试</text>
+
+    <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
+    <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
+    <text x="980" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">安全合规</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">凭证 Encryptable 加密落库</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">回调 HMAC 签名校验</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">操作审计全链路记录</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18 层纵深防御 · 密钥零硬编码</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">内部接口仅内网 + 共享密钥头</text>
+  </g>
+</svg>
