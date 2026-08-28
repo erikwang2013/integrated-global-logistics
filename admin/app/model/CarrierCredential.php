@@ -18,11 +18,12 @@ class CarrierCredential extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'carrier_id', 'name', 'app_key', 'app_secret', 'extra', 'status',
+        'carrier_id', 'name', 'app_key', 'app_secret', 'extra', 'status', 'weight',
     ];
 
     protected $casts = [
         'status' => 'integer',
+        'weight' => 'integer',
         'app_key' => Encryptable::class,
         'app_secret' => Encryptable::class,
         'extra' => 'json',

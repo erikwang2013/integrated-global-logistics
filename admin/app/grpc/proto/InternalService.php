@@ -97,11 +97,18 @@ class InternalService
             }
 
             $logisticsConfig = config('logistics');
+            $credential = null;
             if ($credentialId !== null) {
                 $credential = CarrierCredential::find($credentialId);
                 if (!$credential || !$credential->carrier || $credential->carrier->code !== $code) {
                     return self::error($response, 400, 'credential_id does not match carrier_code', 'INVALID_PARAMS', 'credential_id does not match carrier_code');
                 }
+            } else {
+                $credential = self::pickWeightedCredential($code);
+            }
+            // 加权路径持久化选中凭证 id，保证 credential_id 可审计（显式路径本就一致）
+            $credentialId = $credential?->id ?? $credentialId;
+            if ($credential !== null) {
                 $override = is_array($credential->extra) ? $credential->extra : [];
                 if ($credential->app_key !== '') {
                     $override['app_key'] = $credential->app_key;
@@ -303,6 +310,28 @@ class InternalService
             }
         }
         return 500;
+    }
+
+    /** 未指定 credential_id 时按 weight 加权随机选择该承运商启用凭证；无凭证返回 null（走默认配置） */
+    private static function pickWeightedCredential(string $code): ?CarrierCredential
+    {
+        $carrierId = Carrier::where('code', $code)->value('id');
+        if (!$carrierId) {
+            return null;
+        }
+        $credentials = CarrierCredential::where('carrier_id', $carrierId)->where('status', 1)->get();
+        $total = (int) $credentials->sum('weight');
+        if ($total <= 0) {
+            return null;
+        }
+        $r = random_int(1, $total);
+        foreach ($credentials as $credential) {
+            $r -= (int) $credential->weight;
+            if ($r <= 0) {
+                return $credential;
+            }
+        }
+        return $credentials->first();
     }
 
     /** 标准化 Tracking（含 events），与对外 /v1 契约对齐 */

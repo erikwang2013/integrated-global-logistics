@@ -41,10 +41,21 @@ pub struct Operation {
     pub summary: Option<String>,
     #[serde(skip_serializing_if = "Vec::is_empty", default)]
     pub tags: Vec<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(skip_serializing_if = "Vec::is_empty", default)]
+    pub parameters: Vec<Parameter>,
+    #[serde(rename = "requestBody", skip_serializing_if = "Option::is_none")]
     pub request_body: Option<RequestBody>,
     #[serde(skip_serializing_if = "HashMap::is_empty", default)]
     pub responses: HashMap<String, Response>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Parameter {
+    pub name: String,
+    #[serde(rename = "in")]
+    pub location: String,
+    pub required: bool,
+    pub schema: Schema,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -70,8 +81,10 @@ pub struct Schema {
     pub schema_type: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub properties: Option<HashMap<String, Schema>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "$ref", skip_serializing_if = "Option::is_none")]
     pub reference: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub items: Option<Box<Schema>>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -116,6 +129,7 @@ impl OpenApiBuilder {
         let op = Operation {
             summary: Some(summary.into()),
             tags,
+            parameters: vec![],
             request_body: None,
             responses: {
                 let mut m = HashMap::new();
@@ -153,6 +167,7 @@ impl OpenApiBuilder {
                 schema_type: Some("object".into()),
                 properties: Some(properties),
                 reference: None,
+                items: None,
             },
         );
         self
@@ -183,6 +198,7 @@ pub fn schema_ref(name: &str) -> Schema {
         schema_type: None,
         properties: None,
         reference: Some(format!("#/components/schemas/{name}")),
+        items: None,
     }
 }
 
@@ -191,6 +207,25 @@ pub fn string_schema() -> Schema {
         schema_type: Some("string".into()),
         properties: None,
         reference: None,
+        items: None,
+    }
+}
+
+pub fn integer_schema() -> Schema {
+    Schema {
+        schema_type: Some("integer".into()),
+        properties: None,
+        reference: None,
+        items: None,
+    }
+}
+
+pub fn array_schema(items: Schema) -> Schema {
+    Schema {
+        schema_type: Some("array".into()),
+        properties: None,
+        reference: None,
+        items: Some(Box::new(items)),
     }
 }
 
@@ -267,6 +302,9 @@ mod tests {
         let s = schema_ref("User");
         assert_eq!(s.reference.as_deref(), Some("#/components/schemas/User"));
         assert_eq!(s.schema_type, None);
+        let json = serde_json::to_value(s).unwrap();
+        assert_eq!(json["$ref"], "#/components/schemas/User");
+        assert!(json.get("reference").is_none());
     }
 
     #[test]
@@ -293,6 +331,58 @@ mod tests {
             .build();
         let json = serde_json::to_value(&spec).unwrap();
         assert!(json.pointer("/paths/~1r/post/responses/200").is_some());
+    }
+
+    #[test]
+    fn parameters_serialized_in_operation() {
+        let mut paths = HashMap::new();
+        paths.insert(
+            "/r/{id}".into(),
+            PathItem {
+                get: Some(Operation {
+                    summary: Some("g".into()),
+                    tags: vec![],
+                    parameters: vec![Parameter {
+                        name: "id".into(),
+                        location: "path".into(),
+                        required: true,
+                        schema: string_schema(),
+                    }],
+                    request_body: None,
+                    responses: HashMap::new(),
+                }),
+                post: None,
+                put: None,
+                delete: None,
+                patch: None,
+                head: None,
+                options: None,
+            },
+        );
+        let spec = OpenApiSpec {
+            openapi: "3.0.3".into(),
+            info: OpenApiInfo {
+                title: "T".into(),
+                version: "1".into(),
+            },
+            paths,
+            components: None,
+        };
+        let json = serde_json::to_value(&spec).unwrap();
+        let p = json
+            .pointer("/paths/~1r~1{id}/get/parameters/0")
+            .unwrap();
+        assert_eq!(p["name"], "id");
+        assert_eq!(p["in"], "path");
+        assert_eq!(p["required"], true);
+    }
+
+    #[test]
+    fn array_schema_has_items() {
+        let s = array_schema(string_schema());
+        assert_eq!(s.schema_type.as_deref(), Some("array"));
+        assert_eq!(s.items.unwrap().schema_type.as_deref(), Some("string"));
+        assert_eq!(integer_schema().schema_type.as_deref(), Some("integer"));
     }
 
     #[test]

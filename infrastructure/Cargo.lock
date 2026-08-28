@@ -5588,6 +5588,7 @@ dependencies = [
  "ecat-health",
  "ecat-metrics",
  "ecat-middleware",
+ "ecat-openapi",
  "ecat-transport-http",
  "prometheus",
  "prost",

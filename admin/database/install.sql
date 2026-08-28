@@ -287,6 +287,7 @@ CREATE TABLE `logistics_carrier_credential` (
   `app_secret` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT 'App Secret（加密存储）',
   `extra` json DEFAULT NULL COMMENT '扩展参数（JSON，如 endpoint/partner_id 等）',
   `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态: 0=禁用 1=启用',
+  `weight` int unsigned NOT NULL DEFAULT '100' COMMENT '路由权重，加权随机选择凭证',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),

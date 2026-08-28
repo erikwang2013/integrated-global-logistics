@@ -91,6 +91,7 @@ class CarrierCredentialController extends BaseController
             'app_key' => 'string|max:200',
             'app_secret' => 'string|max:200',
             'status' => 'in:0,1',
+            'weight' => 'nullable|integer|min:1|max:10000',
         ]);
         if ($validator->fails()) {
             return $this->fail($validator->errors()->first(), 422);
@@ -109,6 +110,7 @@ class CarrierCredentialController extends BaseController
         $credential->app_secret = EncryptionService::decryptTransmission($request->input('app_secret', ''));
         $credential->extra = $request->input('extra');
         $credential->status = (int) $request->input('status', 1);
+        $credential->weight = (int) $request->input('weight', 100);
         $credential->save();
 
         return $this->success($this->encodeIds($credential->toArray(), ['id', 'carrier_id']), '创建成功');
@@ -158,6 +160,7 @@ class CarrierCredentialController extends BaseController
             'app_key' => 'string|max:200',
             'app_secret' => 'string|max:200',
             'status' => 'in:0,1',
+            'weight' => 'nullable|integer|min:1|max:10000',
         ]);
         if ($validator->fails()) {
             return $this->fail($validator->errors()->first(), 422);
@@ -177,6 +180,9 @@ class CarrierCredentialController extends BaseController
         }
         if ($request->input('status') !== null) {
             $credential->status = (int) $request->input('status');
+        }
+        if ($request->input('weight') !== null) {
+            $credential->weight = (int) $request->input('weight');
         }
         $credential->save();
 

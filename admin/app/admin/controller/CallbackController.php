@@ -12,8 +12,10 @@ use app\model\Carrier;
 use app\model\CarrierCredential;
 use app\model\TrackingEvent;
 use app\model\TrackingQuery;
+use support\Redis;
 use support\Request;
 use support\Response;
+use Throwable;
 use Webman\RedisQueue\Client as QueueClient;
 
 /**
@@ -131,6 +133,13 @@ class CallbackController extends BaseController
                 ], $normalized),
             ];
             $latest->save();
+        }
+
+        // 事件已落库 → 失效网关缓存，强制下次上游重新查询（best-effort，失败不影响回调响应）
+        try {
+            Redis::del("logistics:cache:track:{$carrier}:{$trackingNo}", "logistics:cache:detect:{$trackingNo}");
+        } catch (Throwable $e) {
+            error_log('[callback] cache invalidation failed: ' . $e->getMessage());
         }
 
         return json(['code' => 0, 'message' => 'ok']);

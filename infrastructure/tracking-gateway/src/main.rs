@@ -38,6 +38,8 @@ pub mod pb {
     tonic::include_proto!("internal.v1");
 }
 
+mod openapi;
+
 // ── 配置 ──
 
 #[derive(Debug, Clone, Deserialize)]
@@ -919,12 +921,15 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             require_api_key,
         ));
 
-    // /v1/health、/metrics 为运维端点，不要求 API-Key
+    // /v1/health、/v1/openapi.json、/metrics 为公共端点，不要求 API-Key
     let health: Router<AppState> = HealthRegistry::new().into_router().with_state(());
+    let openapi: Router<AppState> = Router::new()
+        .route("/openapi.json", get(openapi::openapi_json))
+        .with_state(());
     let metrics: Router<AppState> = metrics_router().with_state(());
 
     let router: Router<()> = api
-        .nest("/v1", health)
+        .nest("/v1", health.merge(openapi))
         .merge(metrics)
         .layer(middleware)
         .with_state(state.clone());
