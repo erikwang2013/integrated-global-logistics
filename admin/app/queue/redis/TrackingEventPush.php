@@ -96,8 +96,11 @@ class TrackingEventPush implements Consumer
     /** @return array{0: bool, 1: string} [是否成功, 错误信息] */
     private function post(string $url, string $body, string $sign): array
     {
+        // 解析一次，同一组 IP 用于拦截校验与连接固定（杜绝 DNS rebinding 换址）
+        $host = (string) parse_url($url, PHP_URL_HOST);
+        $ips = $host !== '' ? gethostbynamel($host) : false;
         // CALLBACK_ALLOW_PRIVATE=1 放行内网回调（仅校验，不影响签名/幂等）
-        if ((int) getenv('CALLBACK_ALLOW_PRIVATE') !== 1 && $this->isBlockedUrl($url)) {
+        if ((int) getenv('CALLBACK_ALLOW_PRIVATE') !== 1 && ($ips === false || self::hasBlockedIp($ips))) {
             return [false, 'blocked callback_url (internal/loopback address)'];
         }
         $ch = curl_init($url);
@@ -112,6 +115,11 @@ class TrackingEventPush implements Consumer
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_RETURNTRANSFER => true,
         ]);
+        if ($ips !== false && $ips !== []) {
+            // 固定连接已校验 IP：curl 不再自行解析，杜绝检查与连接之间的 DNS 换址
+            $port = (int) (parse_url($url, PHP_URL_PORT) ?: (strtolower((string) parse_url($url, PHP_URL_SCHEME)) === 'https' ? 443 : 80));
+            curl_setopt($ch, CURLOPT_RESOLVE, array_map(static fn (string $ip): string => "{$host}:{$port}:{$ip}", $ips));
+        }
         $resp = curl_exec($ch);
         $httpCode = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         $err = curl_error($ch);
@@ -125,14 +133,9 @@ class TrackingEventPush implements Consumer
         return [true, ''];
     }
 
-    /** host 解析后任一地址落入内网/回环段即拦截；解析失败一律拦截 */
-    private function isBlockedUrl(string $url): bool
+    /** 任一解析地址落入内网/回环段即拦截 */
+    private static function hasBlockedIp(array $ips): bool
     {
-        $host = (string) parse_url($url, PHP_URL_HOST);
-        $ips = $host !== '' ? gethostbynamel($host) : false;
-        if ($ips === false) {
-            return true;
-        }
         foreach ($ips as $ip) {
             $long = ip2long($ip);
             if ($long !== false) {

@@ -664,7 +664,7 @@ fn parse_query(resp: pb::QueryResponse) -> Result<Value, Response> {
             })).collect::<Vec<_>>(),
         }));
     }
-    Err(worker_error(resp.code, &resp.message))
+    Err(worker_error(resp.code, &resp.message, Some((&resp.error_code, &resp.error_message))))
 }
 
 fn parse_detect(resp: pb::DetectResponse) -> Result<Value, Response> {
@@ -675,7 +675,7 @@ fn parse_detect(resp: pb::DetectResponse) -> Result<Value, Response> {
             "confidence": resp.confidence,
         }));
     }
-    Err(worker_error(resp.code, &resp.message))
+    Err(worker_error(resp.code, &resp.message, None))
 }
 
 fn parse_carriers(resp: pb::CarriersResponse) -> Result<Value, Response> {
@@ -687,16 +687,22 @@ fn parse_carriers(resp: pb::CarriersResponse) -> Result<Value, Response> {
                 .collect::<Vec<_>>()
         ));
     }
-    Err(worker_error(resp.code, &resp.message))
+    Err(worker_error(resp.code, &resp.message, None))
 }
 
-/// 业务错误码 → HTTP 状态（4xx/5xx 原样映射，其余落 502）
-fn worker_error(code: i32, message: &str) -> Response {
+/// 业务错误码 → HTTP 状态（4xx/5xx 原样映射，其余落 502）；
+/// error 携带上游返回的 error_code/error_message，非空时并入 JSON（诊断用）
+fn worker_error(code: i32, message: &str, error: Option<(&str, &str)>) -> Response {
     let http = match StatusCode::from_u16(code as u16) {
         Ok(s) if s.is_client_error() || s.is_server_error() => s,
         _ => StatusCode::BAD_GATEWAY,
     };
-    err_json(http, code as i64, message)
+    let mut body = json!({ "code": code, "message": message });
+    if let Some((ec, em)) = error {
+        body["error_code"] = json!(ec);
+        body["error_message"] = json!(em);
+    }
+    (http, Json(body)).into_response()
 }
 
 #[derive(Deserialize)]
@@ -815,7 +821,7 @@ async fn subscribe(State(state): State<AppState>, Json(req): Json<SubscribeReq>)
             "secret": resp.secret,
         }))
     } else {
-        worker_error(resp.code, &resp.message)
+        worker_error(resp.code, &resp.message, Some((&resp.error_code, &resp.error_message)))
     }
 }
 

@@ -171,3 +171,15 @@
 - [ ] 新 .php/.rs/.proto 文件含版权头 `Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz`
 - [ ] 文件 <500 行；表前缀 logistics_；不用全局函数前缀 `\`
 - [ ] `logistics_tracking_event` 迁移文件（表前缀/索引 per 计划文档 §4）
+
+## 遗留 P2 状态（2026-08-28 核对）
+
+- [x] **SubscribeResponse 补 error_code/error_message** — proto 字段 5/6 + protoc 重生成 PHP 类与
+      GPBMetadata + Rust `worker_error` 并入 JSON（query/detect/subscribe 生效，carriers 无错误字段）
+- [x] **DNS rebinding** — `TrackingEventPush::post()` 解析一次，同一组 IP 做 `hasBlockedIp` 拦截校验 +
+      `CURLOPT_RESOLVE` 固定连接目标，杜绝检查与连接之间换址（reflection 校验 7/7）
+- [x] **install.sql 同步** — M1 四表（carrier/carrier_credential/tracking_query/callback_subscription）
+      DDL + 三组权限种子（19 条）+ super_admin 关联，scratch 库执行验证通过
+- [ ] **captcha Imagick 环境依赖** — `captcha_create()` 依赖 php-imagick 扩展；属系统环境依赖，
+      agent 无法修复。当前开发机已装 imagick+gd（`php -m` 确认）；生产部署时须在 Dockerfile/安装清单
+      显式安装 `php-imagick`，否则验证码接口 500（代码回退 GD 作为替代方案，M4 后可议）

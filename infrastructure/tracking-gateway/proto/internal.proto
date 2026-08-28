@@ -88,4 +88,7 @@ message SubscribeResponse {
   // 订阅 ID 与回调验签密钥（code==0 时返回，HMAC 验签用）
   int64 subscription_id = 3;
   string secret = 4;
+  // 机器可读错误码与补充信息（code!=0 时返回，诊断用）
+  string error_code = 5;
+  string error_message = 6;
 }

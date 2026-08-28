@@ -24,12 +24,13 @@
 │  ④ ecat-client LoadBalancer（RoundRobin）→ PHP worker 池            │
 │  ⑤ ecat-metrics /metrics（Prometheus）· ecat-health /health         │
 └───────────────┬──────────────────────────────┬──────────────────────┘
-                │ 内部契约（仅内网，共享密钥头）        │ GET /internal/carriers
-                │ POST /internal/tracking/query   │（registry 同步，e-cat 缓存）
+                │ gRPC InternalService（仅内网，       │ rpc Carriers
+                │ 共享密钥头 x-internal-token）       │（registry 同步，e-cat 缓存）
+                │ rpc Query / Detect / Subscribe     │
                 ▼                                  ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │            admin — PHP webman worker 池（无状态，可水平扩展）           │
-│  internal 控制器 → GlobalLogistics\Logistics 门面                    │
+│  app/grpc InternalService → GlobalLogistics\Logistics 门面          │
 │  domestic($code)/international($code)->queryTrack($no)              │
 │  凭证从 logistics_carrier_credential 读取（Encryptable 加密存储）           │
 │  查询结果落 logistics_tracking_query · 标准化 JSON 返回                    │
@@ -80,13 +81,13 @@
     → 命中：直接返回（附带 X-Cache: HIT）
   → 未命中：
     → ecat-circuit-breaker 检查（按 carrier 维度；OPEN 则 503 快速失败，半开后放行探针）
-    → ecat-client RoundRobin 从 worker 池选一个 → POST /internal/tracking/query
+    → ecat-client RoundRobin 从 worker 池选一个 → gRPC InternalService.Query
     → PHP worker：读凭证 → Logistics::domestic/international($code)->queryTrack($no)
       （包内 RetryingClient 自带 2 次重试）
     → 落库 logistics_tracking_query → 返回标准化 JSON → e-cat 写缓存 → 响应
 ```
 
-- `carrier_code` 缺省时：e-cat 先查 `cache:detect:{no}`（短 TTL 5min），未命中调 `POST /internal/tracking/detect`（复用包内 Detector）。
+- `carrier_code` 缺省时：e-cat 先查 `cache:detect:{no}`（短 TTL 5min），未命中调 gRPC `InternalService.Detect`（复用包内 Detector）。
 - 上游承运商失败：PHP 返回结构化错误码 → e-cat 熔断计数 → 客户端收到统一错误结构（`code/carrier_error`），不泄露内部细节。
 
 ### 3.2 回调链路（异步，M3）
@@ -130,16 +131,16 @@ RBAC 权限种子（沿用 slug 约定，插入 `logistics_admin_permission`）�
 
 统一响应：`{code: 0, message: "ok", data: {...}}`；错误 `{code: 4xx/5xx 段, message}`（限流 429、熔断 503、承运商错误 carrier_error）。
 
-### 5.2 内部（e-cat → PHP worker，仅内网，共享密钥头 `X-Internal-Token`）
+### 5.2 内部（e-cat → PHP worker，gRPC，仅内网，共享密钥头 `x-internal-token`）
 
-| 方法 | 路径 | 说明 |
+proto 定义于 `infrastructure/tracking-gateway/proto/internal.proto`（`internal.v1.InternalService`），PHP 服务端为 `admin/app/grpc`（webman grpc server，`InternalService::authorized` 以 `hash_equals` 校验共享密钥），**不落 OperationLog、不走 RBAC**。
+
+| RPC | 请求 → 响应 | 说明 |
 |---|---|---|
-| POST | `/internal/tracking/query` | `{carrier_code, tracking_no, credential_id?}` → 标准化 Tracking JSON 或错误码 |
-| POST | `/internal/tracking/detect` | `{tracking_no}` → `{carrier_code, channel, confidence}`（复用 Detector） |
-| GET | `/internal/carriers` | 承运商注册表（包内 `Resources/carrier-registry.php`），e-cat 缓存 10min 供 /v1/carriers |
-| POST | `/internal/subscriptions`（M3） | 创建订阅（写 logistics_callback_subscription） |
-
-内部路由挂在 `/internal` 前缀，中间件：`AdminAuth` 之外的独立 `InternalAuth`（校验共享密钥 + 仅内网来源），**不落 OperationLog、不走 RBAC**。
+| `Query` | `QueryRequest{carrier_code, tracking_no, credential_id?}` → `QueryResponse{code, message, error_code, error_message, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | 标准化 Tracking 或错误码 |
+| `Detect` | `DetectRequest{tracking_no}` → `DetectResponse{code, message, error_code, error_message, carrier_code, channel, confidence}` | 复用包内 Detector |
+| `Carriers` | `CarriersRequest{}` → `CarriersResponse{code, message, carriers[]}` | 承运商注册表（包内 `Resources/carrier-registry.php`），e-cat 缓存 10min 供 /v1/carriers |
+| `Subscribe`（M3） | `SubscribeRequest{carrier_code, callback_url, event_type}` → `SubscribeResponse{code, message, subscription_id, secret, error_code, error_message}` | 创建订阅（写 logistics_callback_subscription），secret 供商户 HMAC 验签 |
 
 ### 5.3 管理端（admin，走现有 RBAC 中间件链）
 
@@ -173,7 +174,7 @@ RBAC 权限种子（沿用 slug 约定，插入 `logistics_admin_permission`）�
 | 阶段 | 内容 | 产出物 | 完成标志 |
 |---|---|---|---|
 | **M1 管理后台扩展** | 表 + 模型 + 控制器 + 路由 + RBAC 权限种子 + 凭证加密 | install.sql 增量 DDL 与权限种子；模型 Carrier/CarrierCredential/TrackingQuery/CallbackSubscription；控制器与路由注册；`composer require erikwang2013/global-logistics` 并配置 | 后台可对承运商/密钥/订阅 CRUD，权限按 slug 生效，admin 全量回归通过 |
-| **M2 查询网关** ✅ | workspace 新 crate `tracking-gateway` + PHP internal 端点 + 缓存 + LB + 限流 + 熔断 + 对外 API | `infrastructure/tracking-gateway/`（Cargo.toml 加入 workspace members）；`app/controllers/internal/`（InternalAuth 中间件 + query/detect/carriers 端点）；e-cat 对外 /v1 三接口；/metrics；docker-compose 串联 | 已达成：`cargo build --offline` 通过；端到端验证 —— detect 识别 ✓、query 直达顺丰上游并返回结构化 carrier_error ✓、gateway 转发 + 熔断链路 ✓、落库 logistics_tracking_query ✓、Redis 前缀 `logistics:` ✓、internal 401/参数校验 ✓ |
+| **M2 查询网关** ✅ | workspace 新 crate `tracking-gateway` + PHP gRPC 端点 + 缓存 + LB + 限流 + 熔断 + 对外 API | `infrastructure/tracking-gateway/`（Cargo.toml 加入 workspace members）；`app/grpc/`（InternalService gRPC server，Query/Detect/Carriers/Subscribe）；e-cat 对外 /v1 接口；/metrics；docker-compose 串联 | 已达成：`cargo build --offline` 通过；端到端验证 —— detect 识别 ✓、query 直达顺丰上游并返回结构化 carrier_error ✓、gateway 转发 + 熔断链路 ✓、落库 logistics_tracking_query ✓、Redis 前缀 `logistics:` ✓、internal 401/参数校验 ✓ |
 | **M3 回调与订阅** | webhook 接收 + 事件落库 + 异步推送 + 订阅管理 | logistics_tracking_event 表；`/api/callback/{carrier}` 白名单路由 + 签名校验；webman 队列消费者（重试退避 + 幂等）；订阅 CRUD（admin + 对外 POST /v1/subscriptions） | 承运商回调可触发商户 URL 推送，失败重试，重复回调幂等 |
 | **M4 监控与统计** | 统计报表 + 指标面板 + 告警 | `/admin/tracking/statistics` API；e-cat /metrics + Grafana 面板；失败率/熔断告警规则；`ecat-openapi` 文档 | 查询量、成功率、耗时、承运商分布可视化；异常可告警 |
 
@@ -185,8 +186,8 @@ RBAC 权限种子（沿用 slug 约定，插入 `logistics_admin_permission`）�
 |---|---|
 | 209 家适配器质量参差、个别上游不稳定 | 熔断 + 超时 + 包内 RetryingClient 重试；M2 兜底：返回结构化 carrier_error，客户端可降级展示 |
 | 凭证泄露 | Encryptable 加密落库；凭证只存在于 PHP 侧，内部契约仅传 carrier_code（多凭证场景传 credential_id，e-cat 不持凭证明文） |
-| e-cat 与 PHP 耦合（registry/detector 规则版本漂移） | 通过 `/internal/carriers` 定期同步 registry，e-cat 不硬编码承运商清单 |
+| e-cat 与 PHP 耦合（registry/detector 规则版本漂移） | 通过 gRPC `Carriers` 定期同步 registry，e-cat 不硬编码承运商清单 |
 | 回调丢失 / 重复推送 | at-least-once + 幂等键 + 指数退避重试 + 手动重推入口（M3 简化实现，不做精确一次） |
-| 内部 API 被外部探测 | `/internal` 仅监听内网 + 共享密钥头 + 拒绝公网来源 IP |
+| 内部 API 被外部探测 | gRPC 端口仅监听内网 + 共享密钥头（`hash_equals` 校验）+ 拒绝公网来源 IP |
 
 **简化取舍**：缓存 TTL 静态配置（不做事件驱动失效，M4 可加）；detect 端点首版仅服务缺省 carrier_code 场景；回调推送留在 PHP 队列（吞吐不足再迁 e-cat）；多凭证路由策略、灰度、配额细分留到 M4 之后。

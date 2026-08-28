@@ -34,6 +34,16 @@ class SubscribeResponse extends \Google\Protobuf\Internal\Message
      * Generated from protobuf field <code>string secret = 4;</code>
      */
     protected $secret = '';
+    /**
+     * 机器可读错误码与补充信息（code!=0 时返回，诊断用）
+     *
+     * Generated from protobuf field <code>string error_code = 5;</code>
+     */
+    protected $error_code = '';
+    /**
+     * Generated from protobuf field <code>string error_message = 6;</code>
+     */
+    protected $error_message = '';
 
     /**
      * Constructor.
@@ -47,6 +57,9 @@ class SubscribeResponse extends \Google\Protobuf\Internal\Message
      *     @type int|string $subscription_id
      *           订阅 ID 与回调验签密钥（code==0 时返回，HMAC 验签用）
      *     @type string $secret
+     *     @type string $error_code
+     *           机器可读错误码与补充信息（code!=0 时返回，诊断用）
+     *     @type string $error_message
      * }
      */
     public function __construct($data = NULL) {
@@ -146,6 +159,54 @@ class SubscribeResponse extends \Google\Protobuf\Internal\Message
     {
         GPBUtil::checkString($var, True);
         $this->secret = $var;
+
+        return $this;
+    }
+
+    /**
+     * 机器可读错误码与补充信息（code!=0 时返回，诊断用）
+     *
+     * Generated from protobuf field <code>string error_code = 5;</code>
+     * @return string
+     */
+    public function getErrorCode()
+    {
+        return $this->error_code;
+    }
+
+    /**
+     * 机器可读错误码与补充信息（code!=0 时返回，诊断用）
+     *
+     * Generated from protobuf field <code>string error_code = 5;</code>
+     * @param string $var
+     * @return $this
+     */
+    public function setErrorCode($var)
+    {
+        GPBUtil::checkString($var, True);
+        $this->error_code = $var;
+
+        return $this;
+    }
+
+    /**
+     * Generated from protobuf field <code>string error_message = 6;</code>
+     * @return string
+     */
+    public function getErrorMessage()
+    {
+        return $this->error_message;
+    }
+
+    /**
+     * Generated from protobuf field <code>string error_message = 6;</code>
+     * @param string $var
+     * @return $this
+     */
+    public function setErrorMessage($var)
+    {
+        GPBUtil::checkString($var, True);
+        $this->error_message = $var;
 
         return $this;
     }
