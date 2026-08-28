@@ -96,7 +96,8 @@ class TrackingEventPush implements Consumer
     /** @return array{0: bool, 1: string} [是否成功, 错误信息] */
     private function post(string $url, string $body, string $sign): array
     {
-        if ($this->isBlockedUrl($url)) {
+        // CALLBACK_ALLOW_PRIVATE=1 放行内网回调（仅校验，不影响签名/幂等）
+        if ((int) getenv('CALLBACK_ALLOW_PRIVATE') !== 1 && $this->isBlockedUrl($url)) {
             return [false, 'blocked callback_url (internal/loopback address)'];
         }
         $ch = curl_init($url);
