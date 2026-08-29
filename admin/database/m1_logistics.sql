@@ -99,6 +99,99 @@ CREATE TABLE `logistics_callback_subscription` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='回调订阅表';
 
 -- -------------------------------------------
+-- M7 客户端表
+-- -------------------------------------------
+DROP TABLE IF EXISTS `logistics_client`;
+
+CREATE TABLE `logistics_client` (
+  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
+  `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名',
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '密码（bcrypt哈希）',
+  `contact_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '联系人姓名',
+  `contact_phone` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '联系电话',
+  `contact_email` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '联系邮箱',
+  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态: 0=禁用 1=启用',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客户端表';
+
+-- -------------------------------------------
+-- 客户端应用表
+-- -------------------------------------------
+DROP TABLE IF EXISTS `logistics_client_app`;
+
+CREATE TABLE `logistics_client_app` (
+  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
+  `client_id` bigint unsigned NOT NULL COMMENT '所属客户端ID',
+  `appid` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '应用公开标识（服务端生成，对外展示）',
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '应用名称',
+  `purpose` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '申请用途说明',
+  `api_key_sha256` char(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'API密钥sha256哈希（hex），明文仅创建时返回一次',
+  `plan_id` bigint unsigned NOT NULL DEFAULT '0' COMMENT '当前套餐ID（0=未开通）',
+  `valid_days` int unsigned NOT NULL DEFAULT '0' COMMENT '审核通过后有效期天数',
+  `expire_at` datetime DEFAULT NULL COMMENT '有效期截止时间（UTC，审核通过时=now+valid_days）',
+  `review_remark` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '审核备注（驳回原因等）',
+  `reviewed_by` bigint unsigned NOT NULL DEFAULT '0' COMMENT '审核人管理用户ID',
+  `reviewed_at` datetime DEFAULT NULL COMMENT '审核时间',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '状态: pending=待审核 approved=已通过 rejected=已驳回 disabled=已禁用',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_appid` (`appid`),
+  KEY `idx_client_id` (`client_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_expire_at` (`expire_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客户端应用表';
+
+-- -------------------------------------------
+-- 套餐表（种子 3 档：体验 7天 / 基础 30天 / 专业 365天）
+-- -------------------------------------------
+DROP TABLE IF EXISTS `logistics_plan`;
+
+CREATE TABLE `logistics_plan` (
+  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '套餐名称',
+  `price` int unsigned NOT NULL DEFAULT '0' COMMENT '价格（分）',
+  `valid_days` int unsigned NOT NULL DEFAULT '0' COMMENT '有效期（天）',
+  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态: 0=停售 1=在售',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='套餐表';
+
+INSERT INTO `logistics_plan` (`id`, `name`, `price`, `valid_days`, `status`, `created_at`, `updated_at`) VALUES
+('22000000000000001', '体验套餐', 0, 7, 1, NOW(), NOW()),
+('22000000000000002', '基础套餐', 9900, 30, 1, NOW(), NOW()),
+('22000000000000003', '专业套餐', 39900, 365, 1, NOW(), NOW());
+
+-- -------------------------------------------
+-- 订单表
+-- -------------------------------------------
+DROP TABLE IF EXISTS `logistics_order`;
+
+CREATE TABLE `logistics_order` (
+  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
+  `order_no` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '订单号',
+  `client_id` bigint unsigned NOT NULL COMMENT '客户端ID',
+  `app_id` bigint unsigned NOT NULL COMMENT '应用ID',
+  `plan_id` bigint unsigned NOT NULL COMMENT '套餐ID',
+  `amount` int unsigned NOT NULL DEFAULT '0' COMMENT '订单金额（分）',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '状态: pending=待支付 paid=已支付 cancelled=已取消',
+  `paid_at` datetime DEFAULT NULL COMMENT '支付时间',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_order_no` (`order_no`),
+  KEY `idx_client_id` (`client_id`),
+  KEY `idx_app_id` (`app_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+
+-- -------------------------------------------
 -- M1 权限种子（菜单 type=1 + API type=3，ID 沿用 install.sql 的 snowflake 分段约定）
 -- -------------------------------------------
 INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
@@ -141,5 +234,22 @@ INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUE
 ('10000000000000001', '21000000000000143'),
 ('10000000000000001', '21000000000000144'),
 ('10000000000000001', '21000000000000151');
+
+-- -------------------------------------------
+-- M7 客户端管理权限种子
+-- -------------------------------------------
+INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
+('21000000000000105', '0', '客户端管理', 'client', 1, 'people', '/admin/client', 11, NOW(), NOW()),
+('21000000000000161', '21000000000000105', '查看客户端', 'get.admin/client', 3, '', '', 1, NOW(), NOW()),
+('21000000000000162', '21000000000000105', '查看应用', 'get.admin/client/app', 3, '', '', 2, NOW(), NOW()),
+('21000000000000163', '21000000000000105', '审核应用', 'post.admin/client/app/review', 3, '', '', 3, NOW(), NOW()),
+('21000000000000164', '21000000000000105', '禁用应用', 'post.admin/client/app/disable', 3, '', '', 4, NOW(), NOW());
+
+INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUES
+('10000000000000001', '21000000000000105'),
+('10000000000000001', '21000000000000161'),
+('10000000000000001', '21000000000000162'),
+('10000000000000001', '21000000000000163'),
+('10000000000000001', '21000000000000164');
 
 SET FOREIGN_KEY_CHECKS = 1;

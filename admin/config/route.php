@@ -121,6 +121,12 @@ Route::group('/admin', function () {
     // 物流聚合 — 回调订阅
     Route::resource('/callback/subscription', app\admin\controller\CallbackSubscriptionController::class);
     Route::post('/callback/subscription/retry/{event_id}', [app\admin\controller\CallbackSubscriptionController::class, 'retry']);
+
+    // 物流聚合 — 客户端管理
+    Route::get('/client', [app\admin\controller\ClientController::class, 'index']);
+    Route::get('/client/app', [app\admin\controller\ClientController::class, 'apps']);
+    Route::post('/client/app/{id}/review', [app\admin\controller\ClientController::class, 'review']);
+    Route::post('/client/app/{id}/disable', [app\admin\controller\ClientController::class, 'disable']);
 })->middleware([
     app\middleware\AdminAuth::class,
     app\middleware\AdminPermission::class,
@@ -139,11 +145,31 @@ Route::group('/api', function () {
     Route::post('/captcha/generate', v('CaptchaController', 'generate'));
     Route::post('/captcha/verify', v('CaptchaController', 'verify'));
 
-    // 认证
-    Route::post('/auth/login', v('AuthController', 'login'));
+    // 认证（client=1 走客户端门户登录，否则为管理端登录）
+    Route::post('/auth/login', function (Request $request) {
+        if ($request->input('client') === '1') {
+            return (new \app\api\v1\controller\ClientAuthController)->login($request);
+        }
+        return (new \app\api\v1\controller\AuthController)->login($request);
+    });
+    Route::post('/auth/register', v('ClientAuthController', 'register'));
     Route::post('/auth/refresh', v('AuthController', 'refresh'));
 })->middleware([
     app\middleware\ApiVersion::class,
+]);
+
+// 客户端门户（需客户端 JWT，token_type=client）
+Route::group('/api', function () {
+    Route::get('/plan', v('ClientAppController', 'plans'));
+    Route::get('/app', v('ClientAppController', 'index'));
+    Route::post('/app', v('ClientAppController', 'store'));
+    Route::put('/app/{id}/key', v('ClientAppController', 'resetKey'));
+    Route::put('/app/{id}', v('ClientAppController', 'update'));
+    Route::post('/app/{id}/order', v('ClientAppController', 'order'));
+    Route::post('/order/{id}/pay', v('ClientAppController', 'pay'));
+})->middleware([
+    app\middleware\ApiVersion::class,
+    app\middleware\ClientAuth::class,
 ]);
 
 // CORS 预检兜底 — OPTIONS 不匹配已注册路由，fallback 不走中间件链，

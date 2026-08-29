@@ -7,14 +7,17 @@ declare(strict_types=1);
 
 namespace app\middleware;
 
+use app\model\Client;
 use support\Request;
 use Webman\Http\Response;
-use support\Redis;
 use Erikwang2013\Jwt\JWT;
 use Erikwang2013\Jwt\JWTFactory;
-use Erikwang2013\Jwt\JWTException;
 
-class AdminAuth
+/**
+ * 客户端门户认证 — 校验 JWT 且 payload.token_type 必须为 client
+ * （与 admin JWT 同 secret，靠 token_type 区分，避免互相冒用）
+ */
+class ClientAuth
 {
     private static ?JWT $jwt = null;
 
@@ -36,27 +39,23 @@ class AdminAuth
             return json(['code' => 401, 'message' => '未登录', 'data' => []]);
         }
 
-        // 检查 JWT 黑名单
-        $blacklistKey = 'jwt_blacklist:' . md5($token);
-        try {
-            if (Redis::get($blacklistKey)) {
-                return json(['code' => 401, 'message' => 'Token已失效，请重新登录', 'data' => []]);
-            }
-        } catch (\Throwable $e) {
-            // Redis down, skip blacklist check
-        }
-
         try {
             $payload = self::getJWT()->decode($token);
-            if (($payload['token_type'] ?? '') === 'client') {
-                return json(['code' => 401, 'message' => 'Token已过期或无效', 'data' => []]);
-            }
-            $request->adminId = $payload['sub'] ?? 0;
-            $request->adminUsername = $payload['username'] ?? '';
-        } catch (JWTException | \Exception $e) {
+        } catch (\Throwable $e) {
             return json(['code' => 401, 'message' => 'Token已过期或无效', 'data' => []]);
         }
 
+        if (($payload['token_type'] ?? '') !== 'client') {
+            return json(['code' => 401, 'message' => '无效的客户端令牌', 'data' => []]);
+        }
+
+        $client = Client::find($payload['sub'] ?? 0);
+        if (!$client || (int) $client->status !== 1) {
+            return json(['code' => 403, 'message' => '账号不存在或已禁用', 'data' => []]);
+        }
+
+        $request->clientId = (int) $client->id;
+        $request->client = $client;
         return $next($request);
     }
 }

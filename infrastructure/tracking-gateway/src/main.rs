@@ -472,6 +472,20 @@ fn metric(result: &str) {
 
 // ── 鉴权 ──
 
+#[derive(Deserialize)]
+struct ApiKeyRecord {
+    #[allow(dead_code)]
+    appid: String,
+    status: String,
+    expire_at: i64,
+}
+
+fn sha256_hex(input: &str) -> String {
+    use sha2::{Digest, Sha256};
+    let digest = Sha256::digest(input.as_bytes());
+    digest.iter().map(|b| format!("{b:02x}")).collect()
+}
+
 async fn require_api_key(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -482,10 +496,36 @@ async fn require_api_key(
         .get("x-api-key")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("");
+    if key.is_empty() {
+        return err_json(StatusCode::UNAUTHORIZED, 401, "invalid or missing api key");
+    }
+    // 静态数组快速路径（demo key），随后走 Redis 动态校验
     if state.cfg.api_keys.iter().any(|k| k == key) {
-        next.run(req).await
-    } else {
-        err_json(StatusCode::UNAUTHORIZED, 401, "invalid or missing api key")
+        return next.run(req).await;
+    }
+    // Redis 校验：命中则校验 status=approved 且 expire_at>now；未命中 401；
+    // 连接错误 fail-closed（与 NotFound 区分，避免 Redis 故障时放行）
+    let rkey = format!("{}api_keys:{}", state.cfg.key_prefix, sha256_hex(key));
+    match state.cache.get(&rkey).await {
+        Ok(Some(raw)) => match serde_json::from_slice::<ApiKeyRecord>(&raw) {
+            Ok(rec) => {
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs() as i64)
+                    .unwrap_or(0);
+                if rec.status == "approved" && rec.expire_at > now {
+                    next.run(req).await
+                } else {
+                    err_json(StatusCode::UNAUTHORIZED, 401, "api key disabled or expired")
+                }
+            }
+            Err(_) => err_json(StatusCode::UNAUTHORIZED, 401, "invalid or missing api key"),
+        },
+        Ok(None) => err_json(StatusCode::UNAUTHORIZED, 401, "invalid or missing api key"),
+        Err(e) => {
+            tracing::warn!(error = %e, "api key redis check failed, failing closed");
+            err_json(StatusCode::UNAUTHORIZED, 401, "invalid or missing api key")
+        }
     }
 }
 
