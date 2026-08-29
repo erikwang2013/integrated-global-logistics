@@ -275,6 +275,11 @@ class ClientAppController
         $order->status = 'pending';
         $order->save();
 
+        // 应用关联套餐，供管理端审核时确定有效期
+        $app->plan_id = $plan->id;
+        $app->valid_days = $plan->valid_days;
+        $app->save();
+
         return json(['code' => 0, 'message' => '下单成功', 'data' => [
             'id' => HashidsService::encode($order->id),
             'order_no' => $order->order_no,

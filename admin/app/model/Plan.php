@@ -11,7 +11,7 @@ use support\Model;
 
 class Plan extends Model
 {
-    protected $table = 'logistics_plan';
+    protected $table = 'plan';
     protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'int';

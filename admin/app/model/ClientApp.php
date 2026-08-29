@@ -11,7 +11,7 @@ use support\Model;
 
 class ClientApp extends Model
 {
-    protected $table = 'logistics_client_app';
+    protected $table = 'client_app';
     protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'int';

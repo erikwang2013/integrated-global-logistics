@@ -203,7 +203,15 @@ class ClientController extends BaseController
         $app->reviewed_at = date('Y-m-d H:i:s');
 
         if ($action === 'approve') {
-            $plan = $app->plan_id ? Plan::find($app->plan_id) : null;
+            // 套餐优先取应用关联，兜底取最新已支付订单（兼容早期数据）
+            $planId = (int) $app->plan_id;
+            if (!$planId) {
+                $planId = (int) Order::where('app_id', $app->id)
+                    ->where('status', 'paid')
+                    ->orderBy('id', 'desc')
+                    ->value('plan_id');
+            }
+            $plan = $planId ? Plan::find($planId) : null;
             $days = $plan ? (int) $plan->valid_days : (int) $app->valid_days;
             if ($days <= 0) {
                 return $this->fail('应用未关联有效套餐，无法通过审核', 422);
@@ -216,6 +224,14 @@ class ClientController extends BaseController
             if (!$this->writeRedisKey($app->api_key_sha256, $app->appid, $expireTs)) {
                 return $this->fail('网关密钥写入失败，请稍后重试', 500);
             }
+            try {
+                $app->save();
+            } catch (\Throwable $e) {
+                // 补偿：DB 保存失败时删除刚写入的网关记录，避免幽灵 key
+                try { Redis::del("api_keys:{$app->api_key_sha256}"); } catch (\Throwable) {}
+                throw $e;
+            }
+            return $this->success(['id' => $id, 'status' => $app->status]);
         } else {
             $app->review_remark = $remark;
             $app->status = 'rejected';

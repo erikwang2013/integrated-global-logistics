@@ -11,7 +11,7 @@ use support\Model;
 
 class Order extends Model
 {
-    protected $table = 'logistics_order';
+    protected $table = 'order';
     protected $primaryKey = 'id';
     public $incrementing = false;
     protected $keyType = 'int';
