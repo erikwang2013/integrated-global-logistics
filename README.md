@@ -16,7 +16,7 @@
 - **tracking-gateway 高频网关**（Rust e-cat 框架）—— 对外查询 API 的第一道入口：Redis 缓存、限流、按承运商熔断、worker 负载均衡，只做高频面，不懂承运商协议；
 - **global-logistics 统一门面**（PHP 包）—— 209 家承运商适配器（国内 45 + 国际 164）、187 条单号自动识别规则、`TrackStatus` 7 种统一状态语义。
 
-**当前进度**：M1 管理面（承运商/凭证/查询记录/订阅 CRUD）与 M2 查询网关（对外 API 全链路）已完成 —— 客户端 → e-cat → worker → 承运商的轨迹查询链路可演示。
+**当前进度**：M1 管理面（承运商/凭证/查询记录/订阅 CRUD）、M2 查询网关（对外 API 全链路）、M3 回调订阅、M4 监控统计、M5 对外 OpenAPI 文档与 M6 五份客户端 SDK 均已完成 —— 客户端 → e-cat → worker → 承运商的轨迹查询链路可演示，Python / PHP / Node.js / Go / Rust 五份零依赖 SDK 拷贝即用。
 
 ## 项目说明
 
@@ -26,7 +26,7 @@
 - **自动识别**：187 条单号正则规则顺序敏感、优先命中国内通道；识别不了的场景可显式调用 `domestic()` / `international()`；
 - **统一状态**：各家五花八门的原始状态映射为统一的 `TrackStatus` 枚举（待揽收 / 运输中 / 派送中 / 已签收 / 异常 / 退回 / 无法识别）；
 - **全球覆盖**：DHL、FedEx、UPS、USPS 四大快递与各国邮政 S10 系统（欧洲、拉美加勒比、非洲中东、亚太四区域）；
-- **对外 API**：e-cat 查询网关提供 API-Key 鉴权、Redis 缓存命中（`X-Cache: HIT`）、限流 429、按承运商熔断 503、RoundRobin worker 负载均衡；
+- **对外 API**：e-cat 查询网关提供 API-Key 鉴权、Redis 缓存命中（`X-Cache: HIT`）、限流 429、按承运商熔断 503、RoundRobin worker 负载均衡；五份零依赖 SDK（Python / PHP / Node.js / Go / Rust）拷贝即用；
 - **查询全审计**：每次查询落库 `logistics_tracking_query`（成功/失败、耗时、错误码），管理面可查可统计；
 - **密钥零硬编码**：各家密钥全部经配置注入，数据库层用 Encryptable 密文存储，代码与密钥完全分离。
 
@@ -68,6 +68,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -117,6 +118,21 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 
 网关默认监听 `0.0.0.0:8080`（`tracking-gateway/config/config.json` 可改），worker 指向 PHP internal 端点（默认 `http://127.0.0.1:8787`），API-Key 与内部令牌在配置中声明。
 
+**SDK 调用**（五份零依赖客户端，拷贝即用）：
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+各语言用法与示例见 [sdk/README.md](sdk/README.md)。
+
 详细部署见 [admin/README.md](admin/README.md)（Docker Compose 编排 5 个服务：Nginx / PHP / MySQL / Redis / Elasticsearch）与实施规划文档。
 
 ## 文档
@@ -127,6 +143,7 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— 安全架构
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— 平台实施规划（架构、数据流、数据库设计、API 契约、里程碑）
 - [admin/README.md](admin/README.md) —— 管理后台完整说明（技术栈、数据库规范、部署、CI/CD）
+- [sdk/README.md](sdk/README.md) —— 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust，五份零依赖，拷贝即用）
 
 ## 翻译
 
@@ -180,6 +197,23 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
   - 银行名称：THE BANK OF NEW YORK MELLON
   - SWIFT Code：IRVTUS3NXXX
   - 银行地址：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### 虚拟币打赏 (Crypto Donation)
+
+如果这个项目对你有帮助，欢迎扫描二维码打赏支持，谢谢！
+
+| 主网 (Network) | 二维码 (QR Code) | 钱包地址 (Wallet Address) |
+|---|---|---|
+| BNB Smart Chain (BEP20) | [<img src="docs/coin/1.jpg" width="150" alt="BNB Smart Chain (BEP20)">](docs/coin/1.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| Tron (TRC20) | [<img src="docs/coin/2.jpg" width="150" alt="Tron (TRC20)">](docs/coin/2.jpg) | `TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| Ethereum (ERC20) | [<img src="docs/coin/3.jpg" width="150" alt="Ethereum (ERC20)">](docs/coin/3.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| Aptos | [<img src="docs/coin/4.jpg" width="150" alt="Aptos">](docs/coin/4.jpg) | `0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| Plasma | [<img src="docs/coin/5.jpg" width="150" alt="Plasma">](docs/coin/5.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| Polygon POS | [<img src="docs/coin/6.jpg" width="150" alt="Polygon POS">](docs/coin/6.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| Solana | [<img src="docs/coin/7.jpg" width="150" alt="Solana">](docs/coin/7.jpg) | `2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` |
+| The Open Network (TON) | [<img src="docs/coin/8.jpg" width="150" alt="The Open Network (TON)">](docs/coin/8.jpg) | `UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| Arbitrum One | [<img src="docs/coin/9.jpg" width="150" alt="Arbitrum One">](docs/coin/9.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| AVAX C-Chain | [<img src="docs/coin/10.jpg" width="150" alt="AVAX C-Chain">](docs/coin/10.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

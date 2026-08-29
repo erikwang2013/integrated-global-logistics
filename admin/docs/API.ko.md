@@ -1823,3 +1823,125 @@ docker-compose up -d
 ### Nginx 보안 설정
 
 프로덕션 환경 배포 시 `docs/nginx-security.conf`를 참조하여 리버스 프록시 보안 강화를 구성하세요.
+
+## 16. 내부 gRPC 인터페이스(e-cat → PHP worker)
+
+e-cat 조회 게이트웨이 전용입니다. PHP 측은 workerman h2c 서비스(`tcp://0.0.0.0:8792`, 프로세스 `internal_grpc`)입니다. 계약은 `infrastructure/tracking-gateway/proto/internal.proto`(package `internal.v1`)에 정의되며, 메시지는 protobuf로 인코딩되고 metadata에 `x-internal-token`을 반드시 포함해야 합니다(값은 `config/logistics.php`의 `internal_token`, 운영 환경에서는 `INTERNAL_TOKEN` 환경 변수로 덮어씀). 토큰이 없거나 잘못되면 `code=401 UNAUTHORIZED` 응답을 반환합니다.
+
+### 16.1 RPC 목록
+
+| RPC | 요청 | 응답 | 설명 |
+|---|---|---|---|
+| `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | 운송사 식별; 식별 불가 시 `404 CARRIER_NOT_DETECTED` |
+| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | 트래킹 조회; `credential_id` 선택(다중 자격증명 시 지정, `carrier_code`와 일치해야 하며 그렇지 않으면 `400 INVALID_PARAMS`). 모든 조회는 `logistics_tracking_query`에 기록됨 |
+| `Carriers` | `{}` | `{code, carriers[]}` | 등록부 내 전체 운송사 `{carrier_code, channel}` |
+
+### 16.2 오류 계약(응답 `code` 필드, gRPC status는 항상 0)
+
+| `code` | `error_code` | 시나리오 |
+|---|---|---|
+| 400 | `INVALID_PARAMS` | 파라미터 누락 / credential_id 불일치 |
+| 401 | `UNAUTHORIZED` | 내부 토큰 오류 |
+| 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | 운송사 미등록 / 트래킹 없음 / 식별 불가 |
+| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | 상위 자격증명 오류 / 네트워크 오류 / 운송사 비즈니스 오류(구조화된 상위 메시지 포함, 예: `[SF-INTERNATIONAL A1001] 필수 파라미터는 비워둘 수 없음`) |
+| 500 | `INTERNAL_ERROR` | 내부 예외 |
+
+
+## 17. e-cat 쿼리 게이트웨이 외부 API
+
+Rust 고주파 게이트웨이(`infrastructure/tracking-gateway`), 기본 `0.0.0.0:8080` 리슨, 요청 헤더에 `X-API-Key`(설정 `api_keys`)를 포함합니다. 게이트웨이는 API-Key 인증, Redis 캐시 히트(접두사 `logistics:`), RateLimit, 운송사별 서킷 브레이커, RoundRobin worker 포워딩을 담당하며, 자격증명은 절대 게이트웨이로 내려가지 않습니다.
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | 건강 체크(공개 엔드포인트, 키 불필요) |
+| `GET /v1/openapi.json` | OpenAPI 3.0 문서(공개 엔드포인트, 키 불필요) |
+| `GET /v1/carriers` | 운송사 목록(PHP gRPC `InternalService.Carriers` 포워딩) |
+| `POST /v1/tracking/query` | 트래킹 조회(`{"carrier_code": "...", "tracking_no": "..."}`), `carrier_code` 생략 시 게이트웨이가 자동 식별(detect는 query 내부에서 수행) |
+| `GET /v1/tracking/{query_no}` | 쿼리 번호로 마지막 트래킹 결과 조회 |
+| `POST /v1/subscriptions` | 콜백 구독 등록(`{"carrier_code", "callback_url", "event_type"?}`, `event_type` 기본값 `tracking.update`) |
+
+
+게이트웨이 측 추가 의미: `rate_limit`(기본 60초당 100회) 초과 시 `429` 반환; 운송사 연속 실패로 서킷 브레이커 발동(기본 5xx/전송 오류 5회 후 60초 OPEN) 시 `503` 반환; worker 도달 불가 시 `502` 반환. 게이트웨이와 worker 사이는 내부 gRPC(h2c, `0.0.0.0:8792`)이며 `x-internal-token` 공유 키로 인증합니다. 16절 참조.
+
+### 17.1 응답 봉투와 오류
+
+모든 엔드포인트는 통일 봉투 `{"code": 0, "message": "ok", "data": ...}`를 반환합니다. `code != 0`이면 오류이며 `data`는 생략됩니다. 비즈니스 오류 본문은 `error_code` / `error_message`를 포함할 수 있고(상위 운송사 진단 정보, 게이트웨이 투과), `code`는 HTTP 상태와 일치합니다:
+
+| HTTP | 의미 |
+|---|---|
+| 400 | 파라미터 오류(`tracking_no` 누락 / 구독 파라미터 불법) |
+| 401 | 키 누락 또는 무효 |
+| 404 | 쿼리 번호 없음 |
+| 429 | RateLimit(키당 기본 60초 100회), 백오프 후 재시도 권장 |
+| 502 | worker 도달 불가 또는 상위 실패 |
+| 503 | 운송사 서킷 오픈, 백오프 후 재시도 권장 |
+
+### 17.2 호출 예시(curl)
+
+데모 키 `demo-api-key`, 게이트웨이 기본 `http://127.0.0.1:8080`:
+
+```bash
+# 건강 체크(공개 엔드포인트, 키 불필요)
+curl http://127.0.0.1:8080/v1/health
+
+# OpenAPI 문서(공개 엔드포인트, 키 불필요)
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# 운송사 목록
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# 트래킹 조회(운송사 지정은 선택)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# 쿼리 번호로 마지막 결과 조회
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# 콜백 구독 등록(콜백 주소는 공인 http/https여야 하며, 게이트웨이는 루프백/사설망 거부)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 호출 예시(SDK)
+
+5개의 제로 의존성 SDK가 저장소 `sdk/` 디렉터리에 있습니다(Python / PHP / Node.js / Go / Rust, 복사 후 바로 사용):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+SDK는 봉투 `code != 0` 또는 네트워크 실패 시 예외(`TrackingApiError`)를 던지며 `code` / `message` / `error_code` / `error_message` / `http_status`를 포함합니다. RateLimit와 서킷 브레이커 오류는 백오프 재시도를, 운송사 측 오류는 재시도하지 않는 것을 권장합니다. 전체 사용법은 `sdk/README.md`를 참조하세요.

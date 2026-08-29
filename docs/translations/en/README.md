@@ -16,6 +16,8 @@ The platform is composed of three components working together:
 - **tracking-gateway high-frequency gateway** (Rust e-cat framework) — the first entry of the external query API: Redis cache, rate limiting, per-carrier circuit breaking, worker load balancing; it only handles the high-frequency plane and knows nothing about carrier protocols;
 - **global-logistics unified facade** (PHP package) — adapters for 209 carriers (45 domestic + 164 international), 187 tracking-number auto-detection rules, 7 unified status semantics of `TrackStatus`.
 
+**Current progress**: M1 management plane (carrier / credential / query record / subscription CRUD), M2 query gateway (full external API chain), M3 callback subscriptions, M4 monitoring & statistics, M5 external OpenAPI documentation and M6 five client SDKs are all complete — the client → e-cat → worker → carrier tracking query chain is demonstrable, and the five zero-dependency SDKs (Python / PHP / Node.js / Go / Rust) are ready to copy and use.
+
 ## Project Description
 
 <img src="diagrams/description.svg" alt="Project description" width="100%">
@@ -24,6 +26,7 @@ The platform is composed of three components working together:
 - **Auto detection**: 187 tracking-number regex rules are order-sensitive and prioritize domestic channels; for unrecognized scenarios, `domestic()` / `international()` can be called explicitly;
 - **Unified status**: each carrier's varied raw statuses are mapped to a unified `TrackStatus` enum (pending pickup / in transit / out for delivery / delivered / exception / returned / unrecognized);
 - **Global coverage**: the four major couriers DHL, FedEx, UPS, USPS and the national postal S10 systems of various countries (Europe, Latin America & Caribbean, Africa & Middle East, Asia-Pacific);
+- **External API**: the e-cat query gateway provides API-Key authentication, Redis cache hits (`X-Cache: HIT`), rate limiting 429, per-carrier circuit breaking 503, RoundRobin worker load balancing; five zero-dependency SDKs (Python / PHP / Node.js / Go / Rust) ready to copy and use;
 - **Zero hard-coded keys**: all keys are injected via configuration, and the database layer stores them as Encryptable ciphertext — code and keys are fully separated.
 
 ## Project Architecture
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**SDK usage** (five zero-dependency clients, ready to copy and use):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+See [sdk/README.md](sdk/README.md) for usage and examples in each language.
+
 For detailed deployment, see [admin/README.md](admin/README.md) (Docker Compose orchestrates 5 services: Nginx / PHP / MySQL / Redis / Elasticsearch) and the implementation plan document.
 
 ## Documentation
@@ -120,6 +139,7 @@ For detailed deployment, see [admin/README.md](admin/README.md) (Docker Compose 
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — security architecture
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — platform implementation plan (architecture, data flow, database design, API contracts, milestones)
 - [admin/README.md](admin/README.md) — full admin console documentation (tech stack, database conventions, deployment, CI/CD)
+- [sdk/README.md](sdk/README.md) — external API client SDKs (Python / PHP / Node.js / Go / Rust, five zero-dependency, copy-and-run)
 
 ## Translations (other languages)
 
@@ -171,6 +191,16 @@ For detailed deployment, see [admin/README.md](admin/README.md) (Docker Compose 
   - Bank name: THE BANK OF NEW YORK MELLON
   - SWIFT Code: IRVTUS3NXXX
   - Bank address: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Crypto Donation
+
+If this project helps you, scan the QR code to donate, thank you!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

@@ -1823,3 +1823,125 @@ Direktori `database/backup/` menyediakan skrip backup dan pemulihan:
 ### Konfigurasi Keamanan Nginx
 
 Untuk deployment produksi, lihat `docs/nginx-security.conf` untuk konfigurasi penguatan keamanan reverse proxy.
+
+## 16. Antarmuka gRPC internal (e-cat → PHP worker)
+
+Khusus untuk dipanggil oleh gateway kueri e-cat. Di sisi PHP ini adalah layanan workerman h2c (`tcp://0.0.0.0:8792`, proses `internal_grpc`). Kontrak didefinisikan di `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`), pesan dienkode protobuf dan metadata wajib membawa `x-internal-token` (nilai dari `config/logistics.php` — `internal_token`, di produksi ditimpa variabel lingkungan `INTERNAL_TOKEN`). Token hilang/salah mengembalikan `code=401 UNAUTHORIZED`.
+
+### 16.1 Ringkasan RPC
+
+| RPC | Permintaan | Respons | Keterangan |
+|---|---|---|---|
+| `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | Deteksi kurir; tidak dikenali → `404 CARRIER_NOT_DETECTED` |
+| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | Kueri lacak; `credential_id` opsional (untuk skenario multi-kredensial, harus cocok dengan `carrier_code`, jika tidak `400 INVALID_PARAMS`). Setiap kueri disimpan ke `logistics_tracking_query` |
+| `Carriers` | `{}` | `{code, carriers[]}` | Semua kurir dalam registry `{carrier_code, channel}` |
+
+### 16.2 Kontrak kesalahan (field `code` pada respons, status gRPC selalu 0)
+
+| `code` | `error_code` | Skenario |
+|---|---|---|
+| 400 | `INVALID_PARAMS` | Parameter kurang / credential_id tidak cocok |
+| 401 | `UNAUTHORIZED` | Token internal salah |
+| 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | Kurir tidak terdaftar / lacak tidak ditemukan / tidak dapat dideteksi |
+| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | Kesalahan kredensial kurir / kesalahan jaringan / kesalahan bisnis kurir (termasuk pesan terstruktur dari hulu, mis. `[SF-INTERNATIONAL A1001] parameter wajib tidak boleh kosong`) |
+| 500 | `INTERNAL_ERROR` | Pengecualian internal |
+
+
+## 17. API eksternal gateway kueri e-cat
+
+Gateway frekuensi tinggi Rust (`infrastructure/tracking-gateway`), mendengarkan di `0.0.0.0:8080` (default), permintaan membawa header `X-API-Key` (konfigurasi `api_keys`). Gateway menangani autentikasi API-Key, cache Redis (prefix `logistics:`), rate limit, circuit breaker per kurir, dan penerusan RoundRobin ke worker; kredensial tidak pernah turun ke gateway.
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | Pemeriksaan kesehatan (endpoint publik, tanpa kunci) |
+| `GET /v1/openapi.json` | Dokumentasi OpenAPI 3.0 (endpoint publik, tanpa kunci) |
+| `GET /v1/carriers` | Daftar kurir (meneruskan ke gRPC PHP `InternalService.Carriers`) |
+| `POST /v1/tracking/query` | Kueri lacak (`{"carrier_code": "...", "tracking_no": "..."}`); tanpa `carrier_code` gateway mendeteksi otomatis (detect dilakukan di dalam query) |
+| `GET /v1/tracking/{query_no}` | Ambil hasil lacak terakhir berdasarkan nomor kueri |
+| `POST /v1/subscriptions` | Daftarkan langganan callback (`{"carrier_code", "callback_url", "event_type"?}`, `event_type` default `tracking.update`) |
+
+
+Semantik tambahan sisi gateway: melebihi `rate_limit` (default 100 kali/60 detik) mengembalikan `429`; kegagalan beruntun kurir memicu circuit breaker (default OPEN 60 detik setelah 5x error 5xx/transport) → `503`; worker tidak terjangkau → `502`. Antara gateway dan worker adalah gRPC internal (h2c, `0.0.0.0:8792`) dengan autentikasi kunci bersama `x-internal-token`, lihat bagian 16.
+
+### 17.1 Amplop respons dan kesalahan
+
+Semua endpoint mengembalikan amplop terpadu `{"code": 0, "message": "ok", "data": ...}`; `code != 0` berarti kesalahan dan `data` dihilangkan. Badan kesalahan bisnis dapat membawa `error_code` / `error_message` (diagnosis kurir hulu, diteruskan apa adanya oleh gateway); `code` sesuai dengan status HTTP:
+
+| HTTP | Arti |
+|---|---|
+| 400 | Kesalahan parameter (`tracking_no` hilang / parameter langganan tidak valid) |
+| 401 | Kunci hilang atau tidak valid |
+| 404 | Nomor kueri tidak ada |
+| 429 | Rate limit (default 100/60 detik per kunci), coba lagi dengan backoff |
+| 502 | Worker tidak terjangkau atau kegagalan hulu |
+| 503 | Circuit breaker kurir, coba lagi dengan backoff |
+
+### 17.2 Contoh pemanggilan (curl)
+
+Kunci demo `demo-api-key`, gateway default `http://127.0.0.1:8080`:
+
+```bash
+# Pemeriksaan kesehatan (endpoint publik, tanpa kunci)
+curl http://127.0.0.1:8080/v1/health
+
+# Dokumentasi OpenAPI (endpoint publik, tanpa kunci)
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# Daftar kurir
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# Kueri lacak (penentuan kurir opsional)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# Hasil terakhir berdasarkan nomor kueri
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# Daftarkan langganan (alamat callback harus http/https publik; gateway menolak loopback/jaringan privat)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 Contoh pemanggilan (SDK)
+
+Lima SDK tanpa dependensi di direktori `sdk/` repositori (Python / PHP / Node.js / Go / Rust, salin lalu pakai):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+SDK melempar pengecualian (`TrackingApiError`) saat `code != 0` di amplop atau gagal jaringan, membawa `code` / `message` / `error_code` / `error_message` / `http_status`; pada error rate limit dan circuit breaker coba lagi dengan backoff, error sisi kurir tidak perlu diulang. Penggunaan lengkap di `sdk/README.md`.

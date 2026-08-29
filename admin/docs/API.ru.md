@@ -1823,3 +1823,125 @@ docker-compose up -d
 ### Безопасная конфигурация Nginx
 
 Для продакшена см. `docs/nginx-security.conf` — настройка усиления безопасности обратного прокси.
+
+## 16. Внутренний gRPC-интерфейс (e-cat → PHP worker)
+
+Только для вызова e-cat шлюзом запросов. На стороне PHP это сервис workerman h2c (`tcp://0.0.0.0:8792`, процесс `internal_grpc`). Контракт определён в `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`), сообщения кодируются protobuf, в metadata обязательно должен присутствовать `x-internal-token` (значение из `config/logistics.php` — `internal_token`, в проде переопределяется переменной окружения `INTERNAL_TOKEN`). При отсутствии/неверном токене возвращается `code=401 UNAUTHORIZED`.
+
+### 16.1 Обзор RPC
+
+| RPC | Запрос | Ответ | Описание |
+|---|---|---|---|
+| `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | Определение перевозчика; при невозможности — `404 CARRIER_NOT_DETECTED` |
+| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | Запрос трекинга; `credential_id` опционален (задаётся при нескольких учётках, должен совпадать с `carrier_code`, иначе `400 INVALID_PARAMS`). Каждый запрос пишется в `logistics_tracking_query` |
+| `Carriers` | `{}` | `{code, carriers[]}` | Все перевозчики реестра `{carrier_code, channel}` |
+
+### 16.2 Контракт ошибок (поле `code` в ответе, gRPC status всегда 0)
+
+| `code` | `error_code` | Сценарий |
+|---|---|---|
+| 400 | `INVALID_PARAMS` | Не хватает параметров / несовпадение credential_id |
+| 401 | `UNAUTHORIZED` | Неверный внутренний токен |
+| 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | Перевозчик не зарегистрирован / трекинг не найден / не удалось определить |
+| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | Ошибка учётки перевозчика / сетевой сбой / бизнес-ошибка перевозчика (включая структурированное сообщение, напр. `[SF-INTERNATIONAL A1001] обязательные параметры не могут быть пустыми`) |
+| 500 | `INTERNAL_ERROR` | Внутренняя ошибка |
+
+
+## 17. Внешний API шлюза запросов e-cat
+
+Высокочастотный шлюз на Rust (`infrastructure/tracking-gateway`), слушает `0.0.0.0:8080` (по умолчанию), запросы несут заголовок `X-API-Key` (настройка `api_keys`). Шлюз выполняет проверку API-Key, кэш Redis (префикс `logistics:`), rate limiting, circuit breaker по перевозчикам и балансировку worker'ов RoundRobin; учётные данные никогда не передаются шлюзу.
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | Проверка здоровья (публичная точка, ключ не нужен) |
+| `GET /v1/openapi.json` | Документация OpenAPI 3.0 (публичная точка, ключ не нужен) |
+| `GET /v1/carriers` | Список перевозчиков (проксирует PHP gRPC `InternalService.Carriers`) |
+| `POST /v1/tracking/query` | Запрос трекинга (`{"carrier_code": "...", "tracking_no": "..."}`); при отсутствии `carrier_code` шлюз определяет сам (detect выполняется внутри query) |
+| `GET /v1/tracking/{query_no}` | Последний результат трекинга по номеру запроса |
+| `POST /v1/subscriptions` | Регистрация подписки на callback (`{"carrier_code", "callback_url", "event_type"?}`, `event_type` по умолчанию `tracking.update`) |
+
+
+Дополнительная семантика шлюза: превышение `rate_limit` (по умолчанию 100 раз/60с) → `429`; срабатывание circuit breaker после подряд неудач (по умолчанию 5 ошибок 5xx/передачи → OPEN 60с) → `503`; worker недоступен → `502`. Между шлюзом и worker'ом — внутренний gRPC (h2c, `0.0.0.0:8792`), аутентификация общим ключом `x-internal-token`, см. раздел 16.
+
+### 17.1 Конверт ответа и ошибки
+
+Все точки возвращают единый конверт `{"code": 0, "message": "ok", "data": ...}`; `code != 0` — ошибка, `data` опускается. Тело бизнес-ошибки может содержать `error_code` / `error_message` (диагностика перевозчика, прозрачно передаётся шлюзом); `code` совпадает с HTTP-статусом:
+
+| HTTP | Значение |
+|---|---|
+| 400 | Ошибка параметров (`tracking_no` отсутствует / недопустимые параметры подписки) |
+| 401 | Ключ отсутствует или недействителен |
+| 404 | Номер запроса не найден |
+| 429 | Rate limit (по умолчанию 100/60с на ключ), рекомендуется повтор с экспоненциальной задержкой |
+| 502 | Worker недоступен или сбой на стороне провайдера |
+| 503 | Circuit breaker перевозчика, рекомендуется повтор с задержкой |
+
+### 17.2 Примеры вызова (curl)
+
+Демо-ключ `demo-api-key`, шлюз по умолчанию `http://127.0.0.1:8080`:
+
+```bash
+# Проверка здоровья (публичная точка, ключ не нужен)
+curl http://127.0.0.1:8080/v1/health
+
+# Документация OpenAPI (публичная точка, ключ не нужен)
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# Список перевозчиков
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# Запрос трекинга (указание перевозчика опционально)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# Последний результат по номеру запроса
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# Регистрация подписки (адрес callback должен быть публичным http/https; шлюз отклоняет loopback/частные сети)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 Примеры вызова (SDK)
+
+Пять SDK без зависимостей в каталоге `sdk/` репозитория (Python / PHP / Node.js / Go / Rust, копируй и запускай):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+SDK бросают исключение (`TrackingApiError`) при `code != 0` в конверте или сетевой ошибке, с полями `code` / `message` / `error_code` / `error_message` / `http_status`; при rate limit и circuit breaker рекомендуется повтор с задержкой, ошибки на стороне перевозчика повторять не нужно. Полное описание — в `sdk/README.md`.

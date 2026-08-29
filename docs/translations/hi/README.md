@@ -16,6 +16,8 @@
 - **tracking-gateway हाई-फ़्रीक्वेंसी गेटवे** (Rust e-cat फ्रेमवर्क) — बाहरी क्वेरी API की पहली एंट्री: Redis कैश, रेट लिमिटिंग, प्रति-कैरियर सर्किट ब्रेकर, वर्कर लोड बैलेंसिंग; केवल हाई-फ़्रीक्वेंसी हिस्सा, कैरियर प्रोटोकॉल नहीं समझता;
 - **global-logistics यूनिफाइड फ़ेसड** (PHP पैकेज) — 209 कैरियर्स के एडेप्टर (घरेलू 45 + अंतर्राष्ट्रीय 164), 187 ट्रैकिंग-नंबर ऑटो-पहचान नियम, `TrackStatus` की 7 यूनिफाइड स्टेटस सेमेंटिक्स।
 
+**वर्तमान प्रगति**: M1 प्रशासन पैनल (कैरियर / क्रेडेंशियल / क्वेरी रिकॉर्ड / सब्सक्रिप्शन CRUD), M2 क्वेरी गेटवे (संपूर्ण बाहरी API श्रृंखला), M3 कॉलबैक सब्सक्रिप्शन, M4 मॉनिटरिंग और सांख्यिकी, M5 बाहरी OpenAPI दस्तावेज़ और M6 पाँच क्लाइंट SDK सभी पूर्ण हैं — क्लाइंट → e-cat → worker → कैरियर ट्रैकिंग क्वेरी श्रृंखला प्रदर्शन योग्य है, और पाँच शून्य-निर्भरता SDK (Python / PHP / Node.js / Go / Rust) कॉपी-एंड-यूज़ तैयार हैं।
+
 ## परियोजना विवरण
 
 <img src="diagrams/description.svg" alt="परियोजना विवरण" width="100%">
@@ -24,6 +26,7 @@
 - **ऑटो-पहचान**: 187 ट्रैकिंग-नंबर regex नियम क्रम-संवेदनशील हैं और पहले घरेलू चैनल मिलाते हैं; पहचान न होने पर `domestic()` / `international()` स्पष्ट रूप से बुलाया जा सकता है;
 - **यूनिफाइड स्टेटस**: हर कंपनी के अलग-अलग मूल स्टेटस यूनिफाइड `TrackStatus` एनम में मैप होते हैं (पिकअप प्रतीक्षा / ट्रांज़िट में / डिलीवरी में / डिलीवर्ड / असामान्य / वापसी / अज्ञात);
 - **वैश्विक कवरेज**: DHL, FedEx, UPS, USPS चार प्रमुख कूरियर और विभिन्न देशों के डाक S10 सिस्टम (चार क्षेत्र: यूरोप, लैटिन अमेरिका-कैरिबियन, अफ़्रीका-मध्य पूर्व, एशिया-प्रशांत);
+- **बाहरी API**: e-cat क्वेरी गेटवे API-Key प्रमाणीकरण, Redis कैश हिट (`X-Cache: HIT`), दर सीमा 429, प्रति-कैरियर सर्किट ब्रेकर 503, RoundRobin worker लोड संतुलन प्रदान करता है; पाँच शून्य-निर्भरता SDK (Python / PHP / Node.js / Go / Rust) कॉपी-एंड-यूज़ तैयार;
 - **शून्य हार्डकोडेड कुंजियाँ**: सभी कुंजियाँ कॉन्फ़िगरेशन से इंजेक्ट होती हैं; डेटाबेस लेयर में Encryptable से एन्क्रिप्टेड स्टोर होती हैं; कोड और कुंजियाँ पूरी तरह अलग।
 
 ## परियोजना आर्किटेक्चर
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**SDK कॉल** (पाँच शून्य-निर्भरता क्लाइंट, कॉपी-एंड-यूज़):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+प्रत्येक भाषा में उपयोग और उदाहरण के लिए [sdk/README.md](sdk/README.md) देखें।
+
 विस्तृत डिप्लॉयमेंट के लिए देखें [admin/README.md](admin/README.md) (Docker Compose 5 सेवाएँ चलाता है: Nginx / PHP / MySQL / Redis / Elasticsearch) और कार्यान्वयन योजना दस्तावेज़।
 
 ## दस्तावेज़
@@ -120,6 +139,7 @@ cargo build
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — सुरक्षा आर्किटेक्चर
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — प्लेटफ़ॉर्म कार्यान्वयन योजना (आर्किटेक्चर, डेटा फ़्लो, डेटाबेस डिज़ाइन, API कॉन्ट्रैक्ट, माइलस्टोन)
 - [admin/README.md](admin/README.md) — प्रशासन पैनल की पूरी जानकारी (टेक स्टैक, डेटाबेस मानक, डिप्लॉयमेंट, CI/CD)
+- [sdk/README.md](sdk/README.md) — बाहरी API क्लाइंट SDK (Python / PHP / Node.js / Go / Rust, पाँचों शून्य-निर्भरता, कॉपी करके चलाएँ)
 
 ## अनुवाद
 
@@ -171,6 +191,16 @@ cargo build
   - बैंक का नाम: THE BANK OF NEW YORK MELLON
   - SWIFT Code: IRVTUS3NXXX
   - बैंक का पता: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### क्रिप्टो दान (Crypto Donation)
+
+यदि यह प्रोजेक्ट आपके काम आए, तो दान करने के लिए QR कोड स्कैन करें, धन्यवाद!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

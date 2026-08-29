@@ -1823,3 +1823,125 @@ docker-compose up -d
 ### إعدادات أمان Nginx
 
 للنشر في بيئة الإنتاج، راجع `docs/nginx-security.conf` لتهيئة تحصين أمان الوكيل العكسي.
+
+## 16. واجهة gRPC الداخلية (e-cat → PHP worker)
+
+للاستخدام من قبل بوابة الاستعلام e-cat فقط. على جانب PHP هي خدمة workerman h2c (`tcp://0.0.0.0:8792`, العملية `internal_grpc`). العقد معرَّف في `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`), الرسائل مشفرة بـ protobuf ويجب أن تحمل metadata قيمة `x-internal-token` (القيمة من `config/logistics.php` — `internal_token`, وفي الإنتاج تُستبدل بمتغير البيئة `INTERNAL_TOKEN`). في حال غياب/خطأ التوكن يُرجع `code=401 UNAUTHORIZED`.
+
+### 16.1 نظرة عامة على RPC
+
+| RPC | الطلب | الاستجابة | الوصف |
+|---|---|---|---|
+| `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | تحديد الناقل؛ عند عدم التعرف يُرجع `404 CARRIER_NOT_DETECTED` |
+| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | استعلام التتبع؛ `credential_id` اختياري (يُحدد في سيناريوهات الاعتمادات المتعددة، يجب أن يطابق `carrier_code` وإلا `400 INVALID_PARAMS`). يُسجَّل كل استعلام في `logistics_tracking_query` |
+| `Carriers` | `{}` | `{code, carriers[]}` | جميع الناقلين في السجل `{carrier_code, channel}` |
+
+### 16.2 عقد الأخطاء (حقل `code` في الاستجابة، حالة gRPC تساوي 0 دائمًا)
+
+| `code` | `error_code` | السيناريو |
+|---|---|---|
+| 400 | `INVALID_PARAMS` | معاملات ناقصة / عدم تطابق credential_id |
+| 401 | `UNAUTHORIZED` | التوكن الداخلي خاطئ |
+| 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | الناقل غير مسجَّل / التتبع غير موجود / لا يمكن تحديده |
+| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | خطأ اعتمادات الناقل / خطأ شبكة / خطأ تجاري للناقل (يتضمن رسالة منظمة من المزود، مثل `[SF-INTERNATIONAL A1001] المعاملات الإلزامية لا يمكن أن تكون فارغة`) |
+| 500 | `INTERNAL_ERROR` | استثناء داخلي |
+
+
+## 17. الواجهة البرمجية الخارجية لبوابة الاستعلام e-cat
+
+بوابة عالية التردد بلغة Rust (`infrastructure/tracking-gateway`), تستمع على `0.0.0.0:8080` (الافتراضي), الطلبات تحمل رأس `X-API-Key` (الإعداد `api_keys`). تتولى البوابة مصادقة API-Key, وضربات كاش Redis (البادئة `logistics:`), وتحديد المعدل, وقاطع الدائرة لكل ناقل, وإعادة التوجيه الدائري للعمال (RoundRobin)؛ لا تصل الاعتمادات إلى البوابة أبدًا.
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | فحص الصحة (نقطة عامة، لا حاجة لمفتاح) |
+| `GET /v1/openapi.json` | توثيق OpenAPI 3.0 (نقطة عامة، لا حاجة لمفتاح) |
+| `GET /v1/carriers` | قائمة الناقلين (إعادة توجيه إلى gRPC الخاص بـ PHP `InternalService.Carriers`) |
+| `POST /v1/tracking/query` | استعلام التتبع (`{"carrier_code": "...", "tracking_no": "..."}`)؛ عند غياب `carrier_code` تحدد البوابة تلقائيًا (يتم detect داخل query) |
+| `GET /v1/tracking/{query_no}` | آخر نتيجة تتبع حسب رقم الاستعلام |
+| `POST /v1/subscriptions` | تسجيل اشتراك استدعاء (`{"carrier_code", "callback_url", "event_type"?}`, `event_type` الافتراضي `tracking.update`) |
+
+
+دلالات إضافية من جانب البوابة: تجاوز `rate_limit` (الافتراضي 100/60 ثانية) يُرجع `429`؛ فشل الناقل المتتالي يفعّل قاطع الدائرة (الافتراضي OPEN لمدة 60 ثانية بعد 5 أخطاء 5xx/نقل) → `503`؛ العامل غير متاح → `502`. بين البوابة والعامل gRPC داخلي (h2c, `0.0.0.0:8792`) بمصادقة المفتاح المشترك `x-internal-token`, انظر القسم 16.
+
+### 17.1 غلاف الاستجابة والأخطاء
+
+تعيد جميع النقاط الغلاف الموحد `{"code": 0, "message": "ok", "data": ...}`؛ `code != 0` يعني خطأ ويُحذف `data`. قد يحمل جسم الخطأ التجاري `error_code` / `error_message` (تشخيص الناقل من المزود، تمرره البوابة كما هو)؛ `code` يطابق حالة HTTP:
+
+| HTTP | المعنى |
+|---|---|
+| 400 | خطأ معاملات (`tracking_no` مفقود / معاملات اشتراك غير صالحة) |
+| 401 | المفتاح مفقود أو غير صالح |
+| 404 | رقم الاستعلام غير موجود |
+| 429 | تحديد معدل (الافتراضي 100/60 ثانية لكل مفتاح)، أعد المحاولة مع التراجع |
+| 502 | العامل غير متاح أو فشل من المزود |
+| 503 | قاطع دائرة الناقل، أعد المحاولة مع التراجع |
+
+### 17.2 أمثلة الاستدعاء (curl)
+
+مفتاح تجريبي `demo-api-key`, البوابة الافتراضية `http://127.0.0.1:8080`:
+
+```bash
+# فحص الصحة (نقطة عامة، لا حاجة لمفتاح)
+curl http://127.0.0.1:8080/v1/health
+
+# توثيق OpenAPI (نقطة عامة، لا حاجة لمفتاح)
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# قائمة الناقلين
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# استعلام التتبع (تحديد الناقل اختياري)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# آخر نتيجة حسب رقم الاستعلام
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# تسجيل اشتراك الاستدعاء (عنوان الاستدعاء يجب أن يكون http/https عامًا؛ البوابة ترفض الحلقة/الشبكات الخاصة)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 أمثلة الاستدعاء (SDK)
+
+خمس حزم SDK بلا تبعيات في دليل `sdk/` بالمستودع (Python / PHP / Node.js / Go / Rust, انسخ وشغّل):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+تُلقي حزم SDK استثناءً (`TrackingApiError`) عند `code != 0` في الغلاف أو فشل الشبكة، يحمل `code` / `message` / `error_code` / `error_message` / `http_status`؛ في أخطاء تحديد المعدل وقاطع الدائرة أعد المحاولة مع التراجع، ولا تعِد المحاولة لأخطاء جانب الناقل. الاستخدام الكامل في `sdk/README.md`.

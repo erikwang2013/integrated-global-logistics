@@ -16,6 +16,8 @@ A plataforma é composta por três componentes que trabalham juntos:
 - **tracking-gateway** (gateway de alta frequência, framework Rust e-cat) — primeira porta de entrada da API de consulta: cache Redis, rate limiting, circuit breaker por transportadora, balanceamento de carga entre workers; só lida com o tráfego de alta frequência e não entende os protocolos das transportadoras;
 - **global-logistics** (fachada unificada, pacote PHP) — adaptadores de 209 transportadoras (45 nacionais + 164 internacionais), 187 regras de reconhecimento automático de números de rastreio, 7 semânticas de estado unificadas em `TrackStatus`.
 
+**Progresso atual**: M1 painel de administração (CRUD de transportadora / credencial / registro de consulta / assinatura), M2 gateway de consulta (cadeia completa de API externa), M3 assinaturas de callback, M4 monitoramento e estatísticas, M5 documentação OpenAPI externa e M6 cinco SDKs de cliente estão todos concluídos — a cadeia de consulta de rastreamento cliente → e-cat → worker → transportadora é demonstrável, e os cinco SDKs sem dependências (Python / PHP / Node.js / Go / Rust) estão prontos para copiar e usar.
+
 ## Descrição
 
 <img src="diagrams/description.svg" alt="Descrição" width="100%">
@@ -24,6 +26,7 @@ A plataforma é composta por três componentes que trabalham juntos:
 - **Reconhecimento automático**: 187 regras de regex sensíveis à ordem, com prioridade para canais nacionais; quando não é possível reconhecer, é possível chamar explicitamente `domestic()` / `international()`;
 - **Estados unificados**: os estados originais, que variam de transportadora para transportadora, são mapeados para o enum unificado `TrackStatus` (aguardando coleta / em trânsito / em entrega / entregue / exceção / devolvido / não reconhecido);
 - **Cobertura global**: as quatro grandes transportadoras DHL, FedEx, UPS, USPS e os sistemas S10 dos correios nacionais (quatro regiões: Europa, América Latina e Caribe, África e Oriente Médio, Ásia-Pacífico);
+- **API externa**: o gateway e-cat fornece autenticação API-Key, hits de cache Redis (`X-Cache: HIT`), limite de taxa 429, circuit breaker por transportadora 503, balanceamento RoundRobin de workers; cinco SDKs sem dependências (Python / PHP / Node.js / Go / Rust) prontos para copiar e usar;
 - **Zero chave embutida no código**: todas as chaves são injetadas por configuração; na camada de banco de dados, são armazenadas criptografadas via Encryptable; código e chaves totalmente separados.
 
 ## Arquitetura
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**Chamada SDK** (cinco clientes sem dependências, prontos para copiar e usar):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+Consulte [sdk/README.md](sdk/README.md) para uso e exemplos em cada idioma.
+
 Para detalhes de implantação, consulte [admin/README.md](admin/README.md) (Docker Compose orquestra 5 serviços: Nginx / PHP / MySQL / Redis / Elasticsearch) e o documento de planejamento da implementação.
 
 ## Documentação
@@ -120,6 +139,7 @@ Para detalhes de implantação, consulte [admin/README.md](admin/README.md) (Doc
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — arquitetura de segurança
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — planejamento da implementação da plataforma (arquitetura, fluxo de dados, design do banco, contratos da API, marcos)
 - [admin/README.md](admin/README.md) — documentação completa do painel (stack tecnológico, padrões de banco, implantação, CI/CD)
+- [sdk/README.md](sdk/README.md) — SDKs de cliente da API externa (Python / PHP / Node.js / Go / Rust, cinco sem dependências, copiar e usar)
 
 ## Traduções
 
@@ -171,6 +191,16 @@ Para detalhes de implantação, consulte [admin/README.md](admin/README.md) (Doc
   - Nome do banco: THE BANK OF NEW YORK MELLON
   - SWIFT Code: IRVTUS3NXXX
   - Endereço do banco: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Doação em criptomoedas (Crypto Donation)
+
+Se este projeto ajudar você, escaneie o código QR para doar, obrigado!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

@@ -16,6 +16,8 @@
 - **высокочастотный шлюз tracking-gateway** (Rust-фреймворк e-cat) — первая точка входа внешнего API запросов: Redis-кэш, ограничение частоты, размыкание цепи по перевозчикам, балансировка нагрузки worker-процессов; занимается только высокочастотной плоскостью и не знает протоколов перевозчиков;
 - **единый фасад global-logistics** (PHP-пакет) — адаптеры для 209 перевозчиков (45 внутренних + 164 международных), 187 правил автоматического определения трек-номеров, 7 единых семантик статуса `TrackStatus`.
 
+**Текущий прогресс**: M1 панель администрирования (CRUD перевозчика / учётных данных / записи запроса / подписки), M2 шлюз запросов (полная цепочка внешнего API), M3 подписки на обратные вызовы, M4 мониторинг и статистика, M5 внешняя документация OpenAPI и M6 пять клиентских SDK — всё завершено: цепочка запросов отслеживания клиент → e-cat → worker → перевозчик демонстрируема, пять SDK без зависимостей (Python / PHP / Node.js / Go / Rust) готовы к копированию и использованию.
+
 ## Описание проекта
 
 <img src="diagrams/description.svg" alt="Описание проекта" width="100%">
@@ -24,6 +26,7 @@
 - **Автоопределение**: 187 регулярных правил для трек-номеров чувствительны к порядку и в первую очередь находят внутренние каналы; для нераспознанных случаев можно явно вызвать `domestic()` / `international()`;
 - **Единый статус**: разнородные исходные статусы перевозчиков маппятся в единый enum `TrackStatus` (ожидает забора / в пути / в доставке / доставлено / исключение / возврат / не распознан);
 - **Мировой охват**: четыре крупных курьера DHL, FedEx, UPS, USPS и национальные почтовые системы S10 разных стран (Европа, Латинская Америка и Карибы, Африка и Ближний Восток, Азиатско-Тихоокеанский регион);
+- **Внешний API**: шлюз e-cat предоставляет аутентификацию API-Key, попадания в кэш Redis (`X-Cache: HIT`), ограничение скорости 429, автоматический выключатель по перевозчику 503, балансировку RoundRobin; пять SDK без зависимостей (Python / PHP / Node.js / Go / Rust) готовы к копированию и использованию;
 - **Никаких захардкоженных ключей**: все ключи внедряются через конфигурацию, а на уровне БД хранятся как шифротекст Encryptable — код и ключи полностью разделены.
 
 ## Архитектура проекта
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**Вызов SDK** (пять клиентов без зависимостей, готовы к копированию и использованию):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+Использование и примеры на каждом языке см. в [sdk/README.md](sdk/README.md).
+
 Подробное развёртывание — в [admin/README.md](admin/README.md) (Docker Compose оркестрирует 5 сервисов: Nginx / PHP / MySQL / Redis / Elasticsearch) и в документе плана реализации.
 
 ## Документация
@@ -120,6 +139,7 @@ cargo build
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — архитектура безопасности
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — план реализации платформы (архитектура, потоки данных, дизайн БД, контракты API, вехи)
 - [admin/README.md](admin/README.md) — полное описание админ-консоли (технологический стек, правила БД, развёртывание, CI/CD)
+- [sdk/README.md](sdk/README.md) — клиентские SDK внешнего API (Python / PHP / Node.js / Go / Rust, пять без зависимостей, копируй и запускай)
 
 ## Переводы (другие языки)
 
@@ -171,6 +191,16 @@ cargo build
   - Название банка: THE BANK OF NEW YORK MELLON
   - SWIFT-код: IRVTUS3NXXX
   - Адрес банка: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Пожертвование в криптовалюте (Crypto Donation)
+
+Если этот проект помог вам, отсканируйте QR-код, чтобы сделать пожертвование, спасибо!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

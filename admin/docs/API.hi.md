@@ -1823,3 +1823,125 @@ docker-compose up -d
 ### Nginx सुरक्षा कॉन्फ़िगरेशन
 
 प्रोडक्शन डिप्लॉयमेंट में रिवर्स प्रॉक्सी सुरक्षा हार्डनिंग कॉन्फ़िगरेशन के लिए `docs/nginx-security.conf` देखें।
+
+## 16. आंतरिक gRPC इंटरफ़ेस (e-cat → PHP worker)
+
+केवल e-cat क्वेरी गेटवे द्वारा उपयोग हेतु। PHP पक्ष पर यह workerman h2c सेवा है (`tcp://0.0.0.0:8792`, प्रक्रिया `internal_grpc`)। कॉन्ट्रैक्ट `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`) में परिभाषित है, संदेश protobuf में एन्कोडेड होते हैं और metadata में `x-internal-token` होना अनिवार्य है (मान `config/logistics.php` के `internal_token` से, प्रोडक्शन में `INTERNAL_TOKEN` पर्यावरण चर द्वारा ओवरराइड)। टोकन अनुपस्थित/गलत होने पर `code=401 UNAUTHORIZED` लौटता है।
+
+### 16.1 RPC अवलोकन
+
+| RPC | अनुरोध | प्रतिक्रिया | विवरण |
+|---|---|---|---|
+| `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | वाहक पहचान; न पहचाने जाने पर `404 CARRIER_NOT_DETECTED` |
+| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | ट्रैकिंग क्वेरी; `credential_id` वैकल्पिक (बहु-क्रेडेंशियल परिदृश्य में निर्दिष्ट करें, `carrier_code` से मेल खाना चाहिए, अन्यथा `400 INVALID_PARAMS`)। प्रत्येक क्वेरी `logistics_tracking_query` में संग्रहीत होती है |
+| `Carriers` | `{}` | `{code, carriers[]}` | रजिस्ट्री के सभी वाहक `{carrier_code, channel}` |
+
+### 16.2 त्रुटि कॉन्ट्रैक्ट (प्रतिक्रिया `code` फ़ील्ड, gRPC status सदैव 0)
+
+| `code` | `error_code` | परिदृश्य |
+|---|---|---|
+| 400 | `INVALID_PARAMS` | पैरामीटर अनुपस्थित / credential_id बेमेल |
+| 401 | `UNAUTHORIZED` | आंतरिक टोकन गलत |
+| 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | वाहक पंजीकृत नहीं / ट्रैकिंग नहीं मिली / पहचान नहीं हो सकी |
+| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | अपस्ट्रीम क्रेडेंशियल त्रुटि / नेटवर्क त्रुटि / वाहक व्यावसायिक त्रुटि (संरचित अपस्ट्रीम संदेश सहित, जैसे `[SF-INTERNATIONAL A1001] अनिवार्य पैरामीटर खाली नहीं हो सकते`) |
+| 500 | `INTERNAL_ERROR` | आंतरिक अपवाद |
+
+
+## 17. e-cat क्वेरी गेटवे बाहरी API
+
+Rust हाई-फ़्रीक्वेंसी गेटवे (`infrastructure/tracking-gateway`), `0.0.0.0:8080` पर सुनता है (डिफ़ॉल्ट), अनुरोध हेडर में `X-API-Key` ले जाते हैं (कॉन्फ़िग `api_keys`)। गेटवे API-Key प्रमाणीकरण, Redis कैश हिट (प्रीफ़िक्स `logistics:`), दर-सीमा, प्रति-वाहक सर्किट ब्रेकर और RoundRobin worker अग्रेषण संभालता है; क्रेडेंशियल कभी गेटवे तक नहीं पहुँचते।
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | स्वास्थ्य जाँच (सार्वजनिक एंडपॉइंट, कुंजी आवश्यक नहीं) |
+| `GET /v1/openapi.json` | OpenAPI 3.0 दस्तावेज़ (सार्वजनिक एंडपॉइंट, कुंजी आवश्यक नहीं) |
+| `GET /v1/carriers` | वाहक सूची (PHP gRPC `InternalService.Carriers` को अग्रेषित) |
+| `POST /v1/tracking/query` | ट्रैकिंग क्वेरी (`{"carrier_code": "...", "tracking_no": "..."}`); `carrier_code` अनुपस्थित होने पर गेटवे स्वतः पहचानता है (detect, query के अंदर पूर्ण होता है) |
+| `GET /v1/tracking/{query_no}` | क्वेरी नंबर द्वारा अंतिम ट्रैकिंग परिणाम |
+| `POST /v1/subscriptions` | कॉलबैक सदस्यता पंजीकरण (`{"carrier_code", "callback_url", "event_type"?}`, `event_type` डिफ़ॉल्ट `tracking.update`) |
+
+
+गेटवे पक्ष की अतिरिक्त शर्तें: `rate_limit` (डिफ़ॉल्ट 100 बार/60s) से अधिक पर `429`; वाहक की लगातार विफलता सर्किट ब्रेकर सक्रिय करती है (डिफ़ॉल्ट 5x 5xx/ट्रांसपोर्ट त्रुटि के बाद 60s OPEN) → `503`; worker अनुपलब्ध → `502`। गेटवे और worker के बीच आंतरिक gRPC (h2c, `0.0.0.0:8792`), `x-internal-token` साझा कुंजी प्रमाणीकरण, धारा 16 देखें।
+
+### 17.1 प्रतिक्रिया लिफ़ाफ़ा और त्रुटियाँ
+
+सभी एंडपॉइंट एक समान लिफ़ाफ़ा `{"code": 0, "message": "ok", "data": ...}` लौटाते हैं; `code != 0` त्रुटि है और `data` अनुपस्थित रहता है। व्यावसायिक त्रुटि निकाय `error_code` / `error_message` ले सकता है (अपस्ट्रीम वाहक निदान, गेटवे द्वारा पारदर्शी रूप से पास किया गया); `code` HTTP स्थिति के अनुरूप है:
+
+| HTTP | अर्थ |
+|---|---|
+| 400 | पैरामीटर त्रुटि (`tracking_no` अनुपस्थित / सदस्यता पैरामीटर अवैध) |
+| 401 | कुंजी अनुपस्थित या अवैध |
+| 404 | क्वेरी नंबर मौजूद नहीं |
+| 429 | दर-सीमा (डिफ़ॉल्ट 100/60s प्रति कुंजी), बैकऑफ़ के साथ पुनः प्रयास करें |
+| 502 | worker अनुपलब्ध या अपस्ट्रीम विफलता |
+| 503 | वाहक सर्किट ब्रेकर, बैकऑफ़ के साथ पुनः प्रयास करें |
+
+### 17.2 कॉल उदाहरण (curl)
+
+डेमो कुंजी `demo-api-key`, गेटवे डिफ़ॉल्ट `http://127.0.0.1:8080`:
+
+```bash
+# स्वास्थ्य जाँच (सार्वजनिक एंडपॉइंट, कुंजी आवश्यक नहीं)
+curl http://127.0.0.1:8080/v1/health
+
+# OpenAPI दस्तावेज़ (सार्वजनिक एंडपॉइंट, कुंजी आवश्यक नहीं)
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# वाहक सूची
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# ट्रैकिंग क्वेरी (वाहक निर्दिष्ट करना वैकल्पिक)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# क्वेरी नंबर द्वारा अंतिम परिणाम
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# कॉलबैक सदस्यता पंजीकरण (कॉलबैक पता सार्वजनिक http/https होना चाहिए; गेटवे लूपबैक/निजी नेटवर्क अस्वीकार करता है)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 कॉल उदाहरण (SDK)
+
+रिपॉज़िटरी की `sdk/` निर्देशिका में पाँच शून्य-निर्भरता SDK हैं (Python / PHP / Node.js / Go / Rust, कॉपी करके उपयोग करें):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+SDK लिफ़ाफ़े में `code != 0` होने या नेटवर्क विफलता पर अपवाद (`TrackingApiError`) फेंकते हैं, जिसमें `code` / `message` / `error_code` / `error_message` / `http_status` होते हैं; दर-सीमा और सर्किट ब्रेकर त्रुटियों पर बैकऑफ़ के साथ पुनः प्रयास करें, वाहक पक्ष की त्रुटियों पर पुनः प्रयास न करें। पूर्ण उपयोग `sdk/README.md` में।

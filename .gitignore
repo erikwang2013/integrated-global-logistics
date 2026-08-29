@@ -76,3 +76,7 @@ apps/harmonyos/.cxx/
 apps/harmonyos/.idea/
 apps/harmonyos/hvigorw
 apps/harmonyos/hvigorw.bat
+
+# SDK build artifacts
+__pycache__/
+sdk/rust/target

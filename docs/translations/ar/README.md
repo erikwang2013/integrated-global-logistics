@@ -16,6 +16,8 @@
 - **tracking-gateway** (البوابة عالية التردد، إطار Rust e-cat) — المدخل الأول لواجهة الاستعلام الخارجية: ذاكرة Redis، تحديد المعدل، قاطع دائرة لكل شركة، موازنة أحمال العمال؛ للتردد العالي فقط ولا يفهم بروتوكولات الشركات؛
 - **global-logistics** (الواجهة الموحدة، حزمة PHP) — محولات 209 شركات (45 محلية + 164 دولية)، 187 قاعدة تعرّف تلقائي لأرقام التتبع، 7 دلالات حالات موحدة في `TrackStatus`.
 
+**التقدم الحالي**: اكتمل M1 لوحة الإدارة (CRUD الناقل / بيانات الاعتماد / سجل الاستعلام / الاشتراك)، وM2 بوابة الاستعلام (سلسلة واجهة برمجة التطبيقات الخارجية الكاملة)، وM3 اشتراكات رد الاتصال، وM4 المراقبة والإحصائيات، وM5 توثيق OpenAPI الخارجي وM6 خمسة SDKs للعميل — سلسلة استعلام التتبع العميل ← e-cat ← worker ← الناقل قابلة للعرض، وخمسة SDKs بدون تبعيات (Python / PHP / Node.js / Go / Rust) جاهزة للنسخ والاستخدام.
+
 ## وصف المشروع
 
 <img src="diagrams/description.svg" alt="وصف المشروع" width="100%">
@@ -24,6 +26,7 @@
 - **التعرّف التلقائي**: 187 قاعدة regex حساسة للترتيب، مع أولوية للقنوات المحلية؛ وعند تعذّر التعرّف يمكن الاستدعاء الصريح `domestic()` / `international()`؛
 - **حالات موحدة**: تُخطَّط الحالات الأصلية المتنوعة إلى تعداد `TrackStatus` الموحد (بانتظار الاستلام / قيد النقل / قيد التوصيل / تم التسليم / استثناء / إرجاع / غير معروف)؛
 - **تغطية عالمية**: الشحن السريع الأربعة DHL وFedEx وUPS وUSPS وأنظمة S10 للبريد الوطني (أربع مناطق: أوروبا، أمريكا اللاتينية والكاريبي، أفريقيا والشرق الأوسط، آسيا والمحيط الهادئ)؛
+- **واجهة برمجة التطبيقات الخارجية**: توفر بوابة e-cat مصادقة API-Key، ونتائج ذاكرة التخزين المؤقت Redis (`X-Cache: HIT`)، وتحديد المعدل 429، وقاطع الدائرة حسب الناقل 503، وموازنة تحميل RoundRobin للعمال؛ خمسة SDKs بدون تبعيات (Python / PHP / Node.js / Go / Rust) جاهزة للنسخ والاستخدام؛
 - **صفر مفاتيح مدمجة**: تُحقن جميع المفاتيح عبر الإعدادات، وتُخزَّن مشفّرة في قاعدة البيانات عبر Encryptable؛ الكود والمفاتيح منفصلان تمامًا.
 
 ## بنية المشروع
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**استدعاء SDK** (خمسة عملاء بدون تبعيات، جاهزة للنسخ والاستخدام):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+راجع [sdk/README.md](sdk/README.md) للاستخدام والأمثلة بكل لغة.
+
 للنشر التفصيلي انظر [admin/README.md](admin/README.md) (Docker Compose يدير 5 خدمات: Nginx / PHP / MySQL / Redis / Elasticsearch) ووثيقة خطة التنفيذ.
 
 ## الوثائق
@@ -120,6 +139,7 @@ cargo build
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — بنية الأمان
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — خطة تنفيذ المنصة (البنية، تدفق البيانات، تصميم قاعدة البيانات، عقود API، المراحل)
 - [admin/README.md](admin/README.md) — الوصف الكامل للوحة الإدارة (تقنيات، معايير قاعدة البيانات، النشر، CI/CD)
+- [sdk/README.md](sdk/README.md) — حزم SDK لعملاء الواجهة البرمجية الخارجية (Python / PHP / Node.js / Go / Rust، خمس حزم بلا تبعيات، انسخ وشغّل)
 
 ## الترجمات
 
@@ -171,6 +191,16 @@ cargo build
   - اسم البنك: THE BANK OF NEW YORK MELLON
   - رمز SWIFT: IRVTUS3NXXX
   - عنوان البنك: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### التبرع بالعملات الرقمية (Crypto Donation)
+
+إذا كان هذا المشروع مفيدًا لك، فمرحبًا بمسح رمز الاستجابة السريعة للتبرع، شكرًا لك!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

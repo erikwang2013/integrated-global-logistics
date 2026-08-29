@@ -1850,9 +1850,94 @@ Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`
 
 | 端点 | 说明 |
 |---|---|
-| `GET /v1/health` | 健康检查 |
+| `GET /v1/health` | 健康检查（公共端点，无需密钥） |
+| `GET /v1/openapi.json` | OpenAPI 3.0 文档（公共端点，无需密钥） |
 | `GET /v1/carriers` | 承运商清单（转发 PHP gRPC `InternalService.Carriers`） |
-| `POST /v1/tracking/detect` | 单号识别（`{"tracking_no": "..."}`） |
-| `POST /v1/tracking/query` | 轨迹查询（`{"carrier_code": "...", "tracking_no": "..."}`） |
+| `POST /v1/tracking/query` | 轨迹查询（`{"carrier_code": "...", "tracking_no": "..."}`），`carrier_code` 缺省时网关自动识别（detect 在 query 内部完成） |
+| `GET /v1/tracking/{query_no}` | 按查询号取上次轨迹结果 |
+| `POST /v1/subscriptions` | 注册回调订阅（`{"carrier_code", "callback_url", "event_type"?}`，`event_type` 缺省 `tracking.update`） |
 
 网关侧附加语义：超出 `rate_limit`（默认 100 次/60s）返回 `429`；承运商连续失败触发熔断（默认 5 次 5xx/传输错误后 OPEN 60s）返回 `503`；worker 不可达返回 `502`。网关与 worker 之间为内网 gRPC（h2c，`0.0.0.0:8792`），`x-internal-token` 共享密钥鉴权，见第 16 节。
+
+### 17.1 响应信封与错误
+
+所有端点返回统一信封 `{"code": 0, "message": "ok", "data": ...}`；`code != 0` 视为错误，`data` 缺省。业务错误体可能携带 `error_code` / `error_message`（上游承运商诊断信息，网关透传），`code` 与 HTTP 状态一致：
+
+| HTTP | 含义 |
+|---|---|
+| 400 | 参数错误（`tracking_no` 缺失 / 订阅参数非法） |
+| 401 | 密钥缺失或无效 |
+| 404 | 查询号不存在 |
+| 429 | 限流（默认 100 次/60s/密钥），建议退避重试 |
+| 502 | worker 不可达或上游失败 |
+| 503 | 承运商熔断，建议退避重试 |
+
+### 17.2 调用示例（curl）
+
+演示密钥 `demo-api-key`，网关默认 `http://127.0.0.1:8080`：
+
+```bash
+# 健康检查（公共端点，无需密钥）
+curl http://127.0.0.1:8080/v1/health
+
+# OpenAPI 文档（公共端点，无需密钥）
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# 承运商清单
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# 轨迹查询（指定承运商可选）
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# 按查询号取上次结果
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# 注册回调订阅（回调地址须为公网 http/https，网关拒绝回环/私网）
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 调用示例（SDK）
+
+五份零依赖 SDK 见仓库 `sdk/` 目录（Python / PHP / Node.js / Go / Rust，拷贝即用）：
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+SDK 在信封 `code != 0` 或网络失败时抛异常（`TrackingApiError`），携带 `code` / `message` / `error_code` / `error_message` / `http_status`；限流与熔断错误建议退避重试，承运商侧错误无需重试。完整用法见 `sdk/README.md`。

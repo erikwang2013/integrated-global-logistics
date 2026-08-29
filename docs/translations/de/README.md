@@ -16,6 +16,8 @@ Die Plattform besteht aus drei zusammenarbeitenden Komponenten:
 - **tracking-gateway Hochfrequenz-Gateway** (Rust e-cat Framework) – erste Anlaufstelle der externen Query-API: Redis-Cache, Rate-Limit, Circuit Breaker je Carrier, Worker-Load-Balancing; nur für die Hochfrequenz-Ebene, versteht keine Carrier-Protokolle;
 - **global-logistics Einheitsfassade** (PHP-Paket) – 209 Carrier-Adapter (45 Inland + 164 International), 187 Auto-Erkennungsregeln für Sendungsnummern, `TrackStatus` mit 7 einheitlichen Status-Semantiken.
 
+**Aktueller Stand**: M1 Verwaltungsebene (Carrier-/Credential-/Abfrage-/Abonnement-CRUD), M2 Query-Gateway (vollständige externe API-Kette), M3 Callback-Abonnements, M4 Monitoring & Statistiken, M5 externe OpenAPI-Dokumentation und M6 fünf Client-SDKs sind alle abgeschlossen — die Tracking-Abfragekette Client → e-cat → Worker → Carrier ist demonstrierbar, und die fünf SDKs ohne Abhängigkeiten (Python / PHP / Node.js / Go / Rust) sind kopier- und sofort nutzbar.
+
 ## Projektbeschreibung
 
 <img src="diagrams/description.svg" alt="Projektbeschreibung" width="100%">
@@ -24,6 +26,7 @@ Die Plattform besteht aus drei zusammenarbeitenden Komponenten:
 - **Automatische Erkennung**: 187 Regex-Regeln für Sendungsnummern, reihenfolgesensitiv, Inlands-Kanal hat Vorrang; nicht erkennbare Fälle können explizit `domestic()` / `international()` aufrufen;
 - **Einheitlicher Status**: Die unterschiedlichen Rohstatus der Carrier werden auf die einheitliche `TrackStatus`-Enum abgebildet (Abholung erwartet / in Transport / in Zustellung / zugestellt / Ausnahme / Retoure / nicht erkennbar);
 - **Weltweite Abdeckung**: DHL, FedEx, UPS, USPS – die vier großen Kurierdienste – sowie die S10-Systeme der nationalen Posten (vier Regionen: Europa, Lateinamerika & Karibik, Afrika & Naher Osten, Asien-Pazifik);
+- **Externe API**: das e-cat Query-Gateway bietet API-Key-Authentifizierung, Redis-Cache-Treffer (`X-Cache: HIT`), Rate-Limiting 429, Carrier-weises Circuit Breaking 503, RoundRobin-Worker-Lastverteilung; fünf SDKs ohne Abhängigkeiten (Python / PHP / Node.js / Go / Rust) kopier- und sofort nutzbar;
 - **Keine hartcodierten Schlüssel**: Alle Schlüssel werden per Konfiguration injiziert; in der Datenbankschicht werden sie mit Encryptable verschlüsselt gespeichert – Code und Schlüssel sind vollständig getrennt.
 
 ## Architektur
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**SDK-Aufruf** (fünf Clients ohne Abhängigkeiten, kopieren und sofort nutzen):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+Verwendung und Beispiele in jeder Sprache finden Sie in [sdk/README.md](sdk/README.md).
+
 Detaillierte Bereitstellung: [admin/README.md](admin/README.md) (Docker Compose orchestriert 5 Dienste: Nginx / PHP / MySQL / Redis / Elasticsearch) sowie das Umsetzungsplanungsdokument.
 
 ## Dokumentation
@@ -120,6 +139,7 @@ Detaillierte Bereitstellung: [admin/README.md](admin/README.md) (Docker Compose 
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) – Sicherheitsarchitektur
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) – Umsetzungsplan der Plattform (Architektur, Datenfluss, Datenbankdesign, API-Verträge, Meilensteine)
 - [admin/README.md](admin/README.md) – vollständige Beschreibung des Admin-Backends (Tech-Stack, Datenbankkonventionen, Bereitstellung, CI/CD)
+- [sdk/README.md](sdk/README.md) – Client-SDKs für die externe API (Python / PHP / Node.js / Go / Rust, fünf ohne Abhängigkeiten, kopieren und loslegen)
 
 ## Übersetzungen (andere Sprachen)
 
@@ -173,6 +193,16 @@ Diese README ist in 12 Sprachen verfügbar:
   - Bankname: THE BANK OF NEW YORK MELLON
   - SWIFT-Code: IRVTUS3NXXX
   - Bankadresse: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Krypto-Spenden (Crypto Donation)
+
+Wenn dieses Projekt Ihnen hilft, scannen Sie gerne den QR-Code, um zu spenden. Vielen Dank!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

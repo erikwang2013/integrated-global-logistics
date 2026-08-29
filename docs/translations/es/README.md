@@ -16,6 +16,8 @@ La plataforma se compone de tres componentes que cooperan:
 - **tracking-gateway pasarela de alta frecuencia** (framework Rust e-cat) – primera puerta de entrada de la API de consulta externa: caché Redis, rate-limit, circuit breaker por transportista, balanceo de carga de workers; solo la capa de alta frecuencia, no entiende los protocolos de los transportistas;
 - **global-logistics fachada unificada** (paquete PHP) – 209 adaptadores de transportistas (45 nacional + 164 internacional), 187 reglas de identificación automática de números, `TrackStatus` con 7 semánticas de estado unificadas.
 
+**Progreso actual**: M1 panel de administración (CRUD de transportista / credencial / registro de consulta / suscripción), M2 puerta de enlace de consultas (cadena completa de API externa), M3 suscripciones de devolución de llamada, M4 monitoreo y estadísticas, M5 documentación OpenAPI externa y M6 cinco SDK de cliente están todos completos — la cadena de consulta de seguimiento cliente → e-cat → worker → transportista es demostrable, y los cinco SDK sin dependencias (Python / PHP / Node.js / Go / Rust) están listos para copiar y usar.
+
 ## Descripción del proyecto
 
 <img src="diagrams/description.svg" alt="Descripción del proyecto" width="100%">
@@ -24,6 +26,7 @@ La plataforma se compone de tres componentes que cooperan:
 - **Identificación automática**: 187 reglas regex sensibles al orden, prioridad al canal nacional; los casos no identificables pueden llamar explícitamente a `domestic()` / `international()`;
 - **Estado unificado**: los dispares estados brutos de cada proveedor se mapean al enum unificado `TrackStatus` (pendiente de recogida / en transporte / en reparto / entregado / excepción / devuelto / no reconocido);
 - **Cobertura mundial**: los cuatro grandes mensajeros DHL, FedEx, UPS, USPS y los sistemas S10 de los correos nacionales (cuatro regiones: Europa, Latinoamérica y el Caribe, África y Oriente Medio, Asia-Pacífico);
+- **API externa**: la puerta de enlace e-cat ofrece autenticación API-Key, aciertos de caché Redis (`X-Cache: HIT`), límite de velocidad 429, disyuntor por transportista 503, balanceo RoundRobin de workers; cinco SDK sin dependencias (Python / PHP / Node.js / Go / Rust) listos para copiar y usar;
 - **Cero claves en código**: todas las claves se inyectan por configuración; en la capa de base de datos se almacenan cifradas con Encryptable – código y claves totalmente separados.
 
 ## Arquitectura
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**Llamada SDK** (cinco clientes sin dependencias, listos para copiar y usar):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+Consulte [sdk/README.md](sdk/README.md) para el uso y ejemplos en cada idioma.
+
 Despliegue detallado: [admin/README.md](admin/README.md) (Docker Compose orquesta 5 servicios: Nginx / PHP / MySQL / Redis / Elasticsearch) y el documento de plan de implementación.
 
 ## Documentación
@@ -120,6 +139,7 @@ Despliegue detallado: [admin/README.md](admin/README.md) (Docker Compose orquest
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) – arquitectura de seguridad
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) – plan de implementación de la plataforma (arquitectura, flujo de datos, diseño de base de datos, contratos API, hitos)
 - [admin/README.md](admin/README.md) – descripción completa del backend de administración (stack técnico, convenciones de base de datos, despliegue, CI/CD)
+- [sdk/README.md](sdk/README.md) – SDK de cliente de la API externa (Python / PHP / Node.js / Go / Rust, cinco sin dependencias, copiar y usar)
 
 ## Traducciones (otros idiomas)
 
@@ -173,6 +193,16 @@ Este README está disponible en 12 idiomas:
   - Nombre del banco: THE BANK OF NEW YORK MELLON
   - Código SWIFT: IRVTUS3NXXX
   - Dirección del banco: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Donación en criptomonedas (Crypto Donation)
+
+Si este proyecto te resulta útil, escanea el código QR para donar, ¡gracias!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

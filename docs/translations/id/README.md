@@ -16,6 +16,8 @@ Platform terdiri dari tiga komponen yang bekerja sama:
 - **tracking-gateway gateway frekuensi tinggi** (framework Rust e-cat) —— pintu masuk pertama API query eksternal: cache Redis, rate limiting, circuit breaker per operator, load balancing worker, hanya menangani sisi frekuensi tinggi, tidak memahami protokol operator;
 - **global-logistics facade terpadu** (paket PHP) —— 209 adapter operator (domestik 45 + internasional 164), 187 aturan pengenalan otomatis nomor resi, semantik status terpadu `TrackStatus` 7 macam.
 
+**Kemajuan saat ini**: M1 panel administrasi (CRUD karier / kredensial / catatan kueri / langganan), M2 gateway kueri (rantai API eksternal lengkap), M3 langganan callback, M4 pemantauan dan statistik, M5 dokumentasi OpenAPI eksternal dan M6 lima SDK klien semuanya selesai — rantai kueri pelacakan klien → e-cat → worker → karier dapat didemonstrasikan, dan lima SDK tanpa dependensi (Python / PHP / Node.js / Go / Rust) siap salin-pakai.
+
 ## Penjelasan Proyek
 
 <img src="diagrams/description.svg" alt="Penjelasan Proyek" width="100%">
@@ -24,6 +26,7 @@ Platform terdiri dari tiga komponen yang bekerja sama:
 - **Pengenalan otomatis**：187 aturan regex nomor resi sensitif terhadap urutan, mengutamakan jalur domestik; jika tidak teridentifikasi, `domestic()` / `international()` dapat dipanggil secara eksplisit;
 - **Status terpadu**：status mentah dari berbagai operator dipetakan ke enum `TrackStatus` yang terpadu (menunggu penjemputan / dalam pengiriman / sedang diantar / sudah diterima / anomali / dikembalikan / tidak dikenali);
 - **Cakupan global**：empat kurir besar DHL、FedEx、UPS、USPS dan sistem S10 pos berbagai negara (empat kawasan: Eropa, Amerika Latin-Karibia, Afrika-Timur Tengah, Asia Pasifik);
+- **API eksternal**: gateway e-cat menyediakan autentikasi API-Key, cache hit Redis (`X-Cache: HIT`), pembatasan laju 429, pemutus sirkuit per karier 503, penyeimbangan beban worker RoundRobin; lima SDK tanpa dependensi (Python / PHP / Node.js / Go / Rust) siap salin-pakai;
 - **Nol kunci hardcoded**：semua kunci diinjeksi melalui konfigurasi, lapisan database menyimpan ciphertext dengan Encryptable, kode dan kunci sepenuhnya terpisah.
 
 ## Arsitektur Proyek
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**Pemanggilan SDK** (lima klien tanpa dependensi, siap salin-pakai):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+Lihat [sdk/README.md](sdk/README.md) untuk penggunaan dan contoh dalam setiap bahasa.
+
 Deploy detail lihat [admin/README.md](admin/README.md)（Docker Compose mengatur 5 layanan: Nginx / PHP / MySQL / Redis / Elasticsearch）dan dokumen rencana implementasi.
 
 ## Dokumentasi
@@ -120,6 +139,7 @@ Deploy detail lihat [admin/README.md](admin/README.md)（Docker Compose mengatur
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— Arsitektur keamanan
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— Rencana implementasi platform (arsitektur, alur data, desain database, kontrak API, milestone)
 - [admin/README.md](admin/README.md) —— Penjelasan lengkap admin backend (stack teknologi, standar database, deploy, CI/CD)
+- [sdk/README.md](sdk/README.md) —— SDK klien API eksternal (Python / PHP / Node.js / Go / Rust, lima tanpa dependensi, salin lalu jalankan)
 
 ## Translations（Bahasa Lain）
 
@@ -171,6 +191,16 @@ Deploy detail lihat [admin/README.md](admin/README.md)（Docker Compose mengatur
   - Nama bank：THE BANK OF NEW YORK MELLON
   - SWIFT Code：IRVTUS3NXXX
   - Alamat bank：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Donasi Kripto (Crypto Donation)
+
+Jika proyek ini membantu Anda, silakan pindai kode QR untuk berdonasi, terima kasih!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

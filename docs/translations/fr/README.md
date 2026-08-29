@@ -16,6 +16,8 @@ La plateforme repose sur trois composants qui coopèrent :
 - **tracking-gateway passerelle haute fréquence** (framework Rust e-cat) – première porte d'entrée de l'API de requêtes externe : cache Redis, rate-limit, circuit breaker par transporteur, load-balancing des workers ; ne fait que la partie haute fréquence, ignore les protocoles des transporteurs ;
 - **global-logistics façade unifiée** (paquet PHP) – 209 adaptateurs de transporteurs (45 national + 164 international), 187 règles d'identification automatique des numéros, `TrackStatus` avec 7 sémantiques d'état unifiées.
 
+**Progression actuelle** : M1 console d'administration (CRUD transporteur / identifiant / enregistrement de requête / abonnement), M2 passerelle de requête (chaîne d'API externe complète), M3 abonnements de rappel, M4 surveillance et statistiques, M5 documentation OpenAPI externe et M6 cinq SDK clients sont tous terminés — la chaîne de requête de suivi client → e-cat → worker → transporteur est démontrable, et les cinq SDK sans dépendance (Python / PHP / Node.js / Go / Rust) sont prêts à copier et utiliser.
+
 ## Description du projet
 
 <img src="diagrams/description.svg" alt="Description du projet" width="100%">
@@ -24,6 +26,7 @@ La plateforme repose sur trois composants qui coopèrent :
 - **Identification automatique** : 187 règles regex sensibles à l'ordre, le canal national prioritaire ; les cas non identifiés peuvent appeler explicitement `domestic()` / `international()` ;
 - **État unifié** : les états bruts très variés des transporteurs sont mappés sur l'enum unifiée `TrackStatus` (en attente de ramassage / en transport / en livraison / livré / anomalie / retour / non reconnu) ;
 - **Couverture mondiale** : les quatre grands express DHL, FedEx, UPS, USPS et les systèmes S10 des postes nationales (quatre régions : Europe, Amérique latine & Caraïbes, Afrique & Moyen-Orient, Asie-Pacifique) ;
+- **API externe** : la passerelle e-cat fournit l'authentification API-Key, les hits de cache Redis (`X-Cache: HIT`), la limitation de débit 429, le circuit breaker par transporteur 503, l'équilibrage RoundRobin des workers ; cinq SDK sans dépendance (Python / PHP / Node.js / Go / Rust) prêts à copier et utiliser ;
 - **Zéro clé en dur** : toutes les clés sont injectées par configuration ; au niveau base de données, elles sont stockées chiffrées via Encryptable – code et clés totalement séparés.
 
 ## Architecture
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**Appel SDK** (cinq clients sans dépendance, prêts à copier et utiliser) :
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+Consultez [sdk/README.md](sdk/README.md) pour l'utilisation et les exemples dans chaque langue.
+
 Déploiement détaillé : [admin/README.md](admin/README.md) (Docker Compose orchestre 5 services : Nginx / PHP / MySQL / Redis / Elasticsearch) ainsi que le document de plan d'implémentation.
 
 ## Documentation
@@ -120,6 +139,7 @@ Déploiement détaillé : [admin/README.md](admin/README.md) (Docker Compose orc
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) – architecture de sécurité
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) – plan d'implémentation de la plateforme (architecture, flux de données, conception de la base de données, contrats API, jalons)
 - [admin/README.md](admin/README.md) – description complète du backend d'admin (stack technique, conventions de base de données, déploiement, CI/CD)
+- [sdk/README.md](sdk/README.md) – SDK clients de l'API externe (Python / PHP / Node.js / Go / Rust, cinq sans dépendance, à copier-coller)
 
 ## Traductions (autres langues)
 
@@ -173,6 +193,16 @@ Ce README est disponible en 12 langues :
   - Nom de la banque : THE BANK OF NEW YORK MELLON
   - Code SWIFT : IRVTUS3NXXX
   - Adresse de la banque : THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Don en cryptomonnaie (Crypto Donation)
+
+Si ce projet vous est utile, scannez le code QR pour faire un don, merci !
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

@@ -1823,3 +1823,125 @@ docker-compose up -d
 ### Nginx নিরাপত্তা কনফিগারেশন
 
 প্রোডাকশন ডিপ্লয়ে `docs/nginx-security.conf` দেখে রিভার্স প্রক্সি নিরাপত্তা হার্ডেনিং কনফিগার করুন।
+
+## 16. অভ্যন্তরীণ gRPC ইন্টারফেস (e-cat → PHP worker)
+
+শুধুমাত্র e-cat ক্যোয়ারি গেটওয়ের ব্যবহারের জন্য। PHP পাশে এটি একটি workerman h2c সার্ভিস (`tcp://0.0.0.0:8792`, প্রসেস `internal_grpc`)। কন্ট্র্যাক্টটি `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`)-এ সংজ্ঞায়িত, মেসেজগুলো protobuf-এ এনকোড করা হয় এবং metadata-তে `x-internal-token` থাকা আবশ্যক (মান `config/logistics.php`-এর `internal_token` থেকে, প্রোডাকশনে `INTERNAL_TOKEN` এনভায়রনমেন্ট ভেরিয়েবল দিয়ে ওভাররাইড করা হয়)। টোকেন অনুপস্থিত/ভুল হলে `code=401 UNAUTHORIZED` রিটার্ন হয়।
+
+### 16.1 RPC সারসংক্ষেপ
+
+| RPC | অনুরোধ | প্রতিক্রিয়া | বিবরণ |
+|---|---|---|---|
+| `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | ক্যারিয়ার সনাক্তকরণ; সনাক্ত না হলে `404 CARRIER_NOT_DETECTED` |
+| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | ট্র্যাকিং ক্যোয়ারি; `credential_id` ঐচ্ছিক (একাধিক ক্রেডেনশিয়ালের ক্ষেত্রে নির্দিষ্ট করুন, অবশ্যই `carrier_code`-এর সাথে মিলতে হবে, না হলে `400 INVALID_PARAMS`)। প্রতিটি ক্যোয়ারি `logistics_tracking_query`-তে সংরক্ষিত হয় |
+| `Carriers` | `{}` | `{code, carriers[]}` | রেজিস্ট্রির সব ক্যারিয়ার `{carrier_code, channel}` |
+
+### 16.2 ত্রুটি কন্ট্র্যাক্ট (প্রতিক্রিয়ার `code` ফিল্ড, gRPC status সর্বদা 0)
+
+| `code` | `error_code` | পরিস্থিতি |
+|---|---|---|
+| 400 | `INVALID_PARAMS` | প্যারামিটার অনুপস্থিত / credential_id অমিল |
+| 401 | `UNAUTHORIZED` | অভ্যন্তরীণ টোকেন ভুল |
+| 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | ক্যারিয়ার নিবন্ধিত নয় / ট্র্যাকিং পাওয়া যায়নি / সনাক্ত করা যায়নি |
+| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | আপস্ট্রিম ক্রেডেনশিয়াল ত্রুটি / নেটওয়ার্ক ত্রুটি / ক্যারিয়ার ব্যবসায়িক ত্রুটি (কাঠামোবদ্ধ আপস্ট্রিম বার্তা সহ, যেমন `[SF-INTERNATIONAL A1001] বাধ্যতামূলক প্যারামিটার খালি রাখা যাবে না`) |
+| 500 | `INTERNAL_ERROR` | অভ্যন্তরীণ ব্যতিক্রম |
+
+
+## 17. e-cat ক্যোয়ারি গেটওয়ে বাহ্যিক API
+
+Rust হাই-ফ্রিকোয়েন্সি গেটওয়ে (`infrastructure/tracking-gateway`), `0.0.0.0:8080`-এ শোনে (ডিফল্ট), অনুরোধ হেডারে `X-API-Key` বহন করে (কনফিগ `api_keys`)। গেটওয়ে API-Key প্রমাণীকরণ, Redis ক্যাশ হিট (প্রিফিক্স `logistics:`), রেট লিমিট, প্রতি-ক্যারিয়ার সার্কিট ব্রেকার এবং RoundRobin worker ফরওয়ার্ডিং পরিচালনা করে; ক্রেডেনশিয়াল কখনো গেটওয়েতে নামে না।
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | স্বাস্থ্য পরীক্ষা (পাবলিক এন্ডপয়েন্ট, কী প্রয়োজন নেই) |
+| `GET /v1/openapi.json` | OpenAPI 3.0 ডকুমেন্টেশন (পাবলিক এন্ডপয়েন্ট, কী প্রয়োজন নেই) |
+| `GET /v1/carriers` | ক্যারিয়ার তালিকা (PHP gRPC `InternalService.Carriers`-এ ফরওয়ার্ড করে) |
+| `POST /v1/tracking/query` | ট্র্যাকিং ক্যোয়ারি (`{"carrier_code": "...", "tracking_no": "..."}`); `carrier_code` অনুপস্থিত থাকলে গেটওয়ে স্বয়ংক্রিয়ভাবে সনাক্ত করে (detect, query-র ভিতরে সম্পন্ন হয়) |
+| `GET /v1/tracking/{query_no}` | ক্যোয়ারি নম্বর দিয়ে শেষ ট্র্যাকিং ফলাফল |
+| `POST /v1/subscriptions` | কলব্যাক সাবস্ক্রিপশন নিবন্ধন (`{"carrier_code", "callback_url", "event_type"?}`, `event_type` ডিফল্ট `tracking.update`) |
+
+
+গেটওয়ে পাশের অতিরিক্ত শর্ত: `rate_limit` (ডিফল্ট 100 বার/60 সেকেন্ড) অতিক্রম করলে `429`; ক্যারিয়ারের ধারাবাহিক ব্যর্থতা সার্কিট ব্রেকার সক্রিয় করে (ডিফল্ট ৫টি 5xx/ট্রান্সপোর্ট ত্রুটির পর 60 সেকেন্ড OPEN) → `503`; worker অপ্রাপ্য → `502`। গেটওয়ে ও worker-এর মধ্যে অভ্যন্তরীণ gRPC (h2c, `0.0.0.0:8792`), `x-internal-token` শেয়ার্ড কী প্রমাণীকরণ, ধারা 16 দেখুন।
+
+### 17.1 প্রতিক্রিয়া খাম ও ত্রুটি
+
+সব এন্ডপয়েন্ট একীভূত খাম `{"code": 0, "message": "ok", "data": ...}` রিটার্ন করে; `code != 0` মানে ত্রুটি এবং `data` বাদ থাকে। ব্যবসায়িক ত্রুটির বডিতে `error_code` / `error_message` থাকতে পারে (আপস্ট্রিম ক্যারিয়ার ডায়াগনস্টিক, গেটওয়ে সেভাবে পাস করে); `code` HTTP স্ট্যাটাসের সাথে মেলে:
+
+| HTTP | অর্থ |
+|---|---|
+| 400 | প্যারামিটার ত্রুটি (`tracking_no` অনুপস্থিত / সাবস্ক্রিপশন প্যারামিটার অবৈধ) |
+| 401 | কী অনুপস্থিত বা অবৈধ |
+| 404 | ক্যোয়ারি নম্বর নেই |
+| 429 | রেট লিমিট (ডিফল্ট প্রতি কী 100/60 সেকেন্ড), ব্যাকঅফ দিয়ে পুনরায় চেষ্টা করুন |
+| 502 | worker অপ্রাপ্য বা আপস্ট্রিম ব্যর্থতা |
+| 503 | ক্যারিয়ার সার্কিট ব্রেকার, ব্যাকঅফ দিয়ে পুনরায় চেষ্টা করুন |
+
+### 17.2 কল উদাহরণ (curl)
+
+ডেমো কী `demo-api-key`, গেটওয়ে ডিফল্ট `http://127.0.0.1:8080`:
+
+```bash
+# স্বাস্থ্য পরীক্ষা (পাবলিক এন্ডপয়েন্ট, কী প্রয়োজন নেই)
+curl http://127.0.0.1:8080/v1/health
+
+# OpenAPI ডকুমেন্টেশন (পাবলিক এন্ডপয়েন্ট, কী প্রয়োজন নেই)
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# ক্যারিয়ার তালিকা
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# ট্র্যাকিং ক্যোয়ারি (ক্যারিয়ার নির্দিষ্ট করা ঐচ্ছিক)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# ক্যোয়ারি নম্বর দিয়ে শেষ ফলাফল
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# কলব্যাক সাবস্ক্রিপশন নিবন্ধন (কলব্যাক ঠিকানা পাবলিক http/https হতে হবে; গেটওয়ে লুপব্যাক/প্রাইভেট নেটওয়ার্ক প্রত্যাখ্যান করে)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 কল উদাহরণ (SDK)
+
+রিপোজিটরির `sdk/` ডিরেক্টরিতে পাঁচটি জিরো-ডিপেন্ডেন্সি SDK আছে (Python / PHP / Node.js / Go / Rust, কপি করে চালান):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+SDK খামে `code != 0` হলে বা নেটওয়ার্ক ব্যর্থতায় ব্যতিক্রম (`TrackingApiError`) ছোড়ে, যাতে `code` / `message` / `error_code` / `error_message` / `http_status` থাকে; রেট লিমিট ও সার্কিট ব্রেকার ত্রুটিতে ব্যাকঅফ দিয়ে পুনরায় চেষ্টা করুন, ক্যারিয়ার পাশের ত্রুটিতে পুনরায় চেষ্টা করবেন না। সম্পূর্ণ ব্যবহার `sdk/README.md`-তে।

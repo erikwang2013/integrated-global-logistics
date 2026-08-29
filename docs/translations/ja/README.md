@@ -16,6 +16,8 @@
 - **tracking-gateway 高頻度ゲートウェイ**（Rust e-cat フレームワーク）—— 外部クエリ API の第一の入口：Redis キャッシュ、レート制限、運送会社別サーキットブレーカー、worker の負荷分散。高頻度面のみを担い、運送会社プロトコルは理解しません；
 - **global-logistics 統一ファサード**（PHP パッケージ）—— 209 社の運送会社アダプター（国内 45 + 国際 164）、187 件の追跡番号自動識別ルール、`TrackStatus` 7 種の統一ステータスセマンティクス。
 
+**現在の進捗**：M1 管理面（運送会社 / 資格情報 / クエリ記録 / 購読 CRUD）、M2 クエリゲートウェイ（外部 API 全チェーン）、M3 コールバック購読、M4 監視統計、M5 外部 OpenAPI ドキュメント、M6 5 つのクライアント SDK はすべて完了 —— クライアント → e-cat → worker → 運送会社の追跡クエリチェーンがデモ可能で、5 つの依存ゼロ SDK（Python / PHP / Node.js / Go / Rust）はコピーしてすぐ使えます。
+
 ## プロジェクト説明
 
 <img src="diagrams/description.svg" alt="プロジェクト説明" width="100%">
@@ -24,6 +26,7 @@
 - **自動識別**：187 件の追跡番号正規表現ルールは順序に敏感で、国内チャネルを優先的にヒット。識別できない場合は `domestic()` / `international()` を明示的に呼び出せます；
 - **統一ステータス**：各社まちまちの生のステータスを統一 `TrackStatus` 列挙型（集荷待ち / 輸送中 / 配達中 / 配達完了 / 異常 / 返送 / 識別不可）にマッピング；
 - **グローバルカバレッジ**：DHL、FedEx、UPS、USPS の四大宅配便と各国郵便の S10 システム（ヨーロッパ、ラテンアメリカ・カリブ、アフリカ・中東、アジア太平洋の 4 地域）；
+- **外部 API**：e-cat クエリゲートウェイが API-Key 認証、Redis キャッシュヒット（`X-Cache: HIT`）、レート制限 429、運送会社別サーキットブレーカー 503、RoundRobin worker 負荷分散を提供；依存ゼロの 5 SDK（Python / PHP / Node.js / Go / Rust）はコピーしてすぐ使えます；
 - **鍵のハードコードゼロ**：各社の鍵はすべて設定注入を経由し、データベース層では Encryptable 暗号文で保存。コードと鍵は完全に分離されています。
 
 ## プロジェクトアーキテクチャ
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**SDK 呼び出し**（依存ゼロの 5 クライアント、コピーしてすぐ使えます）：
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+各言語の使い方と例は [sdk/README.md](sdk/README.md) を参照してください。
+
 詳細なデプロイは [admin/README.md](admin/README.md)（Docker Compose で 5 サービスを編成：Nginx / PHP / MySQL / Redis / Elasticsearch）と実装計画ドキュメントを参照してください。
 
 ## ドキュメント
@@ -120,6 +139,7 @@ cargo build
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— セキュリティアーキテクチャ
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— プラットフォーム実装計画（アーキテクチャ、データフロー、データベース設計、API 契約、マイルストーン）
 - [admin/README.md](admin/README.md) —— 管理バックエンド完全解説（技術スタック、データベース規約、デプロイ、CI/CD）
+- [sdk/README.md](sdk/README.md) —— 外部 API クライアント SDK（Python / PHP / Node.js / Go / Rust、5 つすべて依存なし、コピーしてすぐ使える）
 
 ## Translations（他の言語）
 
@@ -171,6 +191,16 @@ cargo build
   - 銀行名：THE BANK OF NEW YORK MELLON
   - SWIFT Code：IRVTUS3NXXX
   - 銀行住所：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### 仮想通貨の寄付 (Crypto Donation)
+
+このプロジェクトがお役に立ったら、QRコードをスキャンして寄付してください。ありがとうございます！
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

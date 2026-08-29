@@ -1823,3 +1823,125 @@ O diretório `database/backup/` fornece scripts de backup e restauração:
 ### Configuração de segurança do Nginx
 
 Para ambientes de produção, consulte `docs/nginx-security.conf` para configurar o reforço de segurança do proxy reverso.
+
+## 16. Interface gRPC interna (e-cat → PHP worker)
+
+Somente para chamada pelo gateway e-cat. No lado PHP é um serviço workerman h2c (`tcp://0.0.0.0:8792`, processo `internal_grpc`). O contrato é definido em `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`), as mensagens são codificadas em protobuf e os metadata devem conter `x-internal-token` (valor de `config/logistics.php` — `internal_token`, substituído em produção pela variável de ambiente `INTERNAL_TOKEN`). Token ausente/incorreto retorna `code=401 UNAUTHORIZED`.
+
+### 16.1 Visão geral dos RPC
+
+| RPC | Requisição | Resposta | Descrição |
+|---|---|---|---|
+| `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | Detecção de transportadora; não reconhecida → `404 CARRIER_NOT_DETECTED` |
+| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | Consulta de rastreio; `credential_id` opcional (cenário multi-credenciais, deve corresponder a `carrier_code`, senão `400 INVALID_PARAMS`). Cada consulta é gravada em `logistics_tracking_query` |
+| `Carriers` | `{}` | `{code, carriers[]}` | Todas as transportadoras do registro `{carrier_code, channel}` |
+
+### 16.2 Contrato de erros (campo `code` na resposta, status gRPC sempre 0)
+
+| `code` | `error_code` | Cenário |
+|---|---|---|
+| 400 | `INVALID_PARAMS` | Parâmetros ausentes / credential_id não corresponde |
+| 401 | `UNAUTHORIZED` | Token interno incorreto |
+| 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | Transportadora não registrada / rastreio não encontrado / não detectada |
+| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | Erro de credenciais da transportadora / erro de rede / erro de negócio (inclui mensagem estruturada do provedor, ex. `[SF-INTERNATIONAL A1001] parâmetros obrigatórios não podem estar vazios`) |
+| 500 | `INTERNAL_ERROR` | Exceção interna |
+
+
+## 17. API externa do gateway de consulta e-cat
+
+Gateway de alta frequência em Rust (`infrastructure/tracking-gateway`), escuta em `0.0.0.0:8080` (padrão), requisições carregam o cabeçalho `X-API-Key` (config `api_keys`). O gateway cuida da autenticação API-Key, cache Redis (prefixo `logistics:`), rate limiting, circuit breaker por transportadora e encaminhamento round-robin aos workers; credenciais nunca descem até o gateway.
+
+| 端点 | 说明 |
+|---|---|
+| `GET /v1/health` | Verificação de saúde (ponto público, sem chave) |
+| `GET /v1/openapi.json` | Documentação OpenAPI 3.0 (ponto público, sem chave) |
+| `GET /v1/carriers` | Lista de transportadoras (encaminha ao gRPC PHP `InternalService.Carriers`) |
+| `POST /v1/tracking/query` | Consulta de rastreio (`{"carrier_code": "...", "tracking_no": "..."}`); sem `carrier_code` o gateway detecta automaticamente (detect é feito dentro de query) |
+| `GET /v1/tracking/{query_no}` | Último resultado de rastreio por número de consulta |
+| `POST /v1/subscriptions` | Registrar assinatura de callback (`{"carrier_code", "callback_url", "event_type"?}`, `event_type` padrão `tracking.update`) |
+
+
+Semântica adicional do gateway: exceder `rate_limit` (padrão 100/60s) retorna `429`; falhas consecutivas da transportadora disparam o circuit breaker (padrão OPEN 60s após 5 erros 5xx/transporte) → `503`; worker inacessível → `502`. Gateway↔worker é gRPC interno (h2c, `0.0.0.0:8792`), autenticado pelo segredo compartilhado `x-internal-token`, ver seção 16.
+
+### 17.1 Envelope de resposta e erros
+
+Todos os pontos retornam o envelope unificado `{"code": 0, "message": "ok", "data": ...}`; `code != 0` é erro e `data` é omitido. O corpo de um erro de negócio pode conter `error_code` / `error_message` (diagnóstico da transportadora, repassado pelo gateway); `code` corresponde ao status HTTP:
+
+| HTTP | Significado |
+|---|---|
+| 400 | Erro de parâmetros (`tracking_no` ausente / parâmetros de assinatura inválidos) |
+| 401 | Chave ausente ou inválida |
+| 404 | Número de consulta não existe |
+| 429 | Rate limit (padrão 100/60s por chave), tentar novamente com backoff |
+| 502 | Worker inacessível ou falha do provedor |
+| 503 | Circuit breaker da transportadora, tentar novamente com backoff |
+
+### 17.2 Exemplos de chamada (curl)
+
+Chave demo `demo-api-key`, gateway padrão `http://127.0.0.1:8080`:
+
+```bash
+# Verificação de saúde (ponto público, sem chave)
+curl http://127.0.0.1:8080/v1/health
+
+# Documentação OpenAPI (ponto público, sem chave)
+curl http://127.0.0.1:8080/v1/openapi.json
+
+# Lista de transportadoras
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+
+# Consulta de rastreio (transportadora opcional)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
+  http://127.0.0.1:8080/v1/tracking/query
+
+# Último resultado por número de consulta
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+
+# Registrar assinatura (o endereço de callback deve ser http/https público; o gateway recusa loopback/redes privadas)
+curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
+  http://127.0.0.1:8080/v1/subscriptions
+```
+
+### 17.3 Exemplos de chamada (SDK)
+
+Cinco SDKs sem dependências no diretório `sdk/` do repositório (Python / PHP / Node.js / Go / Rust, copiar e usar):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+print(result["status"], result["events"][0]["description"])
+```
+
+```php
+require "TrackingClient.php";
+$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+$carriers = $client->list_carriers();
+$sub = $client->subscribe("china-post", "https://example.com/cb");
+```
+
+```js
+const { TrackingClient } = require("./tracking-client.js");
+const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
+const detail = await client.getTracking("query_no");
+console.log(detail.status);
+```
+
+```go
+import "trackingclient"
+client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
+raw, err := client.QueryTracking("LX123456789CN", "china-post")
+if err != nil { panic(err) }
+fmt.Println(string(raw))
+```
+
+```rust
+use trackingclient::tracking_client::TrackingClient;
+let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
+let detail = client.get_tracking("query_no")?;
+println!("{}", detail);
+```
+
+Os SDKs lançam exceção (`TrackingApiError`) quando `code != 0` no envelope ou em falha de rede, com `code` / `message` / `error_code` / `error_message` / `http_status`; em rate limit e circuit breaker tente novamente com backoff, erros do lado da transportadora não devem ser repetidos. Uso completo em `sdk/README.md`.

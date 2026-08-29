@@ -128,8 +128,11 @@ RBAC 权限种子（沿用 slug 约定，插入 `logistics_admin_permission`）�
 | GET | `/v1/carriers` | 支持的承运商列表（e-cat 缓存 /internal/carriers 结果） |
 | POST | `/v1/subscriptions`（M3） | 创建回调订阅 `{carrier_code, callback_url, event_type}` |
 | GET | `/v1/health` | 健康检查（e-cat ecat-health） |
+| GET | `/v1/openapi.json` | OpenAPI 3.0 文档（公共端点，无需密钥） |
 
 统一响应：`{code: 0, message: "ok", data: {...}}`；错误 `{code: 4xx/5xx 段, message}`（限流 429、熔断 503、承运商错误 carrier_error）。
+
+> 客户端 SDK：五份零依赖 SDK 位于仓库 `sdk/` 目录（Python / PHP / Node.js / Go / Rust），用法与示例见 [sdk/README.md](../sdk/README.md)。
 
 ### 5.2 内部（e-cat → PHP worker，gRPC，仅内网，共享密钥头 `x-internal-token`）
 
@@ -175,10 +178,12 @@ proto 定义于 `infrastructure/tracking-gateway/proto/internal.proto`（`intern
 |---|---|---|---|
 | **M1 管理后台扩展** | 表 + 模型 + 控制器 + 路由 + RBAC 权限种子 + 凭证加密 | install.sql 增量 DDL 与权限种子；模型 Carrier/CarrierCredential/TrackingQuery/CallbackSubscription；控制器与路由注册；`composer require erikwang2013/global-logistics` 并配置 | 后台可对承运商/密钥/订阅 CRUD，权限按 slug 生效，admin 全量回归通过 |
 | **M2 查询网关** ✅ | workspace 新 crate `tracking-gateway` + PHP gRPC 端点 + 缓存 + LB + 限流 + 熔断 + 对外 API | `infrastructure/tracking-gateway/`（Cargo.toml 加入 workspace members）；`app/grpc/`（InternalService gRPC server，Query/Detect/Carriers/Subscribe）；e-cat 对外 /v1 接口；/metrics；docker-compose 串联 | 已达成：`cargo build --offline` 通过；端到端验证 —— detect 识别 ✓、query 直达顺丰上游并返回结构化 carrier_error ✓、gateway 转发 + 熔断链路 ✓、落库 logistics_tracking_query ✓、Redis 前缀 `logistics:` ✓、internal 401/参数校验 ✓ |
-| **M3 回调与订阅** | webhook 接收 + 事件落库 + 异步推送 + 订阅管理 | logistics_tracking_event 表；`/api/callback/{carrier}` 白名单路由 + 签名校验；webman 队列消费者（重试退避 + 幂等）；订阅 CRUD（admin + 对外 POST /v1/subscriptions） | 承运商回调可触发商户 URL 推送，失败重试，重复回调幂等 |
-| **M4 监控与统计** | 统计报表 + 指标面板 + 告警 | `/admin/tracking/statistics` API；e-cat /metrics + Grafana 面板；失败率/熔断告警规则；`ecat-openapi` 文档 | 查询量、成功率、耗时、承运商分布可视化；异常可告警 |
+| **M3 回调与订阅** ✅ | webhook 接收 + 事件落库 + 异步推送 + 订阅管理 | logistics_tracking_event 表；`/api/callback/{carrier}` 白名单路由 + 签名校验；webman 队列消费者（重试退避 + 幂等）；订阅 CRUD（admin + 对外 POST /v1/subscriptions） | 已达成：回调订阅闭环（Subscribe gRPC + 对外 /v1/subscriptions + HMAC 验签 + 幂等推送） |
+| **M4 监控与统计** ✅ | 统计报表 + 指标面板 + 告警 | `/admin/tracking/statistics` API；e-cat /metrics + Grafana 面板；失败率/熔断告警规则；`ecat-openapi` 文档 | 已达成：查询量、成功率、耗时、承运商分布可视化；异常可告警 |
+| **M5 对外可观测与文档** ✅ | 对外 OpenAPI 文档 + 缓存失效 + 凭证加权路由 | `GET /v1/openapi.json`（公共端点）；webhook 回调触发 Redis 缓存失效；多凭证加权路由；五份对外 SDK（`sdk/`，Python/PHP/Node.js/Go/Rust） | 已达成：OpenAPI 3.0 文档可访问；回调到达缓存即时失效；凭证按权重分发 |
+| **M6 对外 SDK** ✅ | 五份零依赖客户端 SDK + 文档 | `sdk/` 目录：Python / PHP / Node.js / Go / Rust 五份零依赖客户端（query_tracking / get_tracking / list_carriers / subscribe）；`sdk/README.md` 统一用法文档 | 已达成：五份 SDK 拷贝即用，各语言初始化与调用示例齐备 |
 
-**里程碑**：M1 完成（管理面可用）→ **M2 完成（核心查询链路可演示，MVP，2026-08-28）** → M3（回调闭环）→ M4（可观测）。
+**里程碑**：M1 完成（管理面可用）→ **M2 完成（核心查询链路可演示，MVP，2026-08-28）** → **M3 完成（回调闭环）** → **M4 完成（可观测）** → **M5 完成（对外 OpenAPI 文档 + 缓存失效）** → **M6 完成（五份对外 SDK）**。
 
 ## 8. 风险与简化取舍
 

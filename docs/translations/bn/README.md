@@ -16,6 +16,8 @@
 - **tracking-gateway উচ্চ-ফ্রিকোয়েন্সি গেটওয়ে** (Rust e-cat ফ্রেমওয়ার্ক) —— বাহ্যিক কুয়েরি API-এর প্রথম প্রবেশপথ：Redis ক্যাশ, রেট লিমিটিং, ক্যারিয়ারভিত্তিক সার্কিট ব্রেকার, ওয়ার্কার লোড ব্যালেন্সিং, শুধু উচ্চ-ফ্রিকোয়েন্সি পৃষ্ঠা করে, ক্যারিয়ার প্রোটোকল বোঝে না；
 - **global-logistics ইউনিফাইড ফেসেড** (PHP প্যাকেজ) —— ২০৯টি ক্যারিয়ার অ্যাডাপ্টার (দেশীয় ৪৫ + আন্তর্জাতিক ১৬৪), ১৮৭টি ট্র্যাকিং নম্বর স্বয়ংক্রিয় শনাক্তকরণ নিয়ম, `TrackStatus` ৭ প্রকারের ইউনিফাইড স্ট্যাটাস সেম্যান্টিক্স।
 
+**বর্তমান অগ্রগতি**: M1 প্রশাসন প্যানেল (ক্যারিয়ার / ক্রেডেনশিয়াল / কোয়েরি রেকর্ড / সাবস্ক্রিপশন CRUD), M2 কোয়েরি গেটওয়ে (সম্পূর্ণ বাহ্যিক API চেইন), M3 কলব্যাক সাবস্ক্রিপশন, M4 মনিটরিং ও পরিসংখ্যান, M5 বাহ্যিক OpenAPI ডকুমেন্টেশন এবং M6 পাঁচটি ক্লায়েন্ট SDK সব সম্পন্ন — ক্লায়েন্ট → e-cat → worker → ক্যারিয়ার ট্র্যাকিং কোয়েরি চেইন প্রদর্শনযোগ্য, এবং পাঁচটি নির্ভরতা-শূন্য SDK (Python / PHP / Node.js / Go / Rust) কপি-এন্ড-ইউজ প্রস্তুত।
+
 ## প্রকল্প ব্যাখ্যা
 
 <img src="diagrams/description.svg" alt="প্রকল্প ব্যাখ্যা" width="100%">
@@ -24,6 +26,7 @@
 - **স্বয়ংক্রিয় শনাক্তকরণ**：১৮৭টি ট্র্যাকিং নম্বর রেজেক্স নিয়ম ক্রম-সংবেদনশীল, দেশীয় চ্যানেলকে অগ্রাধিকার দেয়；শনাক্ত না হলে স্পষ্টভাবে `domestic()` / `international()` কল করা যায়；
 - **ইউনিফাইড স্ট্যাটাস**：সব কোম্পানির বিবিধ কাঁচা স্ট্যাটাস ইউনিফাইড `TrackStatus` এনামে ম্যাপ হয় (পিকআপ অপেক্ষা / পরিবহনে / ডেলিভারিতে / ডেলিভারি সম্পন্ন / অস্বাভাবিক / ফেরত / শনাক্ত করা যায়নি)；
 - **বৈশ্বিক কভারেজ**：DHL、FedEx、UPS、USPS চারটি বড় কুরিয়ার ও বিভিন্ন দেশের ডাক S10 সিস্টেম (ইউরোপ, লাতিন আমেরিকা-ক্যারিবিয়ান, আফ্রিকা-মধ্যপ্রাচ্য, এশিয়া-প্যাসিফিক চার অঞ্চল)；
+- **বাহ্যিক API**: e-cat কোয়েরি গেটওয়ে API-Key প্রমাণীকরণ, Redis ক্যাশ হিট (`X-Cache: HIT`), রেট লিমিট 429, প্রতি-ক্যারিয়ার সার্কিট ব্রেকার 503, RoundRobin worker লোড ব্যালেন্সিং প্রদান করে; পাঁচটি নির্ভরতা-শূন্য SDK (Python / PHP / Node.js / Go / Rust) কপি-এন্ড-ইউজ প্রস্তুত;
 - **শূন্য হার্ডকোডেড কী**：সব ক্যারিয়ারের কী কনফিগারেশনের মাধ্যমে ইনজেক্ট হয়, ডেটাবেস স্তরে Encryptable সাইফারটেক্সটে সংরক্ষিত, কোড ও কী সম্পূর্ণ আলাদা।
 
 ## প্রকল্প আর্কিটেকচার
@@ -64,6 +67,7 @@ integrated-global-logistics/
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
+├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
     ├── translations/               # 12 语言 README
@@ -110,6 +114,21 @@ cd infrastructure
 cargo build
 ```
 
+**SDK কল** (পাঁচটি নির্ভরতা-শূন্য ক্লায়েন্ট, কপি-এন্ড-ইউজ):
+
+```python
+from tracking_client import TrackingClient
+client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
+result = client.query_tracking("LX123456789CN")
+```
+
+```bash
+curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
+  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
+```
+
+প্রতিটি ভাষায় ব্যবহার ও উদাহরণের জন্য [sdk/README.md](sdk/README.md) দেখুন।
+
 বিস্তারিত ডিপ্লয়ের জন্য দেখুন [admin/README.md](admin/README.md)（Docker Compose-এ ৫টি সার্ভিস সাজানো：Nginx / PHP / MySQL / Redis / Elasticsearch）এবং ইমপ্লিমেন্টেশন প্ল্যান ডকুমেন্ট।
 
 ## ডকুমেন্টেশন
@@ -120,6 +139,7 @@ cargo build
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— সিকিউরিটি আর্কিটেকচার
 - [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— প্ল্যাটফর্ম ইমপ্লিমেন্টেশন প্ল্যান (আর্কিটেকচার, ডেটা ফ্লো, ডেটাবেস ডিজাইন, API কন্ট্রাক্ট, মাইলস্টোন)
 - [admin/README.md](admin/README.md) —— অ্যাডমিন ব্যাকএন্ডের সম্পূর্ণ ব্যাখ্যা (টেক স্ট্যাক, ডেটাবেস নিয়ম, ডিপ্লয়, CI/CD)
+- [sdk/README.md](sdk/README.md) —— বাহ্যিক API ক্লায়েন্ট SDK (Python / PHP / Node.js / Go / Rust, পাঁচটি জিরো-ডিপেন্ডেন্সি, কপি করে চালান)
 
 ## Translations（অন্যান্য ভাষা）
 
@@ -171,6 +191,16 @@ cargo build
   - ব্যাংকের নাম：THE BANK OF NEW YORK MELLON
   - SWIFT Code：IRVTUS3NXXX
   - ব্যাংকের ঠিকানা：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### ক্রিপ্টো দান (Crypto Donation)
+
+এই প্রকল্পটি আপনার কাজে লাগলে, দান করতে QR কোড স্ক্যান করুন, ধন্যবাদ!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 
