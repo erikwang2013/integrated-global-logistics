@@ -17,7 +17,7 @@ The platform is composed of three components working together:
 - **tracking-gateway high-frequency gateway** (Rust e-cat framework) — the first entry of the external query API: Redis cache, rate limiting, per-carrier circuit breaking, worker load balancing; it only handles the high-frequency plane and knows nothing about carrier protocols;
 - **global-logistics unified facade** (PHP package) — adapters for 209 carriers (45 domestic + 164 international), 187 tracking-number auto-detection rules, 7 unified status semantics of `TrackStatus`.
 
-**Current progress**: M1 management plane (carrier / credential / query record / subscription CRUD), M2 query gateway (full external API chain), M3 callback subscriptions, M4 monitoring & statistics, M5 external OpenAPI documentation and M6 five client SDKs are all complete — the client → e-cat → worker → carrier tracking query chain is demonstrable, and the five zero-dependency SDKs (Python / PHP / Node.js / Go / Rust) are ready to copy and use.
+**Current progress**: M1–M13 all complete — M1 admin plane (carrier / credential / query record / subscription CRUD), M2 query gateway (full external API chain), M3 callback subscriptions, M4 monitoring & statistics, M5 external OpenAPI docs, M6 five client SDKs, M7 client portal (register / app / plan / order), M8 payments (Stripe / PayPal), M9 crypto (USDT TRC20 / BEP20 / ERC20), M10 payment method configuration, M11 gateway security middleware, M12 CDN plan (Cloudflare + cache headers), M13 CDN provider management. The client → e-cat → worker → carrier tracking query chain is demonstrable, and the five zero-dependency SDKs are ready to copy and use.
 
 ## Project Description
 
@@ -28,6 +28,8 @@ The platform is composed of three components working together:
 - **Unified status**: each carrier's varied raw statuses are mapped to a unified `TrackStatus` enum (pending pickup / in transit / out for delivery / delivered / exception / returned / unrecognized);
 - **Global coverage**: the four major couriers DHL, FedEx, UPS, USPS and the national postal S10 systems of various countries (Europe, Latin America & Caribbean, Africa & Middle East, Asia-Pacific);
 - **External API**: the e-cat query gateway provides API-Key authentication, Redis cache hits (`X-Cache: HIT`), rate limiting 429, per-carrier circuit breaking 503, RoundRobin worker load balancing; five zero-dependency SDKs (Python / PHP / Node.js / Go / Rust) ready to copy and use;
+- **Client portal & billing** (M7–M10): client register / login (client JWT isolated from admin), app management with self-set X-API-Key, plan / order API; Stripe / PayPal plus USDT TRC20 / BEP20 / ERC20 crypto payments, Stripe payment methods (Apple Pay / Google Pay / Klarna / SEPA etc.) configurable at runtime;
+- **CDN acceleration** (M12/M13): Cloudflare free plan full-site HTTPS + edge caching for static assets, CDN provider / domain / credential management in the admin panel (credentials encrypted);
 - **Zero hard-coded keys**: all keys are injected via configuration, and the database layer stores them as Encryptable ciphertext — code and keys are fully separated.
 
 ## Project Architecture
@@ -40,7 +42,7 @@ The e-cat gateway (Rust) handles API-Key authentication, Redis cache hits, rate 
 
 **The plan of e-cat reusing 209 PHP adapters**: the 209 adapters are PHP (`src/Carriers/Domestic` 45 + `International` 164); rewriting them in Rust would be months of work and would lose the benefit of continuous upstream package updates. e-cat does not need to understand carrier protocols — it depends only on a stable internal contract (`/internal/tracking/query` + `/internal/carriers` registry sync). Credentials are never delivered to e-cat, keeping a clear security boundary.
 
-Management plane (browser) → `/admin/*`: JWT + RBAC permissions + operation audit, covering carrier / carrier-credential / tracking-query / callback-subscription / statistics.
+Management plane (browser) → `/admin/*`: JWT + RBAC permissions + operation audit, covering carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider.
 
 ## Project Structure
 
@@ -95,6 +97,12 @@ Layered defense in depth, key points:
 - **Application layer** (admin): JWT + blacklist (2h access / 14d refresh), RBAC method.path-granularity permissions, full-chain operation audit; `SecurityFilter` blocks XSS / SQL injection / CSRF / command injection / path traversal; sensitive data stored encrypted with `Encryptable` + masked export; login locked for 15 minutes after 5 failures + click captcha;
 - **Callback security**: whitelist route + HMAC signature verification, at-least-once delivery + idempotency key to prevent duplicate pushes;
 - **Unified error semantics**: rate limit 429, circuit break 503, carrier error `carrier_error` — no internal details leaked to clients.
+- **Payment security** (M8/M10): Stripe / PayPal webhook verification (HMAC-SHA256 / verify-webhook-signature), auto order confirmation + manual admin fallback; payment keys stored encrypted via `Encryptable` in `logistics_system_config`;
+- **Crypto payment verification** (M9): USDT TRC20 auto-verified via the Tronscan API; BEP20 / ERC20 confirmed manually;
+- **Client key security** (M7): X-API-Key is client-set (≥16 chars), stored as sha256 — plaintext returned only once at creation; client JWTs (token_type=client) isolated from admin JWTs;
+- **Gateway attack detection** (M11): `ecat-security` SecurityBodyLayer integrated into the gateway (injection / protocol / data serialization / file / sensitive-data leak detectors); attack payloads are blocked at the gateway layer, with the application-layer security package as backstop;
+- **CDN security** (M12): Cloudflare free plan full-site HTTPS + dual-layer WAF (edge managed rules + gateway application-layer detection); Tunnel origin keeps the source zero-exposed; callbacks go through DNS-only subdomain direct connection to avoid order loss on CDN outage; rate limiting counts by X-API-Key, unaffected by CDN edge IPs; authenticated endpoints are always no-store to prevent cross-user cache mixing;
+- **CDN credential management** (M13): CDN provider access_key / access_secret encrypted with `Encryptable` in the `logistics_cdn_provider` table, configured via `/admin/cdn/provider`;
 
 ## Quick Start
 

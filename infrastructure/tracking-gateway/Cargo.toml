@@ -17,6 +17,7 @@ ecat-data-redis = { path = "../ecat-data-redis" }
 ecat-health = { path = "../ecat-health" }
 ecat-metrics = { path = "../ecat-metrics" }
 ecat-openapi = { path = "../ecat-openapi" }
+ecat-security = { path = "../ecat-security" }
 axum.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 serde = { workspace = true, features = ["derive"] }

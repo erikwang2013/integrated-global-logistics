@@ -181,6 +181,11 @@ CREATE TABLE `logistics_order` (
   `plan_id` bigint unsigned NOT NULL COMMENT '套餐ID',
   `amount` int unsigned NOT NULL DEFAULT '0' COMMENT '订单金额（分）',
   `status` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '状态: pending=待支付 paid=已支付 cancelled=已取消',
+  `channel` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'manual' COMMENT '支付渠道: stripe=Stripe paypal=PayPal crypto=虚拟币 manual=人工确认',
+  `chain` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '虚拟币网络: trc20/bep20/erc20',
+  `crypto_amount` decimal(18,8) DEFAULT NULL COMMENT '应付USDT数量',
+  `memo` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '转账备注(TRC20)',
+  `tx_id` varchar(128) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '链上交易哈希(TRC20核验)',
   `paid_at` datetime DEFAULT NULL COMMENT '支付时间',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -188,8 +193,32 @@ CREATE TABLE `logistics_order` (
   UNIQUE KEY `uk_order_no` (`order_no`),
   KEY `idx_client_id` (`client_id`),
   KEY `idx_app_id` (`app_id`),
-  KEY `idx_status` (`status`)
+  KEY `idx_status` (`status`),
+  KEY `idx_channel` (`channel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
+
+-- -------------------------------------------
+-- M13 CDN 服务商配置表
+-- -------------------------------------------
+DROP TABLE IF EXISTS `logistics_cdn_provider`;
+
+CREATE TABLE `logistics_cdn_provider` (
+  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '服务商代码: cloudflare/cloudfront/aliyun/tencent',
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '服务商显示名称',
+  `access_key` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '凭证 Key（加密存储；Cloudflare=API Token，阿里/AWS=AccessKey ID）',
+  `access_secret` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '凭证 Secret（加密存储；阿里/AWS=AccessKey Secret，Cloudflare 留空）',
+  `extra` json DEFAULT NULL COMMENT '扩展参数（JSON：zone_id/email/region 等各家私有参数）',
+  `domains` json DEFAULT NULL COMMENT '域名列表（JSON数组，如 ["api.erik.xyz","cdn.erik.xyz"]）',
+  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态: 0=禁用 1=启用',
+  `sort` int unsigned NOT NULL DEFAULT '0' COMMENT '排序值，越小越靠前',
+  `remark` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '备注',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_code` (`code`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CDN服务商配置表';
 
 -- -------------------------------------------
 -- M1 权限种子（菜单 type=1 + API type=3，ID 沿用 install.sql 的 snowflake 分段约定）
@@ -251,5 +280,47 @@ INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUE
 ('10000000000000001', '21000000000000162'),
 ('10000000000000001', '21000000000000163'),
 ('10000000000000001', '21000000000000164');
+
+-- -------------------------------------------
+-- M8 套餐/订单管理权限种子（菜单 type=1 + API type=3）
+-- -------------------------------------------
+INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
+('21000000000000106', '0', '套餐管理', 'plan', 1, 'tag', '/admin/plan', 12, NOW(), NOW()),
+('21000000000000107', '0', '订单管理', 'order', 1, 'orders', '/admin/order', 13, NOW(), NOW()),
+('21000000000000165', '21000000000000106', '查看套餐', 'get.admin/plan', 3, '', '', 1, NOW(), NOW()),
+('21000000000000166', '21000000000000106', '创建套餐', 'post.admin/plan', 3, '', '', 2, NOW(), NOW()),
+('21000000000000167', '21000000000000106', '更新套餐', 'put.admin/plan', 3, '', '', 3, NOW(), NOW()),
+('21000000000000168', '21000000000000106', '删除套餐', 'delete.admin/plan', 3, '', '', 4, NOW(), NOW()),
+('21000000000000169', '21000000000000107', '查看订单', 'get.admin/order', 3, '', '', 1, NOW(), NOW()),
+('21000000000000170', '21000000000000107', '确认订单', 'post.admin/order/confirm', 3, '', '', 2, NOW(), NOW()),
+('21000000000000171', '21000000000000107', '取消订单', 'post.admin/order/cancel', 3, '', '', 3, NOW(), NOW());
+
+INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUES
+('10000000000000001', '21000000000000106'),
+('10000000000000001', '21000000000000107'),
+('10000000000000001', '21000000000000165'),
+('10000000000000001', '21000000000000166'),
+('10000000000000001', '21000000000000167'),
+('10000000000000001', '21000000000000168'),
+('10000000000000001', '21000000000000169'),
+('10000000000000001', '21000000000000170'),
+('10000000000000001', '21000000000000171');
+
+-- -------------------------------------------
+-- M13 CDN服务商管理权限种子（菜单 type=1 + API type=3）
+-- -------------------------------------------
+INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
+('21000000000000201', '0', 'CDN服务商', 'cdn_provider', 1, 'link', '/admin/cdn/provider', 14, NOW(), NOW()),
+('21000000000000211', '21000000000000201', '查看CDN服务商', 'get.admin/cdn/provider', 3, '', '', 1, NOW(), NOW()),
+('21000000000000212', '21000000000000201', '创建CDN服务商', 'post.admin/cdn/provider', 3, '', '', 2, NOW(), NOW()),
+('21000000000000213', '21000000000000201', '更新CDN服务商', 'put.admin/cdn/provider', 3, '', '', 3, NOW(), NOW()),
+('21000000000000214', '21000000000000201', '删除CDN服务商', 'delete.admin/cdn/provider', 3, '', '', 4, NOW(), NOW());
+
+INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUES
+('10000000000000001', '21000000000000201'),
+('10000000000000001', '21000000000000211'),
+('10000000000000001', '21000000000000212'),
+('10000000000000001', '21000000000000213'),
+('10000000000000001', '21000000000000214');
 
 SET FOREIGN_KEY_CHECKS = 1;

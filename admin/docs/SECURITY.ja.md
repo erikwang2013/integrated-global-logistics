@@ -495,3 +495,5 @@ Policy: https://erik.xyz/security-policy
 | JWT はステートレスで能動的に無効化できない | Token が期限切れになる前にサーバー側から能動的に失効させられない（ブラックリストを除く） | ブラックリスト + 短期 2h TTL でリスクウィンドウを低減 |
 | 管理エンドポイントに特別なレート制限なし | 管理インターフェースも通常インターフェースと共通の 60/min デフォルト制限 | 管理者の操作頻度は本質的に低く、当面区別は不要 |
 | PCRE バックトラック制限 | パッケージ内蔵の 1,000,000 バックトラック上限+finally 復旧、極端に複雑な入力では性能リスクが残る | リクエストボディサイズ制限 (10MB) がフォールバック |
+## 13. クライアントポータルと決済セキュリティ（M7–M10）
+Stripe / PayPal webhook 署名検証（HMAC-SHA256 / verify-webhook-signature）；決済キーは `Encryptable` で暗号化し `logistics_system_config` に保存；USDT TRC20 は Tronscan で自動検証、BEP20 / ERC20 は手動；X-API-Key はクライアント自設（16 文字以上）で sha256 として保存。ゲートウェイ攻撃検知（M11）：`ecat-security` SecurityBodyLayer をゲートウェイに統合、攻撃ペイロードはゲートウェイ層で遮断。 **13.5 CDN セキュリティ（M12）**：Cloudflare 無料プランで全サイト HTTPS + 二層 WAF（エッジ管理ルール + ゲートウェイのアプリケーション層検知）；Tunnel オリジンでソースをゼロ露出；コールバックは DNS 専用サブドメイン直結で CDN 障害時に注文を失わない；レート制限は X-API-Key 単位で CDN エッジ IP の影響を受けない；認証エンドポイントは常に no-store でユーザー間キャッシュ混入を防止。 **13.6 CDN プロバイダーキー管理（M13）**：CDN プロバイダーのプロフィール（access_key / access_secret / ドメイン一覧）を `logistics_cdn_provider` テーブルに保存、機密フィールドは `Encryptable` で暗号化、`/admin/cdn/provider` の CRUD で管理。

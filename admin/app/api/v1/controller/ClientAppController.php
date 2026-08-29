@@ -7,7 +7,9 @@ declare(strict_types=1);
 
 namespace app\api\v1\controller;
 
+use app\common\CryptoService;
 use app\common\HashidsService;
+use app\common\PaymentService;
 use app\common\SnowflakeService;
 use app\model\ClientApp;
 use app\model\Order;
@@ -251,6 +253,8 @@ class ClientAppController
      * @Apidoc\Method("POST")
      * @Apidoc\Url("/api/app/{id}/order")
      * @Apidoc\Param("plan_id", type="string", require=true, desc="套餐ID(hashid)")
+     * @Apidoc\Param("channel", type="string", require=false, desc="支付渠道: stripe|paypal|crypto|manual", default="manual")
+     * @Apidoc\Param("chain", type="string", require=false, desc="虚拟币网络: trc20/bep20/erc20（channel=crypto 时必填）")
      */
     public function order(Request $request, string $id): Response
     {
@@ -264,6 +268,17 @@ class ClientAppController
         if (!$plan) {
             return json(['code' => 422, 'message' => '套餐不存在或已停售', 'data' => []]);
         }
+        $channel = (string) $request->input('channel', 'manual');
+        if (!in_array($channel, PaymentService::CHANNELS, true)) {
+            return json(['code' => 422, 'message' => 'channel 必须为 stripe/paypal/crypto/manual', 'data' => []]);
+        }
+        $chain = '';
+        if ($channel === 'crypto') {
+            $chain = strtolower((string) $request->input('chain', ''));
+            if (!in_array($chain, CryptoService::chains(), true)) {
+                return json(['code' => 422, 'message' => 'channel=crypto 时 chain 必须为 trc20/bep20/erc20', 'data' => []]);
+            }
+        }
 
         $order = new Order();
         $order->id = SnowflakeService::generate();
@@ -272,6 +287,8 @@ class ClientAppController
         $order->app_id = $app->id;
         $order->plan_id = $plan->id;
         $order->amount = $plan->price;
+        $order->channel = $channel;
+        $order->chain = $chain !== '' ? $chain : null;
         $order->status = 'pending';
         $order->save();
 
@@ -285,16 +302,18 @@ class ClientAppController
             'order_no' => $order->order_no,
             'amount' => $order->amount,
             'plan_name' => $plan->name,
+            'channel' => $order->channel,
             'status' => $order->status,
         ]]);
     }
 
     /**
-     * @Apidoc\Title("支付订单")
+     * @Apidoc\Title("发起支付")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("POST")
      * @Apidoc\Url("/api/order/{id}/pay")
-     * @Apidoc\Desc("简化支付：直接标记已支付并返回支付码，开通需管理员在后台人工审核确认")
+     * @Apidoc\Desc("按订单渠道发起支付：stripe 返回 Checkout Session 跳转链接，paypal 返回 approve 链接，manual 返回模拟支付码由管理员人工确认")
+     * @Apidoc\Returned("pay_url", type="string", desc="支付跳转链接（manual 渠道返回 payment_code）")
      */
     public function pay(Request $request, string $id): Response
     {
@@ -307,13 +326,64 @@ class ClientAppController
             return json(['code' => 422, 'message' => '订单状态不允许支付', 'data' => []]);
         }
 
-        $order->status = 'paid';
-        $order->paid_at = date('Y-m-d H:i:s');
-        $order->save();
+        // manual 渠道：保持原模拟支付流程，由管理员人工确认
+        if ($order->channel === 'manual') {
+            $order->status = 'paid';
+            $order->paid_at = date('Y-m-d H:i:s');
+            $order->save();
+            return json(['code' => 0, 'message' => '支付成功，等待管理员确认开通', 'data' => [
+                'order_no' => $order->order_no,
+                'channel' => 'manual',
+                'payment_code' => substr(hash('sha256', $order->order_no), 0, 16),
+                'status' => $order->status,
+            ]]);
+        }
 
-        return json(['code' => 0, 'message' => '支付成功，等待管理员确认开通', 'data' => [
+        // crypto 渠道：返回收款地址/金额/memo，用户链上转账后由管理员核验确认
+        if ($order->channel === 'crypto') {
+            $result = CryptoService::initiate((string) $order->chain, $order->order_no, (int) $order->amount);
+            if (!$result['ok']) {
+                return json(['code' => 422, 'message' => $result['message'] ?? '支付发起失败', 'data' => []]);
+            }
+            $order->chain = $result['chain'];
+            $order->crypto_amount = $result['amount'];
+            $order->memo = $result['memo'];
+            $order->save();
+            return json(['code' => 0, 'message' => '支付发起成功，请向收款地址转账', 'data' => [
+                'order_no' => $order->order_no,
+                'channel' => 'crypto',
+                'chain' => $result['chain'],
+                'address' => $result['address'],
+                'amount' => $result['amount'],
+                'coin' => $result['coin'],
+                'memo' => $result['memo'],
+                'status' => $order->status,
+            ]]);
+        }
+
+        $plan = $order->plan;
+        if (!$plan) {
+            return json(['code' => 422, 'message' => '套餐不存在', 'data' => []]);
+        }
+        $base = rtrim((string) getenv('PORTAL_URL'), '/');
+        if ($base === '') {
+            $scheme = $request->header('x-forwarded-proto', 'https');
+            $base = "{$scheme}://{$request->host()}";
+        }
+        $successUrl = "{$base}/portal/order/{$order->order_no}?paid=1";
+        $cancelUrl = "{$base}/portal/order/{$order->order_no}";
+
+        $result = $order->channel === 'stripe'
+            ? PaymentService::stripeCheckout($order, $plan, $successUrl, $cancelUrl)
+            : PaymentService::paypalOrder($order, $plan, $successUrl, $cancelUrl);
+        if (!$result['ok']) {
+            return json(['code' => $result['code'], 'message' => $result['message'], 'data' => []]);
+        }
+
+        return json(['code' => 0, 'message' => '支付发起成功，请完成支付', 'data' => [
             'order_no' => $order->order_no,
-            'payment_code' => substr(hash('sha256', $order->order_no), 0, 16),
+            'channel' => $order->channel,
+            'pay_url' => $result['url'],
             'status' => $order->status,
         ]]);
     }

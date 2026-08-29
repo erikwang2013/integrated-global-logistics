@@ -26,8 +26,6 @@
 
 ---
 
-## 2. 攻击检测引擎
-
 ## 2. 攻击检测引擎 (erikwang2013/security-php)
 
 攻击检测已从自研 SecurityMiddleware (erikwang2013/security-php) 迁移至 `erikwang2013/security-php` v1.1+ 专用安全包，提供 **31 种检测器**，覆盖 5 大攻击类别。
@@ -46,9 +44,7 @@
 
 ### 2.2 处理模式
 
-每个检测器独立支持两种模式：
-- `block` — 检测到攻击即拦截，返回配置的状态码
-- `log` — 仅记录日志不拦截（`header_injection`、`ssti`、`nosql_injection` 默认 log 模式防误报）
+每个检测器独立支持两种模式：`block` 拦截（返回配置状态码）/ `log` 仅记录（`header_injection`、`ssti`、`nosql_injection` 默认 log 防误报）。
 
 ### 2.3 IP 攻击升级黑名单
 
@@ -319,13 +315,7 @@ OperationLog 中间件对 POST / PUT / DELETE 请求自动记录操作日志。G
 
 ### 7.2 安全日志
 
-**文件位置**：`runtime/logs/security.log`
-
-**记录内容**：
-- 攻击拦截日志：攻击类别、IP、路径、字段、来源、payload 片段（前 200 字符）
-- IP 封禁通知：被封 IP、触发次数
-
-日志权限为 `FILE_APPEND | LOCK_EX`，确保并发安全写入。
+**文件位置**：`runtime/logs/security.log`；记录攻击拦截日志（攻击类别、IP、路径、字段、来源、payload 前 200 字符）与 IP 封禁通知（被封 IP、触发次数）。日志权限为 `FILE_APPEND | LOCK_EX`，确保并发安全写入。
 
 ---
 
@@ -409,15 +399,7 @@ OperationLog 中间件对 POST / PUT / DELETE 请求自动记录操作日志。G
 
 ## 10. security.txt (RFC 9116)
 
-系统在 `/.well-known/security.txt` 提供符合 RFC 9116 标准的安全联系信息端点，方便安全研究人员在发现漏洞时快速找到报告渠道。
-
-**访问方式**：
-
-```
-GET /.well-known/security.txt
-```
-
-**响应内容**：
+系统在 `/.well-known/security.txt` 提供符合 RFC 9116 标准的安全联系信息端点，方便安全研究人员快速找到报告渠道：
 
 ```text
 Contact: mailto:security@erik.xyz
@@ -427,17 +409,7 @@ Canonical: https://erik.xyz/.well-known/security.txt
 Policy: https://erik.xyz/security-policy
 ```
 
-**字段说明**：
-
-| 字段 | 说明 |
-|------|------|
-| Contact | 安全漏洞报告联系方式 |
-| Expires | 文件过期时间，需定期更新 |
-| Preferred-Languages | 首选沟通语言 |
-| Canonical | 此文件的规范 URL |
-| Policy | 安全策略/漏洞披露政策链接 |
-
-该端点不受限流、认证等中间件限制，任何人都可直接访问。
+字段说明：Contact 为漏洞报告邮箱；Expires 为过期时间（需定期更新）；Preferred-Languages 为沟通语言；Canonical 为规范 URL；Policy 为披露政策链接。该端点不受限流、认证等中间件限制，任何人都可直接访问。
 
 ---
 
@@ -493,3 +465,19 @@ Policy: https://erik.xyz/security-policy
 | JWT 无状态无法主动失效 | Token 未过期前无法从服务端主动吊销（除黑名单外） | 黑名单 + 短期 2h TTL 降低风险窗口 |
 | 管理员端点无特殊限流 | 管理员接口与普通接口共用 60/min 默认限制 | 管理员操作频率天然低，暂无需区分 |
 | PCRE 回溯限制 | 包内置 1,000,000 回溯上限+finally恢复，极端复杂输入仍有性能风险 | 请求体大小限制 (10MB) 兜底 |
+
+---
+
+## 13. 客户端门户与支付安全（M7–M10）
+
+**13.1 客户端密钥（M7）**：X-API-Key 由客户端自设（≥16 位），数据库存 `sha256(api_key)`、明文仅创建时返回一次；appid 为服务端生成的公开标识；客户端 JWT（`token_type=client`）由 ClientAuth 中间件校验，与 admin JWT 隔离。
+
+**13.2 支付 webhook 验签（M8/M10）**：Stripe Checkout 以 HMAC-SHA256 验签；PayPal Orders v2 调用 `/v1/notifications/verify-webhook-signature` 验签；webhook 自动确认订单，admin 手动兜底防丢单；支付密钥（stripe_secret_key / paypal_secret 等）经 `Encryptable` 加密存入 `logistics_system_config`。
+
+**13.3 虚拟币到账验证（M9）**：USDT 支持 TRC20 / BEP20 / ERC20 三链；TRC20 经 Tronscan 公共 API 自动验证到账，BEP20 / ERC20 由人工确认。
+
+**13.4 网关攻击检测（M11）**：`ecat-security` SecurityBodyLayer 已集成至 tracking-gateway（注入 / 协议 / 数据序列化 / 文件 / 敏感数据泄露攻击检测），攻击载荷在网关层即被拦截返回安全错误（HandleErrorLayer 消化 SecurityError）；应用层 `erikwang2013/security-php` 继续兜底，两层串行互补。
+
+**13.5 CDN 安全（M12）**：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则集挡 DDoS / 已知漏洞 / 扫描，网关 `ecat-security` 挡应用层攻击载荷）；Tunnel 回源源站零公网暴露（备选：回源 IP 段白名单 + 自定义回源头 + mTLS）；回调（`/api/callback/*`、`/api/payment/webhook/*`）走仅 DNS 独立子域直连回源，CDN 故障不丢单；网关限流按 X-API-Key 计数与来源 IP 无关，CDN 边缘 IP 不改变限流语义；API-Key 鉴权端点一律 no-store 防跨用户缓存串号；「CF-Connecting-IP」仅在绑定回源白名单时可信。
+
+**13.6 CDN 服务商密钥管理（M13）**：CDN 服务商档案（access_key / access_secret / 域名列表）存 `logistics_cdn_provider` 表，密钥字段经 `Encryptable` 加密落库，管理面 `/admin/cdn/provider` CRUD 维护。

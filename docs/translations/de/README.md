@@ -17,7 +17,7 @@ Die Plattform besteht aus drei zusammenarbeitenden Komponenten:
 - **tracking-gateway Hochfrequenz-Gateway** (Rust e-cat Framework) – erste Anlaufstelle der externen Query-API: Redis-Cache, Rate-Limit, Circuit Breaker je Carrier, Worker-Load-Balancing; nur für die Hochfrequenz-Ebene, versteht keine Carrier-Protokolle;
 - **global-logistics Einheitsfassade** (PHP-Paket) – 209 Carrier-Adapter (45 Inland + 164 International), 187 Auto-Erkennungsregeln für Sendungsnummern, `TrackStatus` mit 7 einheitlichen Status-Semantiken.
 
-**Aktueller Stand**: M1 Verwaltungsebene (Carrier-/Credential-/Abfrage-/Abonnement-CRUD), M2 Query-Gateway (vollständige externe API-Kette), M3 Callback-Abonnements, M4 Monitoring & Statistiken, M5 externe OpenAPI-Dokumentation und M6 fünf Client-SDKs sind alle abgeschlossen — die Tracking-Abfragekette Client → e-cat → Worker → Carrier ist demonstrierbar, und die fünf SDKs ohne Abhängigkeiten (Python / PHP / Node.js / Go / Rust) sind kopier- und sofort nutzbar.
+**Aktueller Stand**: M1–M13 alle abgeschlossen — M1 Verwaltungsebene (Carrier-/Credential-/Abfrage-/Abonnement-CRUD), M2 Query-Gateway (vollständige externe API-Kette), M3 Callback-Abonnements, M4 Monitoring & Statistiken, M5 externe OpenAPI-Dokumentation, M6 fünf Client-SDKs, M7 Client-Portal (Registrierung / App / Tarif / Bestellung), M8 Zahlungen (Stripe / PayPal), M9 Kryptowährungen (USDT TRC20 / BEP20 / ERC20), M10 Zahlungsarten-Konfiguration, M11 Gateway-Sicherheits-Middleware, M12 CDN-Plan (Cloudflare + Cache-Header), M13 CDN-Anbieterverwaltung. Die Tracking-Abfragekette Client → e-cat → Worker → Carrier ist demonstrierbar, und die fünf SDKs ohne Abhängigkeiten sind kopier- und sofort nutzbar.
 
 ## Projektbeschreibung
 
@@ -28,6 +28,8 @@ Die Plattform besteht aus drei zusammenarbeitenden Komponenten:
 - **Einheitlicher Status**: Die unterschiedlichen Rohstatus der Carrier werden auf die einheitliche `TrackStatus`-Enum abgebildet (Abholung erwartet / in Transport / in Zustellung / zugestellt / Ausnahme / Retoure / nicht erkennbar);
 - **Weltweite Abdeckung**: DHL, FedEx, UPS, USPS – die vier großen Kurierdienste – sowie die S10-Systeme der nationalen Posten (vier Regionen: Europa, Lateinamerika & Karibik, Afrika & Naher Osten, Asien-Pazifik);
 - **Externe API**: das e-cat Query-Gateway bietet API-Key-Authentifizierung, Redis-Cache-Treffer (`X-Cache: HIT`), Rate-Limiting 429, Carrier-weises Circuit Breaking 503, RoundRobin-Worker-Lastverteilung; fünf SDKs ohne Abhängigkeiten (Python / PHP / Node.js / Go / Rust) kopier- und sofort nutzbar;
+- **Client-Portal & Abrechnung**（M7–M10）：Client-Registrierung / -Login (client JWT von admin getrennt), App-Verwaltung mit selbst gesetztem X-API-Key, Tarif-/Bestell-API; Stripe / PayPal plus Krypto USDT TRC20 / BEP20 / ERC20, Stripe-Zahlungsarten (Apple Pay / Google Pay / Klarna / SEPA usw.) per Konfiguration sofort wirksam;
+- **CDN-Beschleunigung**（M12/M13）：Cloudflare kostenloser Plan — vollständiges HTTPS + Edge-Caching statischer Assets, CDN-Anbieter / Domains / Schlüssel in der Verwaltungsebene konfigurierbar (Schlüssel verschlüsselt);
 - **Keine hartcodierten Schlüssel**: Alle Schlüssel werden per Konfiguration injiziert; in der Datenbankschicht werden sie mit Encryptable verschlüsselt gespeichert – Code und Schlüssel sind vollständig getrennt.
 
 ## Architektur
@@ -40,7 +42,7 @@ Das e-cat-Gateway (Rust) übernimmt die API-Key-Authentifizierung der externen A
 
 **Arbeitsteilung – e-cat nutzt die 209 PHP-Adapter**: Die 209 Adapter sind PHP (`src/Carriers/Domestic` 45 + `International` 164); eine Neuimplementierung in Rust wäre ein Projekt von mehreren Monaten und würde die kontinuierlichen Updates der Upstream-Pakete verlieren. e-cat muss die Carrier-Protokolle nicht verstehen; es verlässt sich nur auf einen stabilen internen Vertrag (`/internal/tracking/query` + Synchronisation des `/internal/carriers`-Registers). Credentials gelangen nie zu e-cat – klare Sicherheitsgrenze.
 
-Verwaltungsoberfläche (Browser) → `/admin/*`: JWT + RBAC-Berechtigungen + Audit-Trail, abgedeckte Bereiche: carrier / carrier-credential / tracking-query / callback-subscription / statistics.
+Verwaltungsoberfläche (Browser) → `/admin/*`: JWT + RBAC-Berechtigungen + Audit-Trail, abgedeckte Bereiche: carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider.
 
 ## Projektstruktur
 
@@ -95,6 +97,12 @@ Gestaffelte Defense-in-Depth, die Kernpunkte:
 - **Anwendungsebene** (admin): JWT + Blacklist (2h access / 14d refresh), RBAC-Berechtigungen in method.path-Granularität, Audit-Trail über die gesamte Kette; `SecurityFilter` blockiert XSS / SQL-Injection / CSRF / Command-Injection / Path-Traversal; sensible Daten per `Encryptable` verschlüsselt + maskierter Export; nach 5 Fehlversuchen 15 Minuten gesperrt + Click-Captcha;
 - **Callback-Sicherheit**: Whitelist-Route + HMAC-Signaturprüfung, at-least-once-Zustellung + Idempotenz-Key gegen doppelte Pushs;
 - **Einheitliche Fehlersemantik**: Rate-Limit 429, Breaker 503, Carrier-Fehler `carrier_error` – keine internen Details an den Client.
+- **Zahlungssicherheit** (M8/M10): Stripe-/PayPal-Webhook-Verifikation (HMAC-SHA256 / verify-webhook-signature), automatische Bestellbestätigung + manueller Admin-Fallback; Zahlungsschlüssel via `Encryptable` verschlüsselt in `logistics_system_config`;
+- **Krypto-Zahlungsverifikation** (M9): USDT TRC20 automatisch über die Tronscan-API verifiziert; BEP20 / ERC20 manuell bestätigt;
+- **Client-Schlüsselsicherheit** (M7): X-API-Key vom Client gesetzt (≥16 Zeichen), als sha256 gespeichert — Klartext nur einmal bei Erstellung; Client-JWTs (token_type=client) von Admin-JWTs isoliert;
+- **Gateway-Angriffserkennung**（M11）：`ecat-security` SecurityBodyLayer in das Gateway integriert (Erkennung von Injektion / Protokoll / Datenserialisierung / Dateien / Datenlecks); Angriffspayloads werden auf der Gateway-Ebene blockiert, das Sicherheitspaket der Anwendungsebene dient als Backstop;
+- **CDN-Sicherheit**（M12）：Cloudflare kostenloser Plan — vollständiges HTTPS + zweischichtige WAF (verwaltete Edge-Regeln + Erkennung auf Anwendungsebene im Gateway); Tunnel-Origin hält die Quelle ohne öffentliche Exposition; Callbacks laufen über eine reine DNS-Subdomain direkt zum Ursprung, um bei CDN-Ausfällen keine Bestellungen zu verlieren; Rate-Limiting zählt nach X-API-Key und ist von CDN-Edge-IPs unabhängig; authentifizierte Endpunkte sind immer no-store gegen Cross-User-Cache-Vermischung;
+- **CDN-Zugangsdatenverwaltung**（M13）：access_key / access_secret der CDN-Anbieter werden mit `Encryptable` in der Tabelle `logistics_cdn_provider` verschlüsselt, konfiguriert über `/admin/cdn/provider`;
 
 ## Schnellstart
 

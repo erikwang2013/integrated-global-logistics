@@ -17,7 +17,7 @@
 - **tracking-gateway 고빈도 게이트웨이**(Rust e-cat 프레임워크) — 외부 조회 API의 첫 진입점: Redis 캐시, 속도 제한, 운송사별 서킷 브레이커, worker 로드 밸런싱. 고빈도 면만 담당하며 운송사 프로토콜은 알지 못합니다;
 - **global-logistics 통합 파사드**(PHP 패키지) — 209개 운송사 어댑터(국내 45 + 국제 164), 운송장 번호 자동 식별 규칙 187개, `TrackStatus` 7가지 통합 상태 시맨틱.
 
-**현재 진행 상황**: M1 관리면(운송사 / 자격증명 / 쿼리 기록 / 구독 CRUD), M2 쿼리 게이트웨이(외부 API 전체 체인), M3 콜백 구독, M4 모니터링 통계, M5 외부 OpenAPI 문서와 M6 5개 클라이언트 SDK 모두 완료 —— 클라이언트 → e-cat → worker → 운송사 추적 쿼리 체인 시연 가능, Python / PHP / Node.js / Go / Rust 5개 무의존성 SDK 복사 즉시 사용.
+**현재 진행 상황**: M1–M13 모두 완료 —— M1 관리면(운송사 / 자격증명 / 쿼리 기록 / 구독 CRUD), M2 쿼리 게이트웨이(외부 API 전체 체인), M3 콜백 구독, M4 모니터링 통계, M5 외부 OpenAPI 문서, M6 5개 클라이언트 SDK, M7 클라이언트 포털(등록 / 앱 / 요금제 / 주문), M8 결제(Stripe / PayPal), M9 가상화폐(USDT TRC20 / BEP20 / ERC20), M10 결제 방식 구성, M11 게이트웨이 보안 미들웨어, M12 CDN 도입 방안(Cloudflare + 캐시 헤더), M13 CDN 사업자 관리. 클라이언트 → e-cat → worker → 운송사 추적 쿼리 체인 시연 가능, 5개 무의존성 SDK 복사 즉시 사용.
 
 ## 프로젝트 설명
 
@@ -28,6 +28,8 @@
 - **통합 상태**: 각 운송사의 다양한 원시 상태를 통합 `TrackStatus` 열거형(수거 대기 / 운송 중 / 배송 중 / 배달 완료 / 예외 / 반송 / 인식 불가)으로 매핑합니다;
 - **글로벌 커버리지**: DHL, FedEx, UPS, USPS 4대 택배와 각국 우편 S10 시스템(유럽, 라틴아메리카·카리브, 아프리카·중동, 아시아·태평양 4개 지역);
 - **외부 API**: e-cat 쿼리 게이트웨이가 API-Key 인증, Redis 캐시 히트(`X-Cache: HIT`), 레이트 제한 429, 운송사별 서킷 브레이커 503, RoundRobin worker 부하 분산 제공; 5개 무의존성 SDK(Python / PHP / Node.js / Go / Rust) 복사 즉시 사용;
+- **클라이언트 포털 & 과금**（M7–M10）：클라이언트 등록 / 로그인（client JWT는 admin과 분리）、앱 관리와 X-API-Key 자체 설정、요금제 / 주문 API；Stripe / PayPal 양 채널 + USDT TRC20 / BEP20 / ERC20 가상화폐 결제, Stripe 결제 방식（Apple Pay / Google Pay / Klarna / SEPA 등）설정으로 즉시 적용；
+- **CDN 가속**（M12/M13）：Cloudflare 무료 요금제 전 사이트 HTTPS + 정적 자산 엣지 캐시, CDN 사업자 / 도메인 / 키 관리면에서 설정（키 암호화 저장）；
 - **키 하드코딩 제로**: 모든 키는 설정으로 주입되며, 데이터베이스 계층은 Encryptable 암호문으로 저장 — 코드와 키가 완전히 분리됩니다.
 
 ## 프로젝트 아키텍처
@@ -40,7 +42,7 @@ e-cat 게이트웨이(Rust)는 외부 API의 API-Key 인증, Redis 캐시 히트
 
 **e-cat이 209개 PHP 어댑터를 재사용하는 분업 방안**: 209개 어댑터는 PHP(`src/Carriers/Domestic` 45개 + `International` 164개)입니다. Rust 재작성은 수개월 공정이고 상위 패키지의 지속적 업데이트 혜택도 잃게 됩니다. e-cat은 운송사 프로토콜을 알 필요 없이 안정적인 내부 계약(`/internal/tracking/query` + `/internal/carriers` 레지스트리 동기화)에만 의존합니다. 자격 증명은 e-cat에 절대 전달되지 않아 보안 경계가 명확합니다.
 
-관리면(브라우저) → `/admin/*`: JWT + RBAC 권한 + 운영 감사로 carrier / carrier-credential / tracking-query / callback-subscription / statistics를 커버합니다.
+관리면(브라우저) → `/admin/*`: JWT + RBAC 권한 + 운영 감사로 carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider를 커버합니다.
 
 ## 프로젝트 구조
 
@@ -95,6 +97,12 @@ integrated-global-logistics/
 - **애플리케이션 계층**(admin): JWT + 블랙리스트(access 2h / refresh 14d), RBAC method.path 단위 권한, 전 구간 운영 감사; `SecurityFilter`가 XSS / SQL 인젝션 / CSRF / 명령 인젝션 / 경로 탐색을 차단; 민감 데이터는 `Encryptable` 암호화 저장 + 마스킹 내보내기; 로그인 5회 실패 시 15분 잠금 + 클릭 캡차;
 - **콜백 보안**: 화이트리스트 라우트 + HMAC 서명 검증, at-least-once 전달 + 멱등 키로 중복 푸시 방지;
 - **통합 오류 시맨틱**: 속도 제한 429, 서킷 브레이크 503, 운송사 오류 `carrier_error` — 클라이언트에 내부 세부 정보를 노출하지 않습니다.
+- **결제 보안**（M8/M10）：Stripe / PayPal 웹훅 검증（HMAC-SHA256 / verify-webhook-signature）、자동 주문 확인 + admin 수동 폴백；결제 키는 `Encryptable`로 암호화해 `logistics_system_config`에 저장；
+- **가상화폐 입금 검증**（M9）：USDT TRC20은 Tronscan API로 자동 검증, BEP20 / ERC20은 수동 확인；
+- **클라이언트 키 보안**（M7）：X-API-Key는 클라이언트 자체 설정（16자 이상）、sha256으로 저장하고 평문은 생성 시 한 번만 반환；클라이언트 JWT（token_type=client）는 admin JWT와 분리；
+- **게이트웨이 공격 탐지**（M11）：`ecat-security` SecurityBodyLayer를 게이트웨이에 통합（주입 / 프로토콜 / 데이터 직렬화 / 파일 / 민감 데이터 유출 탐지）, 공격 페이로드는 게이트웨이 계층에서 차단되고 애플리케이션 계층 보안 패키지가 폴백；
+- **CDN 보안**（M12）：Cloudflare 무료 요금제 전 사이트 HTTPS + 이중 WAF（엣지 관리 규칙 + 게이트웨이 애플리케이션 계층 탐지）；Tunnel 오리진으로 소스 서버 무노출；콜백은 DNS 전용 하위 도메인 직접 연결로 CDN 장애 시 주문 유실 방지；속도 제한은 X-API-Key 기준으로 CDN 엣지 IP에 영향받지 않음；인증 엔드포인트는 항상 no-store로 사용자 간 캐시 혼동 방지；
+- **CDN 자격 증명 관리**（M13）：CDN 사업자 access_key / access_secret을 `Encryptable`로 암호화해 `logistics_cdn_provider` 테이블에 저장, 관리면 `/admin/cdn/provider`에서 설정；
 
 ## 빠른 시작
 

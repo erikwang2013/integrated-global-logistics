@@ -122,6 +122,9 @@ Route::group('/admin', function () {
     // 物流聚合 — 统计报表
     Route::get('/tracking/statistics', [app\admin\controller\StatisticsController::class, 'index']);
 
+    // 物流聚合 — CDN 服务商
+    Route::resource('/cdn/provider', app\admin\controller\CdnProviderController::class);
+
     // 物流聚合 — 回调订阅
     Route::resource('/callback/subscription', app\admin\controller\CallbackSubscriptionController::class);
     Route::post('/callback/subscription/retry/{event_id}', [app\admin\controller\CallbackSubscriptionController::class, 'retry']);

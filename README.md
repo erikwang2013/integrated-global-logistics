@@ -18,7 +18,7 @@
 - **tracking-gateway 高频网关**（Rust e-cat 框架）—— 对外查询 API 的第一道入口：Redis 缓存、限流、按承运商熔断、worker 负载均衡，只做高频面，不懂承运商协议；
 - **global-logistics 统一门面**（PHP 包）—— 209 家承运商适配器（国内 45 + 国际 164）、187 条单号自动识别规则、`TrackStatus` 7 种统一状态语义。
 
-**当前进度**：M1 管理面（承运商/凭证/查询记录/订阅 CRUD）、M2 查询网关（对外 API 全链路）、M3 回调订阅、M4 监控统计、M5 对外 OpenAPI 文档与 M6 五份客户端 SDK 均已完成 —— 客户端 → e-cat → worker → 承运商的轨迹查询链路可演示，Python / PHP / Node.js / Go / Rust 五份零依赖 SDK 拷贝即用。
+**当前进度**：M1-M13 全部完成 —— M1 管理面（承运商/凭证/查询记录/订阅 CRUD）、M2 查询网关（对外 API 全链路）、M3 回调订阅、M4 监控统计、M5 对外 OpenAPI 文档、M6 五份客户端 SDK、M7 客户端门户（注册/应用/套餐/订单）、M8 支付（Stripe / PayPal）、M9 虚拟币（USDT TRC20 / BEP20 / ERC20）、M10 支付方式配置、M11 网关安全中间件、M12 CDN 接入方案（Cloudflare + 缓存头落地）、M13 CDN 服务商管理。客户端 → e-cat → worker → 承运商的轨迹查询链路可演示，Python / PHP / Node.js / Go / Rust 五份零依赖 SDK 拷贝即用。
 
 ## 项目说明
 
@@ -30,6 +30,8 @@
 - **全球覆盖**：DHL、FedEx、UPS、USPS 四大快递与各国邮政 S10 系统（欧洲、拉美加勒比、非洲中东、亚太四区域）；
 - **对外 API**：e-cat 查询网关提供 API-Key 鉴权、Redis 缓存命中（`X-Cache: HIT`）、限流 429、按承运商熔断 503、RoundRobin worker 负载均衡；五份零依赖 SDK（Python / PHP / Node.js / Go / Rust）拷贝即用；
 - **查询全审计**：每次查询落库 `logistics_tracking_query`（成功/失败、耗时、错误码），管理面可查可统计；
+- **客户端门户与计费**（M7-M10）：客户端注册/登录（client JWT 与 admin 隔离）、应用管理与 X-API-Key 自设、套餐/订单 API；Stripe / PayPal 双渠道 + USDT TRC20 / BEP20 / ERC20 虚拟币支付，Stripe 支付方式（Apple Pay / Google Pay / Klarna / SEPA 等）经配置即生效；
+- **CDN 加速**（M12/M13）：Cloudflare 免费版全站 HTTPS + 静态资源边缘缓存，CDN 服务商/域名/密钥管理面可配置（凭证加密落库）；
 - **密钥零硬编码**：各家密钥全部经配置注入，数据库层用 Encryptable 密文存储，代码与密钥完全分离。
 
 ## 项目架构
@@ -42,7 +44,7 @@ e-cat 网关（Rust）负责对外 API 的 API-Key 鉴权、Redis 缓存命中�
 
 **e-cat 复用 209 家 PHP 适配器的分工方案**：209 个适配器是 PHP（`src/Carriers/Domestic` 45 家 + `International` 164 家），Rust 重写是数月工程且丧失上游包持续更新收益；e-cat 不需要懂承运商协议，只依赖一个稳定的内部契约（`/internal/tracking/query` + `/internal/carriers` 注册表同步）。凭证永不下发到 e-cat，安全边界清晰。
 
-管理面（浏览器）→ `/admin/*`：JWT + RBAC 权限 + 操作审计，覆盖 carrier / carrier-credential / tracking-query / callback-subscription / statistics。
+管理面（浏览器）→ `/admin/*`：JWT + RBAC 权限 + 操作审计，覆盖 carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider。
 
 ## 项目结构
 
@@ -96,6 +98,12 @@ integrated-global-logistics/
 - **网关层**（tracking-gateway）：API-Key 鉴权、Redis 限流（按 key / IP）、按承运商熔断、防 SSRF（worker 端点白名单解析）；`/internal` 仅监听内网 + 共享密钥头；凭证隔离 —— e-cat 不持凭证明文；
 - **应用层**（admin）：JWT + 黑名单（2h access / 14d refresh）、RBAC method.path 粒度权限、操作审计全链路记录；`SecurityFilter` 拦截 XSS / SQL 注入 / CSRF / 命令注入 / 路径遍历；敏感数据 `Encryptable` 加密落库 + 脱敏导出；登录 5 次失败锁定 15 分钟 + 点击验证码；
 - **回调安全**：白名单路由 + HMAC 签名校验，at-least-once 投递 + 幂等键防重复推送；
+- **支付安全**（M8/M10）：Stripe / PayPal webhook 验签（HMAC-SHA256 / verify-webhook-signature），自动确认订单 + admin 手动兜底；支付密钥 `Encryptable` 加密存储于 `logistics_system_config`；
+- **虚拟币到账验证**（M9）：USDT TRC20 经 Tronscan API 自动验证，BEP20 / ERC20 人工确认；
+- **客户端密钥安全**（M7）：X-API-Key 客户端自设（≥16 位），sha256 落库、明文仅创建时返回一次；client JWT（token_type=client）与 admin JWT 隔离；
+- **网关攻击检测**（M11）：`ecat-security` SecurityBodyLayer 已集成至网关（注入 / 协议 / 数据序列化 / 文件 / 敏感数据泄露攻击检测），攻击载荷在网关层即被拦截，应用层安全包继续兜底；
+- **CDN 安全**（M12）：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则 + 网关应用层检测）；Tunnel 回源源站零公网暴露；回调走仅 DNS 独立子域直连防 CDN 故障丢单；限流按 X-API-Key 计数不受 CDN 边缘 IP 影响；鉴权端点一律 no-store 防数据串号；
+- **CDN 凭证加密管理**（M13）：CDN 服务商 access_key / access_secret 经 `Encryptable` 加密存储于 `logistics_cdn_provider` 表，管理面 `/admin/cdn/provider` 配置；
 - **统一错误语义**：限流 429、熔断 503、承运商错误 `carrier_error`，不向客户端泄露内部细节。
 
 ## 快速开始

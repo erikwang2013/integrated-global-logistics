@@ -56,9 +56,7 @@ class CarrierCredentialController extends BaseController
                               $data['carrier']['id'] = $this->encodeId((int) $data['carrier']['id']);
                           }
                           $data['app_secret'] = '****';
-                          if (!empty($data['app_key'])) {
-                              $data['app_key'] = mb_substr($data['app_key'], 0, 4) . '****' . mb_substr($data['app_key'], -4);
-                          }
+                          $data['app_key'] = EncryptionService::maskSecret((string) ($data['app_key'] ?? ''));
                           return $data;
                       });
 
@@ -131,7 +129,10 @@ class CarrierCredentialController extends BaseController
             return $this->fail('凭证不存在', 404);
         }
 
-        return $this->success($this->encodeIds($credential->toArray(), ['id', 'carrier_id']));
+        $data = $this->encodeIds($credential->toArray(), ['id', 'carrier_id']);
+        $data['app_secret'] = '****';
+        $data['app_key'] = EncryptionService::maskSecret((string) ($data['app_key'] ?? ''));
+        return $this->success($data);
     }
 
     /**

@@ -17,7 +17,7 @@ La plateforme repose sur trois composants qui coopèrent :
 - **tracking-gateway passerelle haute fréquence** (framework Rust e-cat) – première porte d'entrée de l'API de requêtes externe : cache Redis, rate-limit, circuit breaker par transporteur, load-balancing des workers ; ne fait que la partie haute fréquence, ignore les protocoles des transporteurs ;
 - **global-logistics façade unifiée** (paquet PHP) – 209 adaptateurs de transporteurs (45 national + 164 international), 187 règles d'identification automatique des numéros, `TrackStatus` avec 7 sémantiques d'état unifiées.
 
-**Progression actuelle** : M1 console d'administration (CRUD transporteur / identifiant / enregistrement de requête / abonnement), M2 passerelle de requête (chaîne d'API externe complète), M3 abonnements de rappel, M4 surveillance et statistiques, M5 documentation OpenAPI externe et M6 cinq SDK clients sont tous terminés — la chaîne de requête de suivi client → e-cat → worker → transporteur est démontrable, et les cinq SDK sans dépendance (Python / PHP / Node.js / Go / Rust) sont prêts à copier et utiliser.
+**Progression actuelle** : M1–M13 tous terminés — M1 console d'administration (CRUD transporteur / identifiant / enregistrement de requête / abonnement), M2 passerelle de requête (chaîne d'API externe complète), M3 abonnements de rappel, M4 surveillance et statistiques, M5 documentation OpenAPI externe, M6 cinq SDK clients, M7 portail client (inscription / application / forfait / commande), M8 paiements (Stripe / PayPal), M9 crypto-monnaie (USDT TRC20 / BEP20 / ERC20), M10 configuration des moyens de paiement, M11 middleware de sécurité de passerelle, M12 plan CDN (Cloudflare + en-têtes de cache), M13 gestion des fournisseurs CDN. La chaîne de requête de suivi client → e-cat → worker → transporteur est démontrable, et les cinq SDK sans dépendance sont prêts à copier et utiliser.
 
 ## Description du projet
 
@@ -28,6 +28,8 @@ La plateforme repose sur trois composants qui coopèrent :
 - **État unifié** : les états bruts très variés des transporteurs sont mappés sur l'enum unifiée `TrackStatus` (en attente de ramassage / en transport / en livraison / livré / anomalie / retour / non reconnu) ;
 - **Couverture mondiale** : les quatre grands express DHL, FedEx, UPS, USPS et les systèmes S10 des postes nationales (quatre régions : Europe, Amérique latine & Caraïbes, Afrique & Moyen-Orient, Asie-Pacifique) ;
 - **API externe** : la passerelle e-cat fournit l'authentification API-Key, les hits de cache Redis (`X-Cache: HIT`), la limitation de débit 429, le circuit breaker par transporteur 503, l'équilibrage RoundRobin des workers ; cinq SDK sans dépendance (Python / PHP / Node.js / Go / Rust) prêts à copier et utiliser ;
+- **Portail client & facturation**（M7–M10）：inscription / connexion client (JWT client isolé de l'admin), gestion d'applications avec X-API-Key auto-défini, API forfaits / commandes ; paiements Stripe / PayPal + crypto USDT TRC20 / BEP20 / ERC20, moyens de paiement Stripe (Apple Pay / Google Pay / Klarna / SEPA etc.) configurables sans code ;
+- **Accélération CDN**（M12/M13）：plan gratuit Cloudflare — HTTPS complet + cache périphérie pour les statiques, fournisseurs CDN / domaines / clés configurables dans le panneau (clés chiffrées) ;
 - **Zéro clé en dur** : toutes les clés sont injectées par configuration ; au niveau base de données, elles sont stockées chiffrées via Encryptable – code et clés totalement séparés.
 
 ## Architecture
@@ -40,7 +42,7 @@ La passerelle e-cat (Rust) gère l'authentification API-Key de l'API externe, le
 
 **Répartition des rôles – e-cat réutilise les 209 adaptateurs PHP** : les 209 adaptateurs sont en PHP (`src/Carriers/Domestic` 45 + `International` 164) ; une réécriture en Rust serait un chantier de plusieurs mois et ferait perdre les mises à jour continues des paquets amont. e-cat n'a pas besoin de comprendre les protocoles des transporteurs ; il ne dépend que d'un contrat interne stable (`/internal/tracking/query` + synchronisation du registre `/internal/carriers`). Les credentials ne descendent jamais vers e-cat – frontière de sécurité claire.
 
-Interface de gestion (navigateur) → `/admin/*` : JWT + permissions RBAC + audit d'opérations, couvre carrier / carrier-credential / tracking-query / callback-subscription / statistics.
+Interface de gestion (navigateur) → `/admin/*` : JWT + permissions RBAC + audit d'opérations, couvre carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider.
 
 ## Structure du projet
 
@@ -95,6 +97,12 @@ Défense en profondeur par couches, points clés :
 - **Couche applicative** (admin) : JWT + blacklist (2h access / 14d refresh), permissions RBAC à la granularité method.path, audit d'opérations sur toute la chaîne ; `SecurityFilter` bloque XSS / injection SQL / CSRF / injection de commandes / path traversal ; données sensibles chiffrées via `Encryptable` + export masqué ; verrouillage 15 minutes après 5 échecs de connexion + captcha à clic ;
 - **Sécurité des callbacks** : route whitelist + vérification de signature HMAC, livraison at-least-once + clé d'idempotence contre les pushs en double ;
 - **Sémantique d'erreur unifiée** : rate-limit 429, breaker 503, erreur transporteur `carrier_error` – aucun détail interne divulgué au client.
+- **Sécurité des paiements** (M8/M10) : vérification des webhooks Stripe / PayPal (HMAC-SHA256 / verify-webhook-signature), confirmation automatique des commandes + repli manuel admin ; clés de paiement chiffrées via `Encryptable` dans `logistics_system_config` ;
+- **Vérification des paiements crypto** (M9) : USDT TRC20 vérifié automatiquement via l'API Tronscan ; BEP20 / ERC20 confirmés manuellement ;
+- **Sécurité des clés client** (M7) : X-API-Key défini par le client (≥16 caractères), stocké en sha256 — le texte clair n'est renvoyé qu'une fois à la création ; JWT client (token_type=client) isolés des JWT admin ;
+- **Détection d'attaques au niveau passerelle**（M11）：`ecat-security` SecurityBodyLayer intégré à la passerelle (détecteurs d'injection / protocole / sérialisation de données / fichiers / fuite de données sensibles) ; les charges d'attaque sont bloquées au niveau passerelle, le paquet de sécurité applicative en secours ;
+- **Sécurité CDN**（M12）：plan gratuit Cloudflare — HTTPS complet + WAF double couche (règles gérées en périphérie + détection applicative passerelle) ; origine Tunnel sans exposition publique ; callbacks via sous-domaine DNS direct pour ne pas perdre de commandes en cas de panne CDN ; limitation de débit par X-API-Key, indépendante des IP de périphérie CDN ; endpoints authentifiés toujours no-store contre le mélange de cache entre utilisateurs ;
+- **Gestion des identifiants CDN**（M13）：access_key / access_secret des fournisseurs CDN chiffrés via `Encryptable` dans la table `logistics_cdn_provider`, configurés sur `/admin/cdn/provider` ;
 
 ## Démarrage rapide
 

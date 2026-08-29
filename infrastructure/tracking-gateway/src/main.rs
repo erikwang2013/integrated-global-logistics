@@ -1,8 +1,18 @@
 // Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // M2 查询网关：对外 /v1（X-API-Key）→ 限流 → Redis 缓存 → 按 carrier 熔断
 // → RoundRobin gRPC 转发 PHP worker（internal.v1.InternalService，x-internal-token）→ 写缓存返回。
+//
+// M1 cloudflared Tunnel 模板（无凭证部分，配好 CF_TUNNEL_TOKEN 后启用）：
+// 仓库无本网关独立 compose（admin/docker-compose.yml 属另一套 PHP 应用），
+// 部署侧加入网关同栈即可；token 未配置时容器启动即失败退出，不影响其他服务：
+//   cloudflared:
+//     image: cloudflare/cloudflared
+//     container_name: tracking-gw-cloudflared
+//     restart: unless-stopped
+//     command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
 use axum::{
     Json, Router,
+    error_handling::HandleErrorLayer,
     extract::{Path, State},
     http::{HeaderMap, HeaderName, HeaderValue, Request, StatusCode},
     middleware::{self, Next},
@@ -914,6 +924,21 @@ async fn carriers_list(State(state): State<AppState>) -> Response {
     }
 }
 
+// ── 公共端点缓存 ──
+
+/// 公共端点（/v1/health、/v1/openapi.json）加 60s 缓存头；
+/// 5xx 不加 public 标记，避免 CDN 缓存故障态。
+async fn cache_public(req: Request<axum::body::Body>, next: Next) -> Response {
+    let mut resp = next.run(req).await;
+    if !resp.status().is_server_error() {
+        resp.headers_mut().insert(
+            HeaderName::from_static("cache-control"),
+            HeaderValue::from_static("public, max-age=60"),
+        );
+    }
+    resp
+}
+
 // ── 入口 ──
 
 #[tokio::main]
@@ -949,7 +974,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let middleware = ServiceBuilder::new()
         .layer(MetricsLayer::new())
         .layer(TracingLayer::new("tracking-gateway"))
-        .layer(LoggingLayer);
+        .layer(LoggingLayer)
+        // HandleErrorLayer 在内层消化 SecurityBodyLayer 的 SecurityError
+        // （axum 0.8 Router::layer 要求 Error: Into<Infallible>）
+        .layer(HandleErrorLayer::new(|e: ecat_security::SecurityError| async move { e }))
+        // LIFO：最后添加 = 最外层 = 最先执行，攻击请求在鉴权/限流前即被拦截
+        .layer(ecat_security::SecurityBodyLayer::new());
 
     let api = Router::new()
         .route("/v1/tracking/query", post(tracking_query))
@@ -962,14 +992,17 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         ));
 
     // /v1/health、/v1/openapi.json、/metrics 为公共端点，不要求 API-Key
+    // health/openapi 可缓存；/metrics 不缓存（保持默认 no-store 语义）
     let health: Router<AppState> = HealthRegistry::new().into_router().with_state(());
     let openapi: Router<AppState> = Router::new()
         .route("/openapi.json", get(openapi::openapi_json))
         .with_state(());
     let metrics: Router<AppState> = metrics_router().with_state(());
 
+    let public_routes = health.merge(openapi).layer(middleware::from_fn(cache_public));
+
     let router: Router<()> = api
-        .nest("/v1", health.merge(openapi))
+        .nest("/v1", public_routes)
         .merge(metrics)
         .layer(middleware)
         .with_state(state.clone());
@@ -1066,5 +1099,39 @@ mod tests {
         let cfg: GatewayConfig =
             serde_json::from_value(Value::Object(map.into_iter().collect())).unwrap();
         assert_eq!(cfg.carrier_cache_ttl.get("sf"), Some(&3600));
+    }
+
+    #[tokio::test]
+    async fn cache_public_header_rules() {
+        use tower::ServiceExt;
+        let app = Router::new()
+            .route("/ok", get(|| async { StatusCode::OK }))
+            .route("/err", get(|| async { StatusCode::INTERNAL_SERVER_ERROR }))
+            .layer(middleware::from_fn(cache_public))
+            .with_state(());
+        let ok = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri("/ok")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            ok.headers().get("cache-control").unwrap(),
+            "public, max-age=60"
+        );
+        let err = app
+            .oneshot(
+                Request::builder()
+                    .uri("/err")
+                    .body(axum::body::Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert!(err.headers().get("cache-control").is_none());
     }
 }

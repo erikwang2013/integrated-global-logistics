@@ -17,7 +17,7 @@ Platform terdiri dari tiga komponen yang bekerja sama:
 - **tracking-gateway gateway frekuensi tinggi** (framework Rust e-cat) —— pintu masuk pertama API query eksternal: cache Redis, rate limiting, circuit breaker per operator, load balancing worker, hanya menangani sisi frekuensi tinggi, tidak memahami protokol operator;
 - **global-logistics facade terpadu** (paket PHP) —— 209 adapter operator (domestik 45 + internasional 164), 187 aturan pengenalan otomatis nomor resi, semantik status terpadu `TrackStatus` 7 macam.
 
-**Kemajuan saat ini**: M1 panel administrasi (CRUD karier / kredensial / catatan kueri / langganan), M2 gateway kueri (rantai API eksternal lengkap), M3 langganan callback, M4 pemantauan dan statistik, M5 dokumentasi OpenAPI eksternal dan M6 lima SDK klien semuanya selesai — rantai kueri pelacakan klien → e-cat → worker → karier dapat didemonstrasikan, dan lima SDK tanpa dependensi (Python / PHP / Node.js / Go / Rust) siap salin-pakai.
+**Kemajuan saat ini**: M1–M13 semuanya selesai — M1 panel administrasi (CRUD karier / kredensial / catatan kueri / langganan), M2 gateway kueri (rantai API eksternal lengkap), M3 langganan callback, M4 pemantauan dan statistik, M5 dokumentasi OpenAPI eksternal, M6 lima SDK klien, M7 portal klien (registrasi / aplikasi / paket / pesanan), M8 pembayaran (Stripe / PayPal), M9 kripto (USDT TRC20 / BEP20 / ERC20), M10 konfigurasi metode pembayaran, M11 middleware keamanan gateway, M12 rencana CDN (Cloudflare + header cache), M13 manajemen penyedia CDN. Rantai kueri pelacakan klien → e-cat → worker → karier dapat didemonstrasikan, dan lima SDK tanpa dependensi siap salin-pakai.
 
 ## Penjelasan Proyek
 
@@ -28,6 +28,8 @@ Platform terdiri dari tiga komponen yang bekerja sama:
 - **Status terpadu**：status mentah dari berbagai operator dipetakan ke enum `TrackStatus` yang terpadu (menunggu penjemputan / dalam pengiriman / sedang diantar / sudah diterima / anomali / dikembalikan / tidak dikenali);
 - **Cakupan global**：empat kurir besar DHL、FedEx、UPS、USPS dan sistem S10 pos berbagai negara (empat kawasan: Eropa, Amerika Latin-Karibia, Afrika-Timur Tengah, Asia Pasifik);
 - **API eksternal**: gateway e-cat menyediakan autentikasi API-Key, cache hit Redis (`X-Cache: HIT`), pembatasan laju 429, pemutus sirkuit per karier 503, penyeimbangan beban worker RoundRobin; lima SDK tanpa dependensi (Python / PHP / Node.js / Go / Rust) siap salin-pakai;
+- **Portal klien & penagihan**（M7–M10）：registrasi / login klien (JWT klien terisolasi dari admin), manajemen aplikasi dengan X-API-Key diatur sendiri, API paket / pesanan; pembayaran Stripe / PayPal + kripto USDT TRC20 / BEP20 / ERC20, metode pembayaran Stripe (Apple Pay / Google Pay / Klarna / SEPA dll.) dapat dikonfigurasi tanpa kode;
+- **Akselerasi CDN**（M12/M13）：paket gratis Cloudflare HTTPS penuh + cache edge untuk aset statis, penyedia CDN / domain / kunci dapat dikonfigurasi di panel admin (kunci terenkripsi);
 - **Nol kunci hardcoded**：semua kunci diinjeksi melalui konfigurasi, lapisan database menyimpan ciphertext dengan Encryptable, kode dan kunci sepenuhnya terpisah.
 
 ## Arsitektur Proyek
@@ -40,7 +42,7 @@ Gateway e-cat (Rust) menangani autentikasi API-Key untuk API eksternal, cache hi
 
 **Skema pembagian kerja e-cat yang menggunakan kembali 209 adapter PHP**：209 adapter adalah PHP (`src/Carriers/Domestic` 45 + `International` 164), menulis ulang dalam Rust memakan waktu berbulan-bulan dan kehilangan manfaat pembaruan berkelanjutan dari paket upstream; e-cat tidak perlu memahami protokol operator, hanya bergantung pada kontrak internal yang stabil (`/internal/tracking/query` + sinkronisasi registry `/internal/carriers`). Kredensial tidak pernah diturunkan ke e-cat, batas keamanan jelas.
 
-Sisi manajemen (browser) → `/admin/*`：JWT + izin RBAC + audit operasi, mencakup carrier / carrier-credential / tracking-query / callback-subscription / statistics.
+Sisi manajemen (browser) → `/admin/*`：JWT + izin RBAC + audit operasi, mencakup carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider.
 
 ## Struktur Proyek
 
@@ -95,6 +97,12 @@ Pertahanan berlapis secara mendalam, poin-poin utamanya:
 - **Lapisan aplikasi** (admin)：JWT + blacklist (2 jam access / 14 hari refresh), izin RBAC granularitas method.path, pencatatan audit operasi di seluruh rantai; `SecurityFilter` memblokir XSS / SQL injection / CSRF / command injection / path traversal; data sensitif dienkripsi `Encryptable` saat disimpan + masking saat ekspor; 5 kali gagal login terkunci 15 menit + CAPTCHA klik;
 - **Keamanan callback**：rute whitelist + verifikasi signature HMAC, pengiriman at-least-once + kunci idempoten mencegah push ganda;
 - **Semantik error terpadu**：rate limit 429、circuit breaker 503、error operator `carrier_error`, tidak membocorkan detail internal ke klien.
+- **Keamanan pembayaran** (M8/M10): verifikasi webhook Stripe / PayPal (HMAC-SHA256 / verify-webhook-signature), konfirmasi pesanan otomatis + fallback manual admin; kunci pembayaran dienkripsi `Encryptable` di `logistics_system_config`;
+- **Verifikasi pembayaran kripto** (M9): USDT TRC20 diverifikasi otomatis via API Tronscan; BEP20 / ERC20 dikonfirmasi manual;
+- **Keamanan kunci klien** (M7): X-API-Key ditetapkan klien (≥16 karakter), disimpan sebagai sha256 — teks biasa hanya dikembalikan sekali saat pembuatan; JWT klien (token_type=client) terisolasi dari JWT admin;
+- **Deteksi serangan gateway**（M11）：`ecat-security` SecurityBodyLayer terintegrasi ke gateway (detektor injeksi / protokol / serialisasi data / file / kebocoran data sensitif); muatan serangan diblokir di lapisan gateway, paket keamanan lapisan aplikasi sebagai cadangan;
+- **Keamanan CDN**（M12）：paket gratis Cloudflare HTTPS penuh + WAF dua lapis (aturan terkelola di edge + deteksi lapisan aplikasi gateway); origin Tunnel tanpa eksposur sumber; callback via subdomain DNS langsung agar tidak kehilangan pesanan saat CDN down; rate limit dihitung per X-API-Key, tidak terpengaruh IP edge CDN; endpoint terautentikasi selalu no-store mencegah campur aduk cache antar pengguna;
+- **Manajemen kredensial CDN**（M13）：access_key / access_secret penyedia CDN dienkripsi `Encryptable` di tabel `logistics_cdn_provider`, dikonfigurasi di `/admin/cdn/provider`;
 
 ## Mulai Cepat
 

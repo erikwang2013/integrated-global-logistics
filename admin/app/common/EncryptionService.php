@@ -94,6 +94,15 @@ class EncryptionService
     }
 
     /**
+     * 密钥脱敏: 保留首尾 4 位（app_key/access_key 等）
+     */
+    public static function maskSecret(string $value): string
+    {
+        if ($value === '') return '';
+        return mb_substr($value, 0, 4) . '****' . mb_substr($value, -4);
+    }
+
+    /**
      * 邮箱脱敏: a***@example.com
      */
     public static function maskEmail(string $email): string

@@ -2,6 +2,8 @@
 
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+> 注：本 API 参考文档按端点分组、章节独立（1.概述…18.客户端），为既有结构化长文件，豁免 500 行文件规范。
+
 ## 1. 概述
 
 开放管理后台 (open-admin) 基于 webman v2 构建，提供 RESTful JSON API。所有管理端接口需要 JWT 认证与 RBAC 权限校验，公开接口通过 API 版本头路由到版本化控制器。
@@ -1941,3 +1943,30 @@ println!("{}", detail);
 ```
 
 SDK 在信封 `code != 0` 或网络失败时抛异常（`TrackingApiError`），携带 `code` / `message` / `error_code` / `error_message` / `http_status`；限流与熔断错误建议退避重试，承运商侧错误无需重试。完整用法见 `sdk/README.md`。
+
+## 18. 物流业务端点（M7-M13）
+
+### 18.1 管理端（`/admin/*`，admin JWT + RBAC）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/admin/client` | 客户端列表 |
+| GET | `/admin/client/app` | 应用列表（含状态筛选） |
+| POST | `/admin/client/app/{id}/review` | 应用审核（通过/驳回，通过时按套餐计 expire_at） |
+| POST | `/admin/client/app/{id}/disable` | 禁用应用 |
+| GET/POST/PUT/DELETE | `/admin/plan` | 套餐 CRUD |
+| GET | `/admin/order` | 订单列表（状态/渠道筛选） |
+| POST | `/admin/order/{id}/confirm` | 手动确认订单（兜底） |
+| POST | `/admin/order/{id}/cancel` | 取消订单 |
+| GET/POST/PUT/DELETE | `/admin/cdn/provider` | CDN 服务商凭证 CRUD（access_key/access_secret 加密存储） |
+
+### 18.2 客户端门户（`/api/*`，客户端 JWT `token_type=client`）
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/auth/register` / `/api/auth/login`（`client=1`） | 客户端注册 / 登录 |
+| GET | `/api/plan` | 套餐列表 |
+| GET/POST | `/api/app` | 应用列表 / 创建（自设 X-API-Key ≥16 位） |
+| PUT | `/api/app/{id}`、`/api/app/{id}/key` | 更新应用 / 重置密钥 |
+| POST | `/api/app/{id}/order` | 应用下单 |
+| POST | `/api/order/{id}/pay` | 发起支付（stripe / paypal / crypto） |

@@ -4515,12 +4515,9 @@ dependencies = [
 
 [[package]]
 name = "security-rust"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65999385099ea7718f7aba9995270b82877d2132309c17278bc7338e93d9a7da"
+version = "1.0.8"
 dependencies = [
  "regex",
- "thiserror 2.0.19",
 ]
 
 [[package]]
@@ -5589,6 +5586,7 @@ dependencies = [
  "ecat-metrics",
  "ecat-middleware",
  "ecat-openapi",
+ "ecat-security",
  "ecat-transport-http",
  "prometheus",
  "prost",

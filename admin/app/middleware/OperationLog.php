@@ -51,7 +51,7 @@ class OperationLog implements MiddlewareInterface
      */
     private function filterSensitive(array $data): array
     {
-        $keys = ['password', 'old_password', 'new_password', 'new_password_confirmation', 'token', 'secret', 'access_token', 'refresh_token', 'app_key', 'app_secret'];
+        $keys = ['password', 'old_password', 'new_password', 'new_password_confirmation', 'token', 'secret', 'access_token', 'refresh_token', 'app_key', 'app_secret', 'access_key', 'access_secret'];
         foreach ($data as $key => $value) {
             if (in_array($key, $keys, true)) {
                 $data[$key] = '***';

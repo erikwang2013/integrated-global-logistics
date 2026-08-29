@@ -495,3 +495,5 @@ Policy: https://erik.xyz/security-policy
 | JWT 무상태로 능동 무효화 불가 | Token 만료 전 서버 측에서 능동 폐기 불가 (블랙리스트 제외) | 블랙리스트 + 단기 2h TTL로 위험 창 축소 |
 | 관리자 엔드포인트에 특별 레이트 리밋 없음 | 관리자 인터페이스와 일반 인터페이스가 60/min 기본 제한 공유 | 관리자 작업 빈도가 본래 낮아 구분 불필요 |
 | PCRE 백트래킹 제한 | 패키지 내장 1,000,000 백트래킹 상한+finally 복구, 극단적으로 복잡한 입력에도 성능 리스크 | 요청 본문 크기 제한 (10MB) 폴백 |
+## 13. 클라이언트 포털 및 결제 보안 (M7–M10)
+Stripe / PayPal 웹훅 서명 검증 (HMAC-SHA256 / verify-webhook-signature)；결제 키는 `Encryptable`로 암호화해 `logistics_system_config`에 저장；USDT TRC20은 Tronscan으로 자동 검증, BEP20 / ERC20은 수동；X-API-Key는 클라이언트 설정(16자 이상)으로 sha256 저장。게이트웨이 공격 탐지(M11)：`ecat-security` SecurityBodyLayer를 게이트웨이에 통합, 공격 페이로드는 게이트웨이 계층에서 차단。 **13.5 CDN 보안（M12）**：Cloudflare 무료 요금제 전 사이트 HTTPS + 이중 WAF（엣지 관리 규칙 + 게이트웨이 애플리케이션 계층 탐지）；Tunnel 오리진으로 소스 서버 무노출；콜백은 DNS 전용 하위 도메인 직접 연결로 CDN 장애 시 주문 유실 방지；속도 제한은 X-API-Key 기준으로 CDN 엣지 IP에 영향받지 않음；인증 엔드포인트는 항상 no-store로 사용자 간 캐시 혼동 방지。 **13.6 CDN 사업자 키 관리（M13）**：CDN 사업자 프로필（access_key / access_secret / 도메인 목록）을 `logistics_cdn_provider` 테이블에 저장, 비밀 필드는 `Encryptable`로 암호화, `/admin/cdn/provider` CRUD로 관리。

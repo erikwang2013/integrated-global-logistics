@@ -17,7 +17,7 @@
 - **tracking-gateway 高頻度ゲートウェイ**（Rust e-cat フレームワーク）—— 外部クエリ API の第一の入口：Redis キャッシュ、レート制限、運送会社別サーキットブレーカー、worker の負荷分散。高頻度面のみを担い、運送会社プロトコルは理解しません；
 - **global-logistics 統一ファサード**（PHP パッケージ）—— 209 社の運送会社アダプター（国内 45 + 国際 164）、187 件の追跡番号自動識別ルール、`TrackStatus` 7 種の統一ステータスセマンティクス。
 
-**現在の進捗**：M1 管理面（運送会社 / 資格情報 / クエリ記録 / 購読 CRUD）、M2 クエリゲートウェイ（外部 API 全チェーン）、M3 コールバック購読、M4 監視統計、M5 外部 OpenAPI ドキュメント、M6 5 つのクライアント SDK はすべて完了 —— クライアント → e-cat → worker → 運送会社の追跡クエリチェーンがデモ可能で、5 つの依存ゼロ SDK（Python / PHP / Node.js / Go / Rust）はコピーしてすぐ使えます。
+**現在の進捗**：M1–M13 すべて完了 —— M1 管理面（運送会社 / 資格情報 / クエリ記録 / 購読 CRUD）、M2 クエリゲートウェイ（外部 API 全チェーン）、M3 コールバック購読、M4 監視統計、M5 外部 OpenAPI ドキュメント、M6 5 つのクライアント SDK、M7 クライアントポータル（登録 / アプリ / プラン / 注文）、M8 決済（Stripe / PayPal）、M9 仮想通貨（USDT TRC20 / BEP20 / ERC20）、M10 決済方法設定、M11 ゲートウェイセキュリティミドルウェア、M12 CDN 計画（Cloudflare + キャッシュヘッダー）、M13 CDN プロバイダー管理。クライアント → e-cat → worker → 運送会社の追跡クエリチェーンがデモ可能で、5 つの依存ゼロ SDK はコピーしてすぐ使えます。
 
 ## プロジェクト説明
 
@@ -28,6 +28,8 @@
 - **統一ステータス**：各社まちまちの生のステータスを統一 `TrackStatus` 列挙型（集荷待ち / 輸送中 / 配達中 / 配達完了 / 異常 / 返送 / 識別不可）にマッピング；
 - **グローバルカバレッジ**：DHL、FedEx、UPS、USPS の四大宅配便と各国郵便の S10 システム（ヨーロッパ、ラテンアメリカ・カリブ、アフリカ・中東、アジア太平洋の 4 地域）；
 - **外部 API**：e-cat クエリゲートウェイが API-Key 認証、Redis キャッシュヒット（`X-Cache: HIT`）、レート制限 429、運送会社別サーキットブレーカー 503、RoundRobin worker 負荷分散を提供；依存ゼロの 5 SDK（Python / PHP / Node.js / Go / Rust）はコピーしてすぐ使えます；
+- **クライアントポータルと課金**（M7–M10）：クライアント登録 / ログイン（client JWT は admin と分離）、X-API-Key 自設のアプリ管理、プラン / 注文 API；Stripe / PayPal に加え USDT TRC20 / BEP20 / ERC20 仮想通貨決済、Stripe 決済方法（Apple Pay / Google Pay / Klarna / SEPA など）は設定で即反映；
+- **CDN 高速化**（M12/M13）：Cloudflare 無料プランで全サイト HTTPS + 静的アセットのエッジキャッシュ、CDN プロバイダー / ドメイン / キーは管理面で設定可能（キーは暗号化）；
 - **鍵のハードコードゼロ**：各社の鍵はすべて設定注入を経由し、データベース層では Encryptable 暗号文で保存。コードと鍵は完全に分離されています。
 
 ## プロジェクトアーキテクチャ
@@ -40,7 +42,7 @@ e-cat ゲートウェイ（Rust）は外部 API の API-Key 認証、Redis キ�
 
 **e-cat が 209 社の PHP アダプターを再利用する分業案**：209 個のアダプターは PHP（`src/Carriers/Domestic` 45 社 + `International` 164 社）で、Rust での書き直しは数ヶ月の工事になり、上流パッケージの継続的アップデートの恩恵も失われます。e-cat は運送会社プロトコルを理解する必要はなく、安定した内部契約（`/internal/tracking/query` + `/internal/carriers` レジストリ同期）にのみ依存します。資格情報は e-cat に渡されることはなく、セキュリティ境界は明確です。
 
-管理面（ブラウザ）→ `/admin/*`：JWT + RBAC 権限 + 操作監査。carrier / carrier-credential / tracking-query / callback-subscription / statistics をカバー。
+管理面（ブラウザ）→ `/admin/*`：JWT + RBAC 権限 + 操作監査。carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider をカバー。
 
 ## プロジェクト構造
 
@@ -95,6 +97,12 @@ integrated-global-logistics/
 - **アプリケーション層**（admin）：JWT + ブラックリスト（2h access / 14d refresh）、RBAC method.path 粒度権限、操作監査の全チェーン記録；`SecurityFilter` が XSS / SQL インジェクション / CSRF / コマンドインジェクション / パストラバーサルを遮断；機密データは `Encryptable` で暗号化保存 + マスキングしてエクスポート；ログイン 5 回失敗で 15 分ロック + クリック CAPTCHA；
 - **コールバックセキュリティ**：ホワイトリストルート + HMAC 署名検証、at-least-once 配信 + 冪等キーによる重複プッシュ防止；
 - **統一エラーセマンティクス**：レート制限 429、サーキットブレーカー 503、運送会社エラーは `carrier_error`。クライアントに内部詳細を漏らしません。
+- **決済セキュリティ**（M8/M10）：Stripe / PayPal webhook 検証（HMAC-SHA256 / verify-webhook-signature）、自動注文確定 + admin 手動フォールバック；決済キーは `Encryptable` で暗号化し `logistics_system_config` に保存；
+- **仮想通貨入金検証**（M9）：USDT TRC20 は Tronscan API で自動検証、BEP20 / ERC20 は手動確認；
+- **クライアントキーセキュリティ**（M7）：X-API-Key はクライアント自設（16 文字以上）、sha256 で保存し平文は作成時に一度だけ返却；クライアント JWT（token_type=client）は admin JWT と分離；
+- **ゲートウェイ攻撃検知**（M11）：`ecat-security` SecurityBodyLayer をゲートウェイに統合（注入 / プロトコル / データシリアライズ / ファイル / 機密データ漏えい検知器）；攻撃ペイロードはゲートウェイ層で遮断、アプリケーション層のセキュリティパッケージがフォールバック；
+- **CDN セキュリティ**（M12）：Cloudflare 無料プランで全サイト HTTPS + 二層 WAF（エッジ管理ルール + ゲートウェイのアプリケーション層検知）；Tunnel オリジンでソースをゼロ露出；コールバックは DNS 専用サブドメイン直結で CDN 障害時に注文を失わない；レート制限は X-API-Key 単位で CDN エッジ IP の影響を受けない；認証エンドポイントは常に no-store でユーザー間キャッシュ混入を防止；
+- **CDN 認証情報管理**（M13）：CDN プロバイダーの access_key / access_secret を `Encryptable` で暗号化して `logistics_cdn_provider` テーブルに保存、`/admin/cdn/provider` で設定；
 
 ## クイックスタート
 

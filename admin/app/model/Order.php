@@ -17,7 +17,8 @@ class Order extends Model
     protected $keyType = 'int';
 
     protected $fillable = [
-        'order_no', 'client_id', 'app_id', 'plan_id', 'amount', 'status', 'paid_at',
+        'order_no', 'client_id', 'app_id', 'plan_id', 'amount', 'channel', 'status', 'paid_at',
+        'chain', 'crypto_amount', 'memo', 'tx_id',
     ];
 
     protected $casts = [
@@ -25,6 +26,7 @@ class Order extends Model
         'app_id' => 'integer',
         'plan_id' => 'integer',
         'amount' => 'integer',
+        'crypto_amount' => 'float',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

@@ -17,7 +17,7 @@ A plataforma é composta por três componentes que trabalham juntos:
 - **tracking-gateway** (gateway de alta frequência, framework Rust e-cat) — primeira porta de entrada da API de consulta: cache Redis, rate limiting, circuit breaker por transportadora, balanceamento de carga entre workers; só lida com o tráfego de alta frequência e não entende os protocolos das transportadoras;
 - **global-logistics** (fachada unificada, pacote PHP) — adaptadores de 209 transportadoras (45 nacionais + 164 internacionais), 187 regras de reconhecimento automático de números de rastreio, 7 semânticas de estado unificadas em `TrackStatus`.
 
-**Progresso atual**: M1 painel de administração (CRUD de transportadora / credencial / registro de consulta / assinatura), M2 gateway de consulta (cadeia completa de API externa), M3 assinaturas de callback, M4 monitoramento e estatísticas, M5 documentação OpenAPI externa e M6 cinco SDKs de cliente estão todos concluídos — a cadeia de consulta de rastreamento cliente → e-cat → worker → transportadora é demonstrável, e os cinco SDKs sem dependências (Python / PHP / Node.js / Go / Rust) estão prontos para copiar e usar.
+**Progresso atual**: M1–M13 todos concluídos — M1 painel de administração (CRUD de transportadora / credencial / registro de consulta / assinatura), M2 gateway de consulta (cadeia completa de API externa), M3 assinaturas de callback, M4 monitoramento e estatísticas, M5 documentação OpenAPI externa, M6 cinco SDKs de cliente, M7 portal do cliente (registro / aplicativo / plano / pedido), M8 pagamentos (Stripe / PayPal), M9 criptomoedas (USDT TRC20 / BEP20 / ERC20), M10 configuração de métodos de pagamento, M11 middleware de segurança de gateway, M12 plano CDN (Cloudflare + cabeçalhos de cache), M13 gerenciamento de provedores CDN. A cadeia de consulta de rastreamento cliente → e-cat → worker → transportadora é demonstrável, e os cinco SDKs sem dependências estão prontos para copiar e usar.
 
 ## Descrição
 
@@ -28,6 +28,8 @@ A plataforma é composta por três componentes que trabalham juntos:
 - **Estados unificados**: os estados originais, que variam de transportadora para transportadora, são mapeados para o enum unificado `TrackStatus` (aguardando coleta / em trânsito / em entrega / entregue / exceção / devolvido / não reconhecido);
 - **Cobertura global**: as quatro grandes transportadoras DHL, FedEx, UPS, USPS e os sistemas S10 dos correios nacionais (quatro regiões: Europa, América Latina e Caribe, África e Oriente Médio, Ásia-Pacífico);
 - **API externa**: o gateway e-cat fornece autenticação API-Key, hits de cache Redis (`X-Cache: HIT`), limite de taxa 429, circuit breaker por transportadora 503, balanceamento RoundRobin de workers; cinco SDKs sem dependências (Python / PHP / Node.js / Go / Rust) prontos para copiar e usar;
+- **Portal do cliente e cobrança**（M7–M10）：registro / login de cliente (JWT de cliente isolado do admin), gerenciamento de aplicativos com X-API-Key autodefinido, API de planos / pedidos; pagamentos Stripe / PayPal + cripto USDT TRC20 / BEP20 / ERC20, métodos de pagamento do Stripe (Apple Pay / Google Pay / Klarna / SEPA etc.) configuráveis sem código;
+- **Aceleração CDN**（M12/M13）：plano gratuito Cloudflare — HTTPS completo + cache de borda para estáticos, provedores CDN / domínios / chaves configuráveis no painel (chaves criptografadas);
 - **Zero chave embutida no código**: todas as chaves são injetadas por configuração; na camada de banco de dados, são armazenadas criptografadas via Encryptable; código e chaves totalmente separados.
 
 ## Arquitetura
@@ -40,7 +42,7 @@ O gateway e-cat (Rust) é responsável pela autenticação API-Key da API extern
 
 **Divisão de trabalho com reuso dos 209 adaptadores PHP pelo e-cat**: os 209 adaptadores são em PHP (`src/Carriers/Domestic` com 45 + `International` com 164); reescrevê-los em Rust seria um projeto de meses e perderia os benefícios das atualizações contínuas do pacote upstream; o e-cat não precisa entender os protocolos das transportadoras, depende apenas de um contrato interno estável (`/internal/tracking/query` + sincronização do registro `/internal/carriers`). As credenciais nunca são entregues ao e-cat — a fronteira de segurança é clara.
 
-Painel de gestão (navegador) → `/admin/*`: JWT + permissões RBAC + auditoria de operações, cobrindo carrier / carrier-credential / tracking-query / callback-subscription / statistics.
+Painel de gestão (navegador) → `/admin/*`: JWT + permissões RBAC + auditoria de operações, cobrindo carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider.
 
 ## Estrutura do projeto
 
@@ -95,6 +97,12 @@ Defesa em profundidade em camadas; os pontos principais:
 - **Camada de aplicação** (admin): JWT + blacklist (access 2h / refresh 14d), permissões RBAC com granularidade method.path, auditoria de operações registrada em toda a cadeia; `SecurityFilter` bloqueia XSS / SQL injection / CSRF / command injection / path traversal; dados sensíveis armazenados criptografados com `Encryptable` + mascaramento na exportação; bloqueio de 15 minutos após 5 falhas de login + CAPTCHA de clique;
 - **Segurança de callbacks**: rota de allowlist + verificação de assinatura HMAC, entrega at-least-once + chave de idempotência contra push duplicado;
 - **Semântica de erro unificada**: rate limit 429, circuit breaker 503, erro de transportadora `carrier_error` — sem vazar detalhes internos ao cliente.
+- **Segurança de pagamentos** (M8/M10): verificação de webhooks Stripe / PayPal (HMAC-SHA256 / verify-webhook-signature), confirmação automática de pedidos + fallback manual do admin; chaves de pagamento criptografadas via `Encryptable` em `logistics_system_config`;
+- **Verificação de pagamentos cripto** (M9): USDT TRC20 verificado automaticamente via API Tronscan; BEP20 / ERC20 confirmados manualmente;
+- **Segurança de chaves do cliente** (M7): X-API-Key definido pelo cliente (≥16 caracteres), armazenado como sha256 — o texto puro é retornado apenas uma vez na criação; JWTs de cliente (token_type=client) isolados dos JWTs de admin;
+- **Detecção de ataques na gateway**（M11）：`ecat-security` SecurityBodyLayer integrado à gateway (detectores de injeção / protocolo / serialização de dados / arquivos / vazamento de dados sensíveis); cargas de ataque bloqueadas na camada da gateway, com o pacote de segurança da camada de aplicação como fallback;
+- **Segurança CDN**（M12）：plano gratuito Cloudflare — HTTPS completo + WAF de dupla camada (regras gerenciadas na borda + detecção de camada de aplicação da gateway); origem Tunnel sem exposição pública; callbacks via subdomínio somente DNS direto para não perder pedidos em falha de CDN; limite de taxa por X-API-Key, independente de IPs de borda CDN; endpoints autenticados sempre no-store contra mistura de cache entre usuários;
+- **Gerenciamento de credenciais CDN**（M13）：access_key / access_secret dos provedores CDN criptografados com `Encryptable` na tabela `logistics_cdn_provider`, configurados em `/admin/cdn/provider`;
 
 ## Início rápido
 
