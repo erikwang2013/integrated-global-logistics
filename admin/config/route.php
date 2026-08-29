@@ -25,10 +25,10 @@ use support\Request;
  */
 function v(string $controller, string $action): \Closure
 {
-    return function (Request $request, ...$args) use ($controller, $action) {
+    return function (Request $request) use ($controller, $action) {
         $version = $request->apiVersion ?? 'v1';
         $class = "\\app\\api\\{$version}\\controller\\{$controller}";
-        return (new $class)->{$action}($request, ...$args);
+        return (new $class)->{$action}($request);
     };
 }
 
@@ -63,6 +63,10 @@ Route::get('/api/docs', [app\admin\controller\DocsController::class, 'index']);
 
 // 承运商 webhook 回调（全局路由、不挂中间件组，由控制器内自行校验白名单/签名）
 Route::post('/api/callback/{carrier}', [app\admin\controller\CallbackController::class, 'receive']);
+
+// 支付 webhook 回调（公开端点，控制器内签名校验后确认订单）
+Route::post('/api/payment/webhook/stripe', [app\admin\controller\PaymentWebhookController::class, 'stripe']);
+Route::post('/api/payment/webhook/paypal', [app\admin\controller\PaymentWebhookController::class, 'paypal']);
 
 // ============================================================
 // 管理端路由
@@ -127,6 +131,14 @@ Route::group('/admin', function () {
     Route::get('/client/app', [app\admin\controller\ClientController::class, 'apps']);
     Route::post('/client/app/{id}/review', [app\admin\controller\ClientController::class, 'review']);
     Route::post('/client/app/{id}/disable', [app\admin\controller\ClientController::class, 'disable']);
+
+    // 物流聚合 — 套餐管理
+    Route::resource('/plan', app\admin\controller\PlanController::class);
+
+    // 物流聚合 — 订单管理
+    Route::get('/order', [app\admin\controller\OrderController::class, 'index']);
+    Route::post('/order/{id}/confirm', [app\admin\controller\OrderController::class, 'confirm']);
+    Route::post('/order/{id}/cancel', [app\admin\controller\OrderController::class, 'cancel']);
 })->middleware([
     app\middleware\AdminAuth::class,
     app\middleware\AdminPermission::class,
@@ -163,10 +175,11 @@ Route::group('/api', function () {
     Route::get('/plan', v('ClientAppController', 'plans'));
     Route::get('/app', v('ClientAppController', 'index'));
     Route::post('/app', v('ClientAppController', 'store'));
-    Route::put('/app/{id}/key', v('ClientAppController', 'resetKey'));
-    Route::put('/app/{id}', v('ClientAppController', 'update'));
-    Route::post('/app/{id}/order', v('ClientAppController', 'order'));
-    Route::post('/order/{id}/pay', v('ClientAppController', 'pay'));
+    // webman 闭包 DI 按参数名绑定、不支持变参闭包，带参路由改用数组语法注入 {id}
+    Route::put('/app/{id}/key', [\app\api\v1\controller\ClientAppController::class, 'resetKey']);
+    Route::put('/app/{id}', [\app\api\v1\controller\ClientAppController::class, 'update']);
+    Route::post('/app/{id}/order', [\app\api\v1\controller\ClientAppController::class, 'order']);
+    Route::post('/order/{id}/pay', [\app\api\v1\controller\ClientAppController::class, 'pay']);
 })->middleware([
     app\middleware\ApiVersion::class,
     app\middleware\ClientAuth::class,
