@@ -1,4 +1,5 @@
 # Logistics Aggregation Platform (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 One-stop platform for global logistics tracking: the **admin management console** (PHP webman + Flutter) hosts the management plane and the query worker pool, the **e-cat high-frequency gateway** (long-running Rust process) carries the query traffic, and the **global-logistics unified facade** (PHP adapters for 209 carriers) lets you query the whole world through a single entry.
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-See [sdk/README.md](sdk/README.md) for usage and examples in each language.
+See [sdk/README.md](../../../sdk/README.md) for usage and examples in each language.
 
-For detailed deployment, see [admin/README.md](admin/README.md) (Docker Compose orchestrates 5 services: Nginx / PHP / MySQL / Redis / Elasticsearch) and the implementation plan document.
+For detailed deployment, see [admin/README.md](../../../admin/README.md) (Docker Compose orchestrates 5 services: Nginx / PHP / MySQL / Redis / Elasticsearch) and the implementation plan document.
 
 ## Documentation
 
-- [admin/docs/API.md](admin/docs/API.md) — API reference (unified response format, error codes, authentication flow, rate-limit policies, middleware chain)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) — architecture design
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) — design document
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — security architecture
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — platform implementation plan (architecture, data flow, database design, API contracts, milestones)
-- [admin/README.md](admin/README.md) — full admin console documentation (tech stack, database conventions, deployment, CI/CD)
-- [sdk/README.md](sdk/README.md) — external API client SDKs (Python / PHP / Node.js / Go / Rust, five zero-dependency, copy-and-run)
+- [admin/docs/API.md](../../../admin/docs/API.md) — API reference (unified response format, error codes, authentication flow, rate-limit policies, middleware chain)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) — architecture design
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) — design document
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) — security architecture
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) — platform implementation plan (architecture, data flow, database design, API contracts, milestones)
+- [admin/README.md](../../../admin/README.md) — full admin console documentation (tech stack, database conventions, deployment, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) — external API client SDKs (Python / PHP / Node.js / Go / Rust, five zero-dependency, copy-and-run)
 
 ## Translations (other languages)
 

@@ -1,4 +1,5 @@
 # 物流聚合平台实施规划
+<img src="diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 > 架构师规划文档 · 2026-08-27
 > 依据：`admin`（PHP webman 管理后台，已有 RBAC/JWT/加密/导出体系）+ `infrastructure`（Rust e-cat 框架，55+ crates 微服务全栈）+ `erikwang2013/global-logistics`（PHP 包，209 家承运商轨迹查询统一门面，本地位于 `/home/wwwroot/erikwang2013/global-logistics`）。

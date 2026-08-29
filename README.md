@@ -2,6 +2,8 @@
 
 全球物流轨迹查询的一站式平台：**admin 管理后台**（PHP webman + Flutter）承载管理面与查询 worker 池，**e-cat 高频网关**（Rust 常驻进程）扛住查询流量，**global-logistics 统一门面**（209 家承运商 PHP 适配器）一条入口查遍全球。
 
+<img src="docs/diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
+
 > 支持语言：[[English / 英语]](docs/translations/en/README.md) · [[한국어 / 韩语]](docs/translations/ko/README.md) · [[Русский / 俄语]](docs/translations/ru/README.md) · [[Deutsch / 德语]](docs/translations/de/README.md) · [[Français / 法语]](docs/translations/fr/README.md) · [[Español / 西班牙语]](docs/translations/es/README.md) · [[Português / 葡萄牙语]](docs/translations/pt/README.md) · [[हिन्दी / 印地语]](docs/translations/hi/README.md) · [[العربية / 阿拉伯语]](docs/translations/ar/README.md) · [[বাংলা / 孟加拉语]](docs/translations/bn/README.md) · [[Bahasa Indonesia / 印尼语]](docs/translations/id/README.md) · [[日本語 / 日语]](docs/translations/ja/README.md)（[跳到翻译](#翻译)）
 
 ## 项目介绍

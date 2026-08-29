@@ -1,4 +1,5 @@
 # লজিস্টিক অ্যাগ্রিগেশন প্ল্যাটফর্ম (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 বিশ্বব্যাপী লজিস্টিক ট্র্যাকিং কুয়েরির এক-স্টপ প্ল্যাটফর্ম：**admin ম্যানেজমেন্ট ব্যাকএন্ড** (PHP webman + Flutter) ব্যবস্থাপনা পৃষ্ঠা ও কুয়েরি ওয়ার্কার পুল বহন করে, **e-cat উচ্চ-ফ্রিকোয়েন্সি গেটওয়ে** (Rust স্থায়ী প্রসেস) কুয়েরি ট্রাফিক সামলায়, আর **global-logistics ইউনিফাইড ফেসেড** (২০৯টি ক্যারিয়ারের PHP অ্যাডাপ্টার) একটি প্রবেশপথে সারা বিশ্বে খোঁজ করে।
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-প্রতিটি ভাষায় ব্যবহার ও উদাহরণের জন্য [sdk/README.md](sdk/README.md) দেখুন।
+প্রতিটি ভাষায় ব্যবহার ও উদাহরণের জন্য [sdk/README.md](../../../sdk/README.md) দেখুন।
 
-বিস্তারিত ডিপ্লয়ের জন্য দেখুন [admin/README.md](admin/README.md)（Docker Compose-এ ৫টি সার্ভিস সাজানো：Nginx / PHP / MySQL / Redis / Elasticsearch）এবং ইমপ্লিমেন্টেশন প্ল্যান ডকুমেন্ট।
+বিস্তারিত ডিপ্লয়ের জন্য দেখুন [admin/README.md](../../../admin/README.md)（Docker Compose-এ ৫টি সার্ভিস সাজানো：Nginx / PHP / MySQL / Redis / Elasticsearch）এবং ইমপ্লিমেন্টেশন প্ল্যান ডকুমেন্ট।
 
 ## ডকুমেন্টেশন
 
-- [admin/docs/API.md](admin/docs/API.md) —— API রেফারেন্স (ইউনিফাইড রেসপন্স ফরম্যাট, এরর কোড, অথেনটিকেশন ফ্লো, রেট লিমিট পলিসি, মিডলওয়্যার চেইন)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) —— আর্কিটেকচার ডিজাইন
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) —— ডিজাইন ডকুমেন্ট
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— সিকিউরিটি আর্কিটেকচার
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— প্ল্যাটফর্ম ইমপ্লিমেন্টেশন প্ল্যান (আর্কিটেকচার, ডেটা ফ্লো, ডেটাবেস ডিজাইন, API কন্ট্রাক্ট, মাইলস্টোন)
-- [admin/README.md](admin/README.md) —— অ্যাডমিন ব্যাকএন্ডের সম্পূর্ণ ব্যাখ্যা (টেক স্ট্যাক, ডেটাবেস নিয়ম, ডিপ্লয়, CI/CD)
-- [sdk/README.md](sdk/README.md) —— বাহ্যিক API ক্লায়েন্ট SDK (Python / PHP / Node.js / Go / Rust, পাঁচটি জিরো-ডিপেন্ডেন্সি, কপি করে চালান)
+- [admin/docs/API.md](../../../admin/docs/API.md) —— API রেফারেন্স (ইউনিফাইড রেসপন্স ফরম্যাট, এরর কোড, অথেনটিকেশন ফ্লো, রেট লিমিট পলিসি, মিডলওয়্যার চেইন)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) —— আর্কিটেকচার ডিজাইন
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) —— ডিজাইন ডকুমেন্ট
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) —— সিকিউরিটি আর্কিটেকচার
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) —— প্ল্যাটফর্ম ইমপ্লিমেন্টেশন প্ল্যান (আর্কিটেকচার, ডেটা ফ্লো, ডেটাবেস ডিজাইন, API কন্ট্রাক্ট, মাইলস্টোন)
+- [admin/README.md](../../../admin/README.md) —— অ্যাডমিন ব্যাকএন্ডের সম্পূর্ণ ব্যাখ্যা (টেক স্ট্যাক, ডেটাবেস নিয়ম, ডিপ্লয়, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) —— বাহ্যিক API ক্লায়েন্ট SDK (Python / PHP / Node.js / Go / Rust, পাঁচটি জিরো-ডিপেন্ডেন্সি, কপি করে চালান)
 
 ## Translations（অন্যান্য ভাষা）
 

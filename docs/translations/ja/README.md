@@ -1,4 +1,5 @@
 # 物流統合プラットフォーム（Integrated Global Logistics）
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 世界の物流追跡クエリを一元的に扱うワンストッププラットフォーム：**admin 管理バックエンド**（PHP webman + Flutter）が管理面とクエリ worker プールを担い、**e-cat 高頻度ゲートウェイ**（Rust 常駐プロセス）がクエリトラフィックを支え、**global-logistics 統一ファサード**（209 社の運送会社 PHP アダプター）が一つの入口で全世界を検索します。
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-各言語の使い方と例は [sdk/README.md](sdk/README.md) を参照してください。
+各言語の使い方と例は [sdk/README.md](../../../sdk/README.md) を参照してください。
 
-詳細なデプロイは [admin/README.md](admin/README.md)（Docker Compose で 5 サービスを編成：Nginx / PHP / MySQL / Redis / Elasticsearch）と実装計画ドキュメントを参照してください。
+詳細なデプロイは [admin/README.md](../../../admin/README.md)（Docker Compose で 5 サービスを編成：Nginx / PHP / MySQL / Redis / Elasticsearch）と実装計画ドキュメントを参照してください。
 
 ## ドキュメント
 
-- [admin/docs/API.md](admin/docs/API.md) —— API リファレンス（統一レスポンス形式、エラーコード、認証フロー、レート制限ポリシー、ミドルウェアチェーン）
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) —— アーキテクチャ設計
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) —— 設計ドキュメント
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— セキュリティアーキテクチャ
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— プラットフォーム実装計画（アーキテクチャ、データフロー、データベース設計、API 契約、マイルストーン）
-- [admin/README.md](admin/README.md) —— 管理バックエンド完全解説（技術スタック、データベース規約、デプロイ、CI/CD）
-- [sdk/README.md](sdk/README.md) —— 外部 API クライアント SDK（Python / PHP / Node.js / Go / Rust、5 つすべて依存なし、コピーしてすぐ使える）
+- [admin/docs/API.md](../../../admin/docs/API.md) —— API リファレンス（統一レスポンス形式、エラーコード、認証フロー、レート制限ポリシー、ミドルウェアチェーン）
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) —— アーキテクチャ設計
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) —— 設計ドキュメント
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) —— セキュリティアーキテクチャ
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) —— プラットフォーム実装計画（アーキテクチャ、データフロー、データベース設計、API 契約、マイルストーン）
+- [admin/README.md](../../../admin/README.md) —— 管理バックエンド完全解説（技術スタック、データベース規約、デプロイ、CI/CD）
+- [sdk/README.md](../../../sdk/README.md) —— 外部 API クライアント SDK（Python / PHP / Node.js / Go / Rust、5 つすべて依存なし、コピーしてすぐ使える）
 
 ## Translations（他の言語）
 

@@ -1,8 +1,9 @@
 # लॉजिस्टिक्स एग्रीगेशन प्लेटफ़ॉर्म (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 वैश्विक लॉजिस्टिक्स ट्रैकिंग के लिए वन-स्टॉप प्लेटफ़ॉर्म: **admin प्रशासन पैनल** (PHP webman + Flutter) प्रबंधन और क्वेरी वर्कर पूल संभालता है, **e-cat हाई-फ़्रीक्वेंसी गेटवे** (Rust रेज़िडेंट प्रोसेस) क्वेरी ट्रैफ़िक झेलता है, और **global-logistics यूनिफाइड फ़ेसड** (209 कैरियर्स के PHP एडेप्टर) एक ही एंट्री से पूरी दुनिया में क्वेरी करता है।
 
-> भाषाएँ: [[English]](docs/translations/en/README.md) · [[한국어]](docs/translations/ko/README.md) · [[Русский]](docs/translations/ru/README.md) · [[Deutsch]](docs/translations/de/README.md) · [[Français]](docs/translations/fr/README.md) · [[Español]](docs/translations/es/README.md) · [[Português]](docs/translations/pt/README.md) · [[हिन्दी]](docs/translations/hi/README.md) · [[العربية]](docs/translations/ar/README.md) · [[বাংলা]](docs/translations/bn/README.md) · [[Bahasa Indonesia]](docs/translations/id/README.md) · [[日本語]](docs/translations/ja/README.md)（[अनुवाद देखें](#अनुवाद)）
+> भाषाएँ: [[English]](/docs/translations/en/README.md) · [[한국어]](/docs/translations/ko/README.md) · [[Русский]](/docs/translations/ru/README.md) · [[Deutsch]](/docs/translations/de/README.md) · [[Français]](/docs/translations/fr/README.md) · [[Español]](/docs/translations/es/README.md) · [[Português]](/docs/translations/pt/README.md) · [[हिन्दी]](/docs/translations/hi/README.md) · [[العربية]](/docs/translations/ar/README.md) · [[বাংলা]](/docs/translations/bn/README.md) · [[Bahasa Indonesia]](/docs/translations/id/README.md) · [[日本語]](/docs/translations/ja/README.md)（[अनुवाद देखें](#अनुवाद)）
 
 ## परियोजना परिचय
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-प्रत्येक भाषा में उपयोग और उदाहरण के लिए [sdk/README.md](sdk/README.md) देखें।
+प्रत्येक भाषा में उपयोग और उदाहरण के लिए [sdk/README.md](../../../sdk/README.md) देखें।
 
-विस्तृत डिप्लॉयमेंट के लिए देखें [admin/README.md](admin/README.md) (Docker Compose 5 सेवाएँ चलाता है: Nginx / PHP / MySQL / Redis / Elasticsearch) और कार्यान्वयन योजना दस्तावेज़।
+विस्तृत डिप्लॉयमेंट के लिए देखें [admin/README.md](../../../admin/README.md) (Docker Compose 5 सेवाएँ चलाता है: Nginx / PHP / MySQL / Redis / Elasticsearch) और कार्यान्वयन योजना दस्तावेज़।
 
 ## दस्तावेज़
 
-- [admin/docs/API.md](admin/docs/API.md) — API संदर्भ (यूनिफाइड रिस्पॉन्स फ़ॉर्मेट, एरर कोड, प्रमाणीकरण फ़्लो, रेट लिमिट नीतियाँ, मिडलवेयर चेन)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) — आर्किटेक्चर डिज़ाइन
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) — डिज़ाइन दस्तावेज़
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — सुरक्षा आर्किटेक्चर
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — प्लेटफ़ॉर्म कार्यान्वयन योजना (आर्किटेक्चर, डेटा फ़्लो, डेटाबेस डिज़ाइन, API कॉन्ट्रैक्ट, माइलस्टोन)
-- [admin/README.md](admin/README.md) — प्रशासन पैनल की पूरी जानकारी (टेक स्टैक, डेटाबेस मानक, डिप्लॉयमेंट, CI/CD)
-- [sdk/README.md](sdk/README.md) — बाहरी API क्लाइंट SDK (Python / PHP / Node.js / Go / Rust, पाँचों शून्य-निर्भरता, कॉपी करके चलाएँ)
+- [admin/docs/API.md](../../../admin/docs/API.md) — API संदर्भ (यूनिफाइड रिस्पॉन्स फ़ॉर्मेट, एरर कोड, प्रमाणीकरण फ़्लो, रेट लिमिट नीतियाँ, मिडलवेयर चेन)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) — आर्किटेक्चर डिज़ाइन
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) — डिज़ाइन दस्तावेज़
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) — सुरक्षा आर्किटेक्चर
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) — प्लेटफ़ॉर्म कार्यान्वयन योजना (आर्किटेक्चर, डेटा फ़्लो, डेटाबेस डिज़ाइन, API कॉन्ट्रैक्ट, माइलस्टोन)
+- [admin/README.md](../../../admin/README.md) — प्रशासन पैनल की पूरी जानकारी (टेक स्टैक, डेटाबेस मानक, डिप्लॉयमेंट, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) — बाहरी API क्लाइंट SDK (Python / PHP / Node.js / Go / Rust, पाँचों शून्य-निर्भरता, कॉपी करके चलाएँ)
 
 ## अनुवाद
 

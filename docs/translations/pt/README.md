@@ -1,8 +1,9 @@
 # Plataforma de Logística Integrada (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 Plataforma tudo-em-um para consulta de rastreio logístico global: o **painel admin** (PHP webman + Flutter) cuida da gestão e do pool de workers de consulta, o **gateway de alta frequência e-cat** (processo residente em Rust) absorve o tráfego de consultas, e a **fachada unificada global-logistics** (adaptadores PHP de 209 transportadoras) consulta o mundo inteiro por um único ponto de entrada.
 
-> Idiomas: [[English]](docs/translations/en/README.md) · [[한국어]](docs/translations/ko/README.md) · [[Русский]](docs/translations/ru/README.md) · [[Deutsch]](docs/translations/de/README.md) · [[Français]](docs/translations/fr/README.md) · [[Español]](docs/translations/es/README.md) · [[Português]](docs/translations/pt/README.md) · [[हिन्दी]](docs/translations/hi/README.md) · [[العربية]](docs/translations/ar/README.md) · [[বাংলা]](docs/translations/bn/README.md) · [[Bahasa Indonesia]](docs/translations/id/README.md) · [[日本語]](docs/translations/ja/README.md)（[Ir para as traduções](#traduções)）
+> Idiomas: [[English]](/docs/translations/en/README.md) · [[한국어]](/docs/translations/ko/README.md) · [[Русский]](/docs/translations/ru/README.md) · [[Deutsch]](/docs/translations/de/README.md) · [[Français]](/docs/translations/fr/README.md) · [[Español]](/docs/translations/es/README.md) · [[Português]](/docs/translations/pt/README.md) · [[हिन्दी]](/docs/translations/hi/README.md) · [[العربية]](/docs/translations/ar/README.md) · [[বাংলা]](/docs/translations/bn/README.md) · [[Bahasa Indonesia]](/docs/translations/id/README.md) · [[日本語]](/docs/translations/ja/README.md)（[Ir para as traduções](#traduções)）
 
 ## Introdução
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-Consulte [sdk/README.md](sdk/README.md) para uso e exemplos em cada idioma.
+Consulte [sdk/README.md](../../../sdk/README.md) para uso e exemplos em cada idioma.
 
-Para detalhes de implantação, consulte [admin/README.md](admin/README.md) (Docker Compose orquestra 5 serviços: Nginx / PHP / MySQL / Redis / Elasticsearch) e o documento de planejamento da implementação.
+Para detalhes de implantação, consulte [admin/README.md](../../../admin/README.md) (Docker Compose orquestra 5 serviços: Nginx / PHP / MySQL / Redis / Elasticsearch) e o documento de planejamento da implementação.
 
 ## Documentação
 
-- [admin/docs/API.md](admin/docs/API.md) — referência da API (formato de resposta unificado, códigos de erro, fluxo de autenticação, políticas de rate limit, cadeia de middlewares)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) — design de arquitetura
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) — documento de design
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — arquitetura de segurança
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — planejamento da implementação da plataforma (arquitetura, fluxo de dados, design do banco, contratos da API, marcos)
-- [admin/README.md](admin/README.md) — documentação completa do painel (stack tecnológico, padrões de banco, implantação, CI/CD)
-- [sdk/README.md](sdk/README.md) — SDKs de cliente da API externa (Python / PHP / Node.js / Go / Rust, cinco sem dependências, copiar e usar)
+- [admin/docs/API.md](../../../admin/docs/API.md) — referência da API (formato de resposta unificado, códigos de erro, fluxo de autenticação, políticas de rate limit, cadeia de middlewares)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) — design de arquitetura
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) — documento de design
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) — arquitetura de segurança
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) — planejamento da implementação da plataforma (arquitetura, fluxo de dados, design do banco, contratos da API, marcos)
+- [admin/README.md](../../../admin/README.md) — documentação completa do painel (stack tecnológico, padrões de banco, implantação, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) — SDKs de cliente da API externa (Python / PHP / Node.js / Go / Rust, cinco sem dependências, copiar e usar)
 
 ## Traduções
 

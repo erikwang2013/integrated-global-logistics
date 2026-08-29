@@ -1,4 +1,5 @@
 # Platform Logistik Terpadu (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 Platform satu pintu untuk penelusuran logistik global: **admin backend** (PHP webman + Flutter) menangani sisi manajemen dan kumpulan worker query, **gateway frekuensi tinggi e-cat** (proses menetap Rust) menopang trafik query, dan **facade terpadu global-logistics** (209 adapter PHP operator) menelusuri seluruh dunia lewat satu pintu masuk.
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-Lihat [sdk/README.md](sdk/README.md) untuk penggunaan dan contoh dalam setiap bahasa.
+Lihat [sdk/README.md](../../../sdk/README.md) untuk penggunaan dan contoh dalam setiap bahasa.
 
-Deploy detail lihat [admin/README.md](admin/README.md)（Docker Compose mengatur 5 layanan: Nginx / PHP / MySQL / Redis / Elasticsearch）dan dokumen rencana implementasi.
+Deploy detail lihat [admin/README.md](../../../admin/README.md)（Docker Compose mengatur 5 layanan: Nginx / PHP / MySQL / Redis / Elasticsearch）dan dokumen rencana implementasi.
 
 ## Dokumentasi
 
-- [admin/docs/API.md](admin/docs/API.md) —— Referensi API (format respons terpadu, kode error, alur autentikasi, kebijakan rate limit, rantai middleware)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) —— Desain arsitektur
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) —— Dokumen desain
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— Arsitektur keamanan
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— Rencana implementasi platform (arsitektur, alur data, desain database, kontrak API, milestone)
-- [admin/README.md](admin/README.md) —— Penjelasan lengkap admin backend (stack teknologi, standar database, deploy, CI/CD)
-- [sdk/README.md](sdk/README.md) —— SDK klien API eksternal (Python / PHP / Node.js / Go / Rust, lima tanpa dependensi, salin lalu jalankan)
+- [admin/docs/API.md](../../../admin/docs/API.md) —— Referensi API (format respons terpadu, kode error, alur autentikasi, kebijakan rate limit, rantai middleware)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) —— Desain arsitektur
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) —— Dokumen desain
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) —— Arsitektur keamanan
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) —— Rencana implementasi platform (arsitektur, alur data, desain database, kontrak API, milestone)
+- [admin/README.md](../../../admin/README.md) —— Penjelasan lengkap admin backend (stack teknologi, standar database, deploy, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) —— SDK klien API eksternal (Python / PHP / Node.js / Go / Rust, lima tanpa dependensi, salin lalu jalankan)
 
 ## Translations（Bahasa Lain）
 

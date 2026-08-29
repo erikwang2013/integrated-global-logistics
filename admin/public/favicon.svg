@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="156 55 200 250">
+  <!-- 雷达信号背景 -->
+  <circle cx="256" cy="256" r="244" fill="#F0F6FF"/>
+  <circle cx="256" cy="256" r="196" fill="none" stroke="#DCE8FB" stroke-width="3" stroke-dasharray="12 10"/>
+  <circle cx="256" cy="256" r="150" fill="none" stroke="#E7F0FD" stroke-width="2.5"/>
+  <path d="M256,256 L256,86 A170,170 0 0 1 403,206 Z" fill="#2B5CD9" fill-opacity="0.06"/>
+
+  <!-- 尾巴 -->
+  <path d="M142,428 C96,436 78,404 82,372 C85,348 104,338 118,340"
+        stroke="#FF8A3D" stroke-width="20" stroke-linecap="round" fill="none"/>
+
+  <!-- 脚 -->
+  <ellipse cx="206" cy="466" rx="34" ry="15" fill="#FF8A3D"/>
+  <ellipse cx="306" cy="466" rx="34" ry="15" fill="#FF8A3D"/>
+
+  <!-- 身体 -->
+  <path d="M138,296 C140,258 196,240 256,240 C316,240 372,258 374,296
+           L372,420 C371,452 322,462 256,462 C190,462 141,452 140,420 Z"
+        fill="#2B5CD9"/>
+  <!-- 肚皮 -->
+  <ellipse cx="256" cy="398" rx="88" ry="52" fill="#3F6BE0"/>
+
+  <!-- 手臂（捧包裹） -->
+  <path d="M150,322 C134,356 156,386 186,396" stroke="#2B5CD9" stroke-width="26" stroke-linecap="round" fill="none"/>
+  <path d="M362,322 C378,356 356,386 326,396" stroke="#2B5CD9" stroke-width="26" stroke-linecap="round" fill="none"/>
+
+  <!-- 包裹 -->
+  <rect x="192" y="336" width="128" height="92" rx="10" fill="#D9A05B"/>
+  <rect x="244" y="336" width="24" height="92" fill="#F7E3C1"/>
+  <rect x="192" y="368" width="128" height="20" fill="#F7E3C1"/>
+  <!-- 条形码 -->
+  <rect x="206" y="352" width="8" height="26" fill="#8A5A2B"/>
+  <rect x="218" y="352" width="4" height="26" fill="#8A5A2B"/>
+  <rect x="226" y="352" width="8" height="26" fill="#8A5A2B"/>
+
+  <!-- 耳朵 -->
+  <path d="M176,150 L208,74 L246,128 Z" fill="#FF8A3D"/>
+  <path d="M336,150 L304,74 L266,128 Z" fill="#FF8A3D"/>
+  <path d="M188,142 L212,90 L234,128 Z" fill="#FFD9B8"/>
+  <path d="M324,142 L300,90 L278,128 Z" fill="#FFD9B8"/>
+
+  <!-- 头 -->
+  <circle cx="256" cy="192" r="90" fill="#FF8A3D"/>
+
+  <!-- 追踪雷达帽 -->
+  <path d="M172,180 Q172,128 256,124 Q340,128 340,180 Z" fill="#2B5CD9"/>
+  <rect x="156" y="172" width="200" height="22" rx="11" fill="#2349B0"/>
+  <circle cx="256" cy="148" r="15" fill="#FFFFFF"/>
+  <text x="256" y="148" text-anchor="middle" dominant-baseline="central"
+        font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2B5CD9">E</text>
+  <!-- 天线与信号波 -->
+  <line x1="256" y1="124" x2="256" y2="88" stroke="#26324B" stroke-width="4"/>
+  <circle cx="256" cy="82" r="8" fill="#FF8A3D"/>
+  <path d="M274,70 A30,30 0 0 1 274,94" stroke="#FF8A3D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M284,62 A44,44 0 0 1 284,102" stroke="#FF8A3D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+  <!-- 眼睛 -->
+  <circle cx="220" cy="196" r="11" fill="#26324B"/>
+  <circle cx="292" cy="196" r="11" fill="#26324B"/>
+  <circle cx="224" cy="192" r="4" fill="#FFFFFF"/>
+  <circle cx="296" cy="192" r="4" fill="#FFFFFF"/>
+  <!-- 腮红 -->
+  <ellipse cx="198" cy="214" rx="12" ry="7" fill="#FFB4A8" fill-opacity="0.8"/>
+  <ellipse cx="314" cy="214" rx="12" ry="7" fill="#FFB4A8" fill-opacity="0.8"/>
+  <!-- 嘴 -->
+  <path d="M236,224 Q256,240 276,224" stroke="#26324B" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+  <!-- 胡须 -->
+  <path d="M172,206 L134,198" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+  <path d="M172,218 L136,224" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+  <path d="M340,206 L378,198" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+  <path d="M340,218 L376,224" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- 水印 -->
+  <text x="344" y="298" text-anchor="end" font-family="Arial, sans-serif" font-size="11"
+        fill="#1B2A4A" fill-opacity="0.35">erik.xyz</text>
+</svg>

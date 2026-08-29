@@ -1,4 +1,5 @@
 # 물류 통합 플랫폼 (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 전 세계 물류 배송 추적을 위한 원스톱 플랫폼: **admin 관리 콘솔**(PHP webman + Flutter)이 관리면과 조회 worker 풀을 담당하고, **e-cat 고빈도 게이트웨이**(Rust 상주 프로세스)가 조회 트래픽을 처리하며, **global-logistics 통합 파사드**(209개 운송사 PHP 어댑터)로 하나의 진입점에서 전 세계를 조회합니다.
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-각 언어 사용법과 예시는 [sdk/README.md](sdk/README.md)를 참조하세요.
+각 언어 사용법과 예시는 [sdk/README.md](../../../sdk/README.md)를 참조하세요.
 
-자세한 배포는 [admin/README.md](admin/README.md)(Docker Compose로 Nginx / PHP / MySQL / Redis / Elasticsearch 5개 서비스 오케스트레이션)와 구현 계획 문서를 참조하세요.
+자세한 배포는 [admin/README.md](../../../admin/README.md)(Docker Compose로 Nginx / PHP / MySQL / Redis / Elasticsearch 5개 서비스 오케스트레이션)와 구현 계획 문서를 참조하세요.
 
 ## 문서
 
-- [admin/docs/API.md](admin/docs/API.md) — API 참조(통합 응답 형식, 오류 코드, 인증 흐름, 속도 제한 정책, 미들웨어 체인)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) — 아키텍처 설계
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) — 설계 문서
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — 보안 아키텍처
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — 플랫폼 구현 계획(아키텍처, 데이터 흐름, 데이터베이스 설계, API 계약, 마일스톤)
-- [admin/README.md](admin/README.md) — 관리 콘솔 전체 설명(기술 스택, 데이터베이스 규칙, 배포, CI/CD)
-- [sdk/README.md](sdk/README.md) — 외부 API 클라이언트 SDK (Python / PHP / Node.js / Go / Rust, 5개 전부 제로 의존성, 복사 후 바로 사용)
+- [admin/docs/API.md](../../../admin/docs/API.md) — API 참조(통합 응답 형식, 오류 코드, 인증 흐름, 속도 제한 정책, 미들웨어 체인)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) — 아키텍처 설계
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) — 설계 문서
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) — 보안 아키텍처
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) — 플랫폼 구현 계획(아키텍처, 데이터 흐름, 데이터베이스 설계, API 계약, 마일스톤)
+- [admin/README.md](../../../admin/README.md) — 관리 콘솔 전체 설명(기술 스택, 데이터베이스 규칙, 배포, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) — 외부 API 클라이언트 SDK (Python / PHP / Node.js / Go / Rust, 5개 전부 제로 의존성, 복사 후 바로 사용)
 
 ## 번역(기타 언어)
 

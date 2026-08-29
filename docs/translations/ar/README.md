@@ -1,8 +1,9 @@
 # منصة تجميع اللوجستيات (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 منصة شاملة للاستعلام عن تتبع الشحنات عالميًا: **لوحة الإدارة admin** (PHP webman + Flutter) تتولى جانب الإدارة ومجموعة عمال الاستعلام، **البوابة عالية التردد e-cat** (عملية مقيمة بلغة Rust) تتحمل حركة الاستعلامات، و**الواجهة الموحدة global-logistics** (محولات PHP لـ 209 شركات شحن) تستعلم عن العالم كله عبر مدخل واحد.
 
-> اللغات: [[English]](docs/translations/en/README.md) · [[한국어]](docs/translations/ko/README.md) · [[Русский]](docs/translations/ru/README.md) · [[Deutsch]](docs/translations/de/README.md) · [[Français]](docs/translations/fr/README.md) · [[Español]](docs/translations/es/README.md) · [[Português]](docs/translations/pt/README.md) · [[हिन्दी]](docs/translations/hi/README.md) · [[العربية]](docs/translations/ar/README.md) · [[বাংলা]](docs/translations/bn/README.md) · [[Bahasa Indonesia]](docs/translations/id/README.md) · [[日本語]](docs/translations/ja/README.md)（[انتقل إلى الترجمات](#الترجمات)）
+> اللغات: [[English]](/docs/translations/en/README.md) · [[한국어]](/docs/translations/ko/README.md) · [[Русский]](/docs/translations/ru/README.md) · [[Deutsch]](/docs/translations/de/README.md) · [[Français]](/docs/translations/fr/README.md) · [[Español]](/docs/translations/es/README.md) · [[Português]](/docs/translations/pt/README.md) · [[हिन्दी]](/docs/translations/hi/README.md) · [[العربية]](/docs/translations/ar/README.md) · [[বাংলা]](/docs/translations/bn/README.md) · [[Bahasa Indonesia]](/docs/translations/id/README.md) · [[日本語]](/docs/translations/ja/README.md)（[انتقل إلى الترجمات](#الترجمات)）
 
 ## مقدمة المشروع
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-راجع [sdk/README.md](sdk/README.md) للاستخدام والأمثلة بكل لغة.
+راجع [sdk/README.md](../../../sdk/README.md) للاستخدام والأمثلة بكل لغة.
 
-للنشر التفصيلي انظر [admin/README.md](admin/README.md) (Docker Compose يدير 5 خدمات: Nginx / PHP / MySQL / Redis / Elasticsearch) ووثيقة خطة التنفيذ.
+للنشر التفصيلي انظر [admin/README.md](../../../admin/README.md) (Docker Compose يدير 5 خدمات: Nginx / PHP / MySQL / Redis / Elasticsearch) ووثيقة خطة التنفيذ.
 
 ## الوثائق
 
-- [admin/docs/API.md](admin/docs/API.md) — مرجع API (تنسيق استجابة موحد، أكواد الخطأ، مسار المصادقة، سياسات تحديد المعدل، سلسلة الوسائط)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) — تصميم البنية
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) — وثيقة التصميم
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — بنية الأمان
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — خطة تنفيذ المنصة (البنية، تدفق البيانات، تصميم قاعدة البيانات، عقود API، المراحل)
-- [admin/README.md](admin/README.md) — الوصف الكامل للوحة الإدارة (تقنيات، معايير قاعدة البيانات، النشر، CI/CD)
-- [sdk/README.md](sdk/README.md) — حزم SDK لعملاء الواجهة البرمجية الخارجية (Python / PHP / Node.js / Go / Rust، خمس حزم بلا تبعيات، انسخ وشغّل)
+- [admin/docs/API.md](../../../admin/docs/API.md) — مرجع API (تنسيق استجابة موحد، أكواد الخطأ، مسار المصادقة، سياسات تحديد المعدل، سلسلة الوسائط)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) — تصميم البنية
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) — وثيقة التصميم
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) — بنية الأمان
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) — خطة تنفيذ المنصة (البنية، تدفق البيانات، تصميم قاعدة البيانات، عقود API، المراحل)
+- [admin/README.md](../../../admin/README.md) — الوصف الكامل للوحة الإدارة (تقنيات، معايير قاعدة البيانات، النشر، CI/CD)
+- [sdk/README.md](../../../sdk/README.md) — حزم SDK لعملاء الواجهة البرمجية الخارجية (Python / PHP / Node.js / Go / Rust، خمس حزم بلا تبعيات، انسخ وشغّل)
 
 ## الترجمات
 

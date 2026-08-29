@@ -1,4 +1,5 @@
 # e-cat 查询网关 SDK
+<img src="../docs/diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 对外 API 客户端，五份零依赖 SDK：拷贝即用，无第三方包。
 

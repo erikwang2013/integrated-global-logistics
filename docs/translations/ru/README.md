@@ -1,4 +1,5 @@
 # Логистическая агрегационная платформа (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 Единая платформа для отслеживания мировой логистики: **админ-консоль admin** (PHP webman + Flutter) отвечает за управление и пул worker-процессов запросов, **высокочастотный шлюз e-cat** (постоянно работающий процесс на Rust) держит трафик запросов, а **единый фасад global-logistics** (PHP-адаптеры для 209 перевозчиков) позволяет запрашивать весь мир через одну точку входа.
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-Использование и примеры на каждом языке см. в [sdk/README.md](sdk/README.md).
+Использование и примеры на каждом языке см. в [sdk/README.md](../../../sdk/README.md).
 
-Подробное развёртывание — в [admin/README.md](admin/README.md) (Docker Compose оркестрирует 5 сервисов: Nginx / PHP / MySQL / Redis / Elasticsearch) и в документе плана реализации.
+Подробное развёртывание — в [admin/README.md](../../../admin/README.md) (Docker Compose оркестрирует 5 сервисов: Nginx / PHP / MySQL / Redis / Elasticsearch) и в документе плана реализации.
 
 ## Документация
 
-- [admin/docs/API.md](admin/docs/API.md) — справочник API (единый формат ответа, коды ошибок, процесс аутентификации, политики лимитов, цепочка мидлварей)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) — архитектурный дизайн
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) — дизайн-документ
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) — архитектура безопасности
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) — план реализации платформы (архитектура, потоки данных, дизайн БД, контракты API, вехи)
-- [admin/README.md](admin/README.md) — полное описание админ-консоли (технологический стек, правила БД, развёртывание, CI/CD)
-- [sdk/README.md](sdk/README.md) — клиентские SDK внешнего API (Python / PHP / Node.js / Go / Rust, пять без зависимостей, копируй и запускай)
+- [admin/docs/API.md](../../../admin/docs/API.md) — справочник API (единый формат ответа, коды ошибок, процесс аутентификации, политики лимитов, цепочка мидлварей)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) — архитектурный дизайн
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) — дизайн-документ
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) — архитектура безопасности
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) — план реализации платформы (архитектура, потоки данных, дизайн БД, контракты API, вехи)
+- [admin/README.md](../../../admin/README.md) — полное описание админ-консоли (технологический стек, правила БД, развёртывание, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) — клиентские SDK внешнего API (Python / PHP / Node.js / Go / Rust, пять без зависимостей, копируй и запускай)
 
 ## Переводы (другие языки)
 

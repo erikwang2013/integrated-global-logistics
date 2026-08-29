@@ -1,4 +1,5 @@
 # Plataforma logística (Integrated Global Logistics)
+<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
 Plataforma integral para la consulta del seguimiento logístico mundial: el **backend de administración admin** (PHP webman + Flutter) sostiene la interfaz de gestión y el pool de workers de consulta, la **pasarela de alta frecuencia e-cat** (proceso residente Rust) absorbe el tráfico de consultas, y la **fachada unificada global-logistics** (adaptadores PHP de 209 transportistas) consulta todo el mundo desde una sola entrada.
 
@@ -127,19 +128,19 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
   -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
 ```
 
-Consulte [sdk/README.md](sdk/README.md) para el uso y ejemplos en cada idioma.
+Consulte [sdk/README.md](../../../sdk/README.md) para el uso y ejemplos en cada idioma.
 
-Despliegue detallado: [admin/README.md](admin/README.md) (Docker Compose orquesta 5 servicios: Nginx / PHP / MySQL / Redis / Elasticsearch) y el documento de plan de implementación.
+Despliegue detallado: [admin/README.md](../../../admin/README.md) (Docker Compose orquesta 5 servicios: Nginx / PHP / MySQL / Redis / Elasticsearch) y el documento de plan de implementación.
 
 ## Documentación
 
-- [admin/docs/API.md](admin/docs/API.md) – referencia de API (formato de respuesta unificado, códigos de error, flujo de autenticación, estrategias de rate-limit, cadena de middlewares)
-- [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) – diseño de arquitectura
-- [admin/docs/DESIGN.md](admin/docs/DESIGN.md) – documento de diseño
-- [admin/docs/SECURITY.md](admin/docs/SECURITY.md) – arquitectura de seguridad
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) – plan de implementación de la plataforma (arquitectura, flujo de datos, diseño de base de datos, contratos API, hitos)
-- [admin/README.md](admin/README.md) – descripción completa del backend de administración (stack técnico, convenciones de base de datos, despliegue, CI/CD)
-- [sdk/README.md](sdk/README.md) – SDK de cliente de la API externa (Python / PHP / Node.js / Go / Rust, cinco sin dependencias, copiar y usar)
+- [admin/docs/API.md](../../../admin/docs/API.md) – referencia de API (formato de respuesta unificado, códigos de error, flujo de autenticación, estrategias de rate-limit, cadena de middlewares)
+- [admin/docs/ARCHITECTURE.md](../../../admin/docs/ARCHITECTURE.md) – diseño de arquitectura
+- [admin/docs/DESIGN.md](../../../admin/docs/DESIGN.md) – documento de diseño
+- [admin/docs/SECURITY.md](../../../admin/docs/SECURITY.md) – arquitectura de seguridad
+- [docs/logistics-aggregation-platform-plan.md](../../../docs/logistics-aggregation-platform-plan.md) – plan de implementación de la plataforma (arquitectura, flujo de datos, diseño de base de datos, contratos API, hitos)
+- [admin/README.md](../../../admin/README.md) – descripción completa del backend de administración (stack técnico, convenciones de base de datos, despliegue, CI/CD)
+- [sdk/README.md](../../../sdk/README.md) – SDK de cliente de la API externa (Python / PHP / Node.js / Go / Rust, cinco sin dependencias, copiar y usar)
 
 ## Traducciones (otros idiomas)
 
