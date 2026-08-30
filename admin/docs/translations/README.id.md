@@ -10,6 +10,9 @@ Sistem panel admin full-stack berbasis webman v2 + Flutter.
 
 ## Daftar Fitur
 
+<img src="../../../docs/diagrams/description.svg" alt="Daftar Fitur" width="100%">
+
+
 | Domain | Fitur | Keterangan |
 |--------|------|------|
 | 🔐 Autentikasi | Login/Refresh Token/Logout | Captcha klik + JWT + blacklist |

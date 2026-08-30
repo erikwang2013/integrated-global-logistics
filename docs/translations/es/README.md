@@ -104,6 +104,36 @@ Defensa en profundidad por capas, puntos clave:
 - **Seguridad CDN**（M12）：plan gratuito de Cloudflare — HTTPS completo + WAF de doble capa (reglas gestionadas en el borde + detección de capa de aplicación de pasarela); origen Tunnel sin exposición pública; callbacks por subdominio de solo DNS directo para no perder pedidos ante caída del CDN; limitación de velocidad por X-API-Key, independiente de las IP de borde del CDN; endpoints autenticados siempre no-store para evitar mezcla de caché entre usuarios;
 - **Gestión de credenciales CDN**（M13）：access_key / access_secret de los proveedores CDN cifrados con `Encryptable` en la tabla `logistics_cdn_provider`, configurados en `/admin/cdn/provider`;
 
+## Características
+
+<img src="diagrams/description.svg" alt="Características de la plataforma" width="100%">
+
+- **Consultas de seguimiento agregadas: un número de seguimiento en todo el mundo — 187 reglas de patrones detectan automáticamente el canal nacional/internacional y el transportista, 209 adaptadores unifican la salida en 7 estados estándar de `TrackStatus`;**
+- **Integración multicarrier: 45 adaptadores nacionales + 164 internacionales, cobertura total de DHL / FedEx / UPS / USPS y correos nacionales S10, credenciales cifradas, cero claves hardcodeadas;**
+- **RBAC del panel: JWT + lista negra + permisos granulares method.path + auditoría completa, filtro de seguridad bloquea XSS / inyección SQL / CSRF / inyección de comandos;**
+- **Ciclo de pago cerrado: Stripe / PayPal más USDT TRC20 / BEP20 / ERC20, verificación de firma webhook confirma pedidos automáticamente, métodos de pago vía configuración;**
+- **Portal de clientes y planes: API de registro / login / gestión de apps / planes / pedidos, X-API-Key configurado por el cliente, JWT de cliente aislado del admin;**
+- **Protección del gateway: autenticación API-Key, límite de tasa Redis (429), circuit breaker por transportista (503), protección SSRF, payloads de ataque bloqueados en el gateway;**
+- **Entrega segura por CDN: HTTPS de todo el sitio con Cloudflare gratis + WAF doble + caché perimetral, origen Tunnel sin exposición pública;**
+- **SDK multilingüe: cinco SDK sin dependencias para Python / PHP / Node.js / Go / Rust, copiar y ejecutar.**
+
+## Instalación en un clic
+
+Recomendado: despliegue con un solo comando con Docker Compose — inicia 5 servicios (Nginx / PHP / MySQL / Redis / Elasticsearch) con health checks y persistencia de datos:
+
+```bash
+bash install.sh
+```
+
+Tras clonar el repositorio:
+
+```bash
+cd integrated-global-logistics   # entrar en la raíz del proyecto
+bash install.sh                  # puerto 80 por defecto, sobrescribible con NGINX_PORT=8080
+```
+
+El script verifica el entorno Docker, inicia todos los servicios y sondea los health checks (máx. 120 segundos); luego abre `http://localhost/install` para completar el asistente (inicialización de la base de datos + creación del admin). Ver [admin/README.md](../../admin/README.md) para el despliegue detallado.
+
 ## Inicio rápido
 
 **admin Backend de administración** (PHP webman):

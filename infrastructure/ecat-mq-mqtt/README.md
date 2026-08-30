@@ -17,3 +17,15 @@ let mut stream = mq.subscribe("sensors/temp").await?;
 Implements `MessageQueue` from `ecat-mq`.
 
 **Notes:** publish uses QoS 0; each subscription gets its own connection (`<client_id>-sub<n>`) so slow consumers cannot stall each other; a keep-alive task drives the publisher's event loop.
+
+## Installation
+
+```bash
+cargo add ecat-mq-mqtt
+```
+
+## Features
+
+- Implements `MessageQueue` from `ecat-mq`
+- Publish / subscribe over MQTT via `rumqttc`
+- QoS 0 publish; dedicated connection per subscription so slow consumers cannot stall each other

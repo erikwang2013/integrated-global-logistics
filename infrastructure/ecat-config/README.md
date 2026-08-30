@@ -19,3 +19,16 @@ let mut cfg = Config::new();
 cfg.load(&FileSource::new("config.yaml")).await.unwrap();
 let value: String = cfg.get("key").unwrap();
 ```
+
+## Installation
+
+```bash
+cargo add ecat-config
+```
+
+## Features
+
+- `FileSource` — YAML/JSON config files
+- `EnvSource` — environment variables
+- `ObfuscatedSource` — XOR-obfuscated values in config files (obfuscation, not encryption)
+- Typed lookups via `Config::get<T>` after async `load`

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dashboard_controller.dart';
-import '../../i18n/translations.dart';
 
 class DashboardPage extends GetView<DashboardController> {
   const DashboardPage({super.key});
@@ -51,7 +50,16 @@ class DashboardPage extends GetView<DashboardController> {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(flex: 2, child: _buildDistributionChart(context)),
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    children: [
+                      _buildDistributionChart(context),
+                      const SizedBox(height: 24),
+                      _buildOrderChannelChart(context),
+                    ],
+                  ),
+                ),
                 const SizedBox(width: 24),
                 Expanded(flex: 3, child: _buildRecentLogs(context)),
               ],
@@ -75,7 +83,7 @@ class DashboardPage extends GetView<DashboardController> {
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
           ),
-          itemCount: 4,
+          itemCount: controller.stats.length,
           itemBuilder: (context, index) {
             final stat = controller.stats[index];
             final color = Color(int.parse('0xFF${stat['color'].replaceFirst('#', '')}'));
@@ -152,33 +160,37 @@ class DashboardPage extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildDistributionChart(BuildContext context) {
+  Widget _buildDistributionChart(BuildContext context) =>
+      _buildPieCard('用户状态分布', controller.pieSections);
+
+  Widget _buildOrderChannelChart(BuildContext context) =>
+      _buildPieCard('订单渠道分布', controller.orderChannelSections);
+
+  Widget _buildPieCard(String title, List<PieChartSectionData> sections) {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('用户状态分布', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             SizedBox(
               height: 200,
               child: PieChart(
                 PieChartData(
-                  sections: controller.pieSections,
+                  sections: sections,
                   centerSpaceRadius: 40,
                   sectionsSpace: 2,
                 ),
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildLegend(const Color(0xFF1677FF), '启用'),
-                const SizedBox(width: 24),
-                _buildLegend(const Color(0xFF52C41A), '禁用'),
-              ],
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [for (final s in sections) _buildLegend(s.color, s.title)],
             ),
           ],
         ),
@@ -246,6 +258,10 @@ class DashboardPage extends GetView<DashboardController> {
       case 'people': return Icons.people;
       case 'person_add': return Icons.person_add;
       case 'bolt': return Icons.bolt;
+      case 'query_stats':
+      case 'search': return Icons.search;
+      case 'payments':
+      case 'pay-circle': return Icons.payments;
       default: return Icons.description;
     }
   }

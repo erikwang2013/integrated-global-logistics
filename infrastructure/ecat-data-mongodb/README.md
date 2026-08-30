@@ -19,3 +19,16 @@ let deleted = client.delete("users", &json!({"name": "erik"})).await?;
 Implements `DocumentClient` from `ecat-data`. Documents are passed as `serde_json::Value` and converted to BSON internally.
 
 **Notes:** TLS is configured through the connection string (`mongodb+srv://` or `tls=true`); the `tls` config field is reserved for future use.
+
+## Installation
+
+```bash
+cargo add ecat-data-mongodb
+```
+
+## Features
+
+- Implements `DocumentClient` from `ecat-data`
+- `insert` / `find` / `update` / `delete` over collections
+- Documents passed as `serde_json::Value`, converted to BSON internally
+- Powered by the official `mongodb` driver; TLS via connection string (`mongodb+srv://` or `tls=true`)

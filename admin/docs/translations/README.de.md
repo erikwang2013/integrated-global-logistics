@@ -10,6 +10,9 @@ Ein Full-Stack-Administrations-Backend auf Basis von webman v2 + Flutter.
 
 ## Funktionsübersicht
 
+<img src="../../../docs/diagrams/description.svg" alt="Funktionsübersicht" width="100%">
+
+
 | Geschäftsbereich | Funktion | Beschreibung |
 |--------|------|------|
 | 🔐 Authentifizierung | Login/Token-Erneuerung/Logout | Klick-Captcha + JWT + Blacklist |

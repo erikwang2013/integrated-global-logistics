@@ -106,6 +106,36 @@ integrated-global-logistics/
 - **CDN 凭证加密管理**（M13）：CDN 服务商 access_key / access_secret 经 `Encryptable` 加密存储于 `logistics_cdn_provider` 表，管理面 `/admin/cdn/provider` 配置；
 - **统一错误语义**：限流 429、熔断 503、承运商错误 `carrier_error`，不向客户端泄露内部细节。
 
+## 功能清单
+
+<img src="docs/diagrams/description.svg" alt="平台功能" width="100%">
+
+- **轨迹聚合查询**：一个单号查遍全球 —— 187 条单号规则自动识别国内 / 国际通道与承运商，209 家承运商适配器统一输出 `TrackStatus` 7 种标准状态；
+- **多承运商接入**：国内 45 + 国际 164 家适配器，DHL / FedEx / UPS / USPS 与各国邮政 S10 全覆盖，凭证加密落库、密钥零硬编码；
+- **管理后台 RBAC**：JWT + 黑名单 + method.path 粒度权限 + 全链路操作审计，安全过滤拦截 XSS / SQL 注入 / CSRF / 命令注入；
+- **支付闭环**：Stripe / PayPal 双渠道 + USDT TRC20 / BEP20 / ERC20 虚拟币，webhook 验签自动确认订单，支付方式配置即生效；
+- **客户端门户与套餐**：注册 / 登录 / 应用管理 / 套餐 / 订单 API，X-API-Key 客户端自设，client JWT 与 admin 完全隔离；
+- **API 网关防护**：API-Key 鉴权、Redis 限流（429）、按承运商熔断（503）、防 SSRF，攻击载荷在网关层即被拦截；
+- **CDN 安全分发**：Cloudflare 免费版全站 HTTPS + 双层 WAF + 边缘缓存，Tunnel 回源源站零公网暴露；
+- **多语言 SDK**：Python / PHP / Node.js / Go / Rust 五份零依赖 SDK，拷贝即用。
+
+## 一键安装
+
+推荐使用 Docker Compose 一键部署 —— 一条命令启动 5 个服务（Nginx / PHP / MySQL / Redis / Elasticsearch），含健康检查与数据持久化：
+
+```bash
+bash install.sh
+```
+
+克隆仓库后按以下步骤执行：
+
+```bash
+cd integrated-global-logistics   # 进入项目根目录
+bash install.sh                  # 默认对外端口 80，可用 NGINX_PORT=8080 覆盖
+```
+
+脚本自动检查 Docker 环境、启动全部服务并轮询健康检查（最多 120 秒）；就绪后访问 `http://localhost/install` 完成安装向导（数据库初始化 + 管理员创建）。Docker Compose 详细部署见 [admin/README.md](admin/README.md)。
+
 ## 快速开始
 
 **admin 管理后台**（PHP webman）：

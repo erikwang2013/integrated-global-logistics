@@ -12,3 +12,15 @@ let mut stream = mq.subscribe("orders.created").await?;
 Implements `MessageQueue` from `ecat-mq`.
 
 **Notes:** NATS subjects map directly to topics; `subscribe` returns a live `Subscription` stream (no delivery acknowledgements, per NATS semantics).
+
+## Installation
+
+```bash
+cargo add ecat-mq-nats
+```
+
+## Features
+
+- Implements `MessageQueue` from `ecat-mq`
+- NATS subjects map directly to topics
+- Live `Subscription` stream, no delivery acknowledgements (NATS semantics)

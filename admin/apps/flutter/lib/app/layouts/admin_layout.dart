@@ -12,6 +12,7 @@ import '../pages/role/role_list_page.dart';
 import '../pages/config/config_page.dart';
 import '../pages/log/log_page.dart';
 import '../pages/dashboard/dashboard_page.dart';
+import '../pages/report/report_page.dart';
 import '../pages/profile/profile_page.dart';
 import '../theme/app_theme.dart';
 
@@ -36,6 +37,7 @@ class _AdminLayoutState extends State<AdminLayout> {
 
   static const _pages = <Widget>[
     DashboardPage(),
+    ReportPage(),
     UserListPage(),
     RoleListPage(),
     ConfigPage(),
@@ -167,6 +169,7 @@ class _AdminLayoutState extends State<AdminLayout> {
     final showCollapsed = _showCollapsedContent;
     final items = [
       (showCollapsed ? null : t('nav_dashboard'), Icons.dashboard),
+      (showCollapsed ? null : t('nav_report'), Icons.bar_chart),
       (showCollapsed ? null : t('nav_users'), Icons.people),
       (showCollapsed ? null : t('nav_roles'), Icons.security),
       (showCollapsed ? null : t('nav_config'), Icons.settings),
@@ -260,6 +263,11 @@ class _AdminLayoutState extends State<AdminLayout> {
         icon: const Icon(Icons.dashboard, size: 20),
         label: Text(t('nav_dashboard')),
         selectedIcon: const Icon(Icons.dashboard, size: 20),
+      ),
+      NavigationDrawerDestination(
+        icon: const Icon(Icons.bar_chart, size: 20),
+        label: Text(t('nav_report')),
+        selectedIcon: const Icon(Icons.bar_chart, size: 20),
       ),
       NavigationDrawerDestination(
         icon: const Icon(Icons.people, size: 20),

@@ -20,3 +20,9 @@ let app = App::builder()
     .build()
     .unwrap();
 ```
+
+## Installation
+
+```bash
+cargo add ecat
+```

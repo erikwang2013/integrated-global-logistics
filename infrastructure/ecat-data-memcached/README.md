@@ -15,3 +15,26 @@ testing. **Do not use it in production** — use a real memcached/redis client
 before deployment.
 
 Part of the [e-cat](https://github.com/erik/e-cat) ecosystem.
+
+## Installation
+
+```bash
+cargo add ecat-data-memcached
+```
+
+## Features
+
+- Implements the `Cache` trait from `ecat-data`
+- Process-local in-memory `HashMap` cache — no memcached network protocol, no TTL propagation
+- Development / testing only; use a real memcached/redis client in production
+
+## Usage
+
+```rust
+use std::time::Duration;
+use ecat_data_memcached::MemcachedClient;
+
+let cache = MemcachedClient::new();
+cache.set("key", b"value", Duration::from_secs(60)).await?;
+let value = cache.get("key").await?;
+```

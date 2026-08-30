@@ -253,6 +253,16 @@ e-cat/
 └── examples/                   # Example projects
 ```
 
+## One-Click Install
+
+The repository root provides a Docker Compose one-click install script (starts 5 services: Nginx / PHP / MySQL / Redis / Elasticsearch):
+
+```bash
+bash install.sh
+```
+
+The script checks the Docker environment, starts all services and polls health checks (up to 120 seconds); once ready, visit `http://localhost/install` to complete the installation wizard (database initialization + admin creation). The external port can be changed with the `NGINX_PORT` environment variable. Deploying the Rust gateway in this directory is covered in "Quick Start" below.
+
 ## Quick Start
 
 ### Prerequisites

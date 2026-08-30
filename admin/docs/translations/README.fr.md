@@ -10,6 +10,9 @@ Système de panneau d'administration full-stack basé sur webman v2 + Flutter.
 
 ## Fonctionnalités
 
+<img src="../../../docs/diagrams/description.svg" alt="Fonctionnalités" width="100%">
+
+
 | Domaine métier | Fonctionnalité | Description |
 |--------|------|------|
 | 🔐 Authentification | Connexion / rafraîchissement du jeton / déconnexion | Captcha à clic + JWT + liste noire |

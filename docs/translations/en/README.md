@@ -104,6 +104,36 @@ Layered defense in depth, key points:
 - **CDN security** (M12): Cloudflare free plan full-site HTTPS + dual-layer WAF (edge managed rules + gateway application-layer detection); Tunnel origin keeps the source zero-exposed; callbacks go through DNS-only subdomain direct connection to avoid order loss on CDN outage; rate limiting counts by X-API-Key, unaffected by CDN edge IPs; authenticated endpoints are always no-store to prevent cross-user cache mixing;
 - **CDN credential management** (M13): CDN provider access_key / access_secret encrypted with `Encryptable` in the `logistics_cdn_provider` table, configured via `/admin/cdn/provider`;
 
+## Features
+
+<img src="diagrams/description.svg" alt="Platform features" width="100%">
+
+- **Aggregated tracking queries: one tracking number across the globe — 187 number-pattern rules auto-detect the domestic/international channel and carrier, 209 carrier adapters unify output into 7 standard `TrackStatus` states;**
+- **Multi-carrier integration: 45 domestic + 164 international adapters, full coverage of DHL / FedEx / UPS / USPS and national posts S10, credentials encrypted at rest, zero hardcoded keys;**
+- **Admin RBAC: JWT + blacklist + method.path granular permissions + full audit trail, security filter blocks XSS / SQL injection / CSRF / command injection;**
+- **Payment closed loop: Stripe / PayPal plus USDT TRC20 / BEP20 / ERC20, webhook signature verification auto-confirms orders, payment methods take effect via config;**
+- **Client portal & plans: register / login / app management / plans / orders API, self-set X-API-Key, client JWT fully isolated from admin;**
+- **API gateway protection: API-Key auth, Redis rate limiting (429), per-carrier circuit breaker (503), SSRF protection, attack payloads blocked at the gateway layer;**
+- **CDN secure delivery: Cloudflare free plan full-site HTTPS + dual WAF + edge cache, Tunnel origin with zero public exposure;**
+- **Multi-language SDKs: five zero-dependency SDKs for Python / PHP / Node.js / Go / Rust, copy and run.**
+
+## One-Click Install
+
+Recommended: one-command Docker Compose deployment — starts 5 services (Nginx / PHP / MySQL / Redis / Elasticsearch) with health checks and data persistence:
+
+```bash
+bash install.sh
+```
+
+After cloning the repository:
+
+```bash
+cd integrated-global-logistics   # enter project root
+bash install.sh                  # port 80 by default, override with NGINX_PORT=8080
+```
+
+The script checks the Docker environment, starts all services and polls health checks (up to 120 seconds); once ready, visit `http://localhost/install` to complete the installation wizard (database initialization + admin creation). See [admin/README.md](../../admin/README.md) for the detailed Docker Compose deployment.
+
 ## Quick Start
 
 **admin management console** (PHP webman):

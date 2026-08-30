@@ -9,6 +9,28 @@
 - Go：`go/tracking_client.go`（stdlib `net/http`，Go 1.21+）
 - Rust：`rust/src/tracking_client.rs`（std `TcpStream`，零依赖，仅支持明文 http）
 
+## 安装
+
+五份 SDK 均为单文件实现、零第三方依赖，无需 `pip install` / `composer install` / `npm install` / `go get` / `cargo add` —— 拷贝即用：
+
+| 语言 | 文件 | 运行要求 |
+|---|---|---|
+| Python | `python/tracking_client.py` | Python 3.7+（stdlib `urllib.request`） |
+| PHP | `php/TrackingClient.php` | PHP 7.0+（内置 curl） |
+| Node.js | `js/tracking-client.js` | Node 18+（内置 fetch，CommonJS） |
+| Go | `go/tracking_client.go` | Go 1.21+（stdlib `net/http`） |
+| Rust | `rust/src/tracking_client.rs` | Rust 1.56+（std `TcpStream`，零依赖，仅支持明文 http，https 请置于反向代理之后） |
+
+各目录内示例脚本（`example.py` / `example.php` / `example.js` / `go/example` / `rust/`）同样可直接运行。
+
+## 功能
+
+- **轨迹查询**：`query_tracking()` 按单号查询，自动识别承运商，返回统一标准化轨迹；`get_tracking()` 按查询号取上次结果；
+- **多承运商**：`list_carriers()` 获取承运商清单，查询时可按 `carrier_code` 指定承运商；
+- **回调订阅**：`subscribe()` 注册订阅，承运商轨迹更新时网关回调推送商户 URL；
+- **统一错误码**：信封 `code != 0` 即错误，限流 429 / 熔断 503 / 承运商错误 `carrier_error`，异常统一携带 `code` / `message` / `error_code` / `http_status`；
+- **零依赖**：五份 SDK 全部只用标准库，跨语言行为一致，密钥由调用方传入、SDK 不落任何密钥。
+
 ## 初始化
 
 ```python

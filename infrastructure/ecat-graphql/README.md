@@ -40,3 +40,9 @@ impl GraphQLField for UserField {
 - 操作级变量定义 (`query ($v: Int = 3)`) 与字段指令 (`@skip`) 被跳过；
 - mutation 按顶层字段 dispatch 到 mutation resolvers；
 - 请勿在生产服务中将其暴露为通用 GraphQL 端点，如需完整功能请接入成熟 GraphQL 引擎（如 async-graphql / juniper）。
+
+## 安装
+
+```bash
+cargo add ecat-graphql
+```

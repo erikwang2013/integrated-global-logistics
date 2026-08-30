@@ -10,6 +10,9 @@ Sistema de administração full-stack baseado em webman v2 + Flutter.
 
 ## Lista de funcionalidades
 
+<img src="../../../docs/diagrams/description.svg" alt="Lista de funcionalidades" width="100%">
+
+
 | Domínio de negócio | Funcionalidade | Descrição |
 |--------|------|------|
 | 🔐 Autenticação | Login/atualização de token/logout | Captcha de clique + JWT + blacklist |

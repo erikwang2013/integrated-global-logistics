@@ -104,6 +104,36 @@ integrated-global-logistics/
 - **CDN 보안**（M12）：Cloudflare 무료 요금제 전 사이트 HTTPS + 이중 WAF（엣지 관리 규칙 + 게이트웨이 애플리케이션 계층 탐지）；Tunnel 오리진으로 소스 서버 무노출；콜백은 DNS 전용 하위 도메인 직접 연결로 CDN 장애 시 주문 유실 방지；속도 제한은 X-API-Key 기준으로 CDN 엣지 IP에 영향받지 않음；인증 엔드포인트는 항상 no-store로 사용자 간 캐시 혼동 방지；
 - **CDN 자격 증명 관리**（M13）：CDN 사업자 access_key / access_secret을 `Encryptable`로 암호화해 `logistics_cdn_provider` 테이블에 저장, 관리면 `/admin/cdn/provider`에서 설정；
 
+## 기능 목록
+
+<img src="diagrams/description.svg" alt="플랫폼 기능" width="100%">
+
+- **통합 추적 조회: 하나의 운송장 번호로 전 세계 조회 — 187개 번호 패턴 규칙이 국내/국제 채널과 운송사를 자동 판별, 209개 운송사 어댑터가 `TrackStatus` 7가지 표준 상태로 출력 통일;**
+- **다중 운송사 연동: 국내 45 + 국제 164 어댑터, DHL / FedEx / UPS / USPS 및 각국 우편 S10 완전 지원, 자격 증명 암호화 저장, 하드코딩 키 없음;**
+- **관리자 RBAC: JWT + 블랙리스트 + method.path 단위 권한 + 전체 운영 감사, 보안 필터가 XSS / SQL 인젝션 / CSRF / 명령어 인젝션 차단;**
+- **결제 클로즈드 루프: Stripe / PayPal + USDT TRC20 / BEP20 / ERC20, webhook 서명 검증으로 주문 자동 확정, 결제 수단은 설정으로 즉시 활성화;**
+- **클라이언트 포털 및 요금제: 회원가입 / 로그인 / 앱 관리 / 요금제 / 주문 API, X-API-Key 클라이언트 자체 설정, client JWT는 admin과 완전 분리;**
+- **API 게이트웨이 보호: API-Key 인증, Redis 요청 제한(429), 운송사별 서킷 브레이커(503), SSRF 방어, 공격 페이로드는 게이트웨이에서 차단;**
+- **CDN 안전 배포: Cloudflare 무료판 전체 사이트 HTTPS + 이중 WAF + 엣지 캐시, Tunnel 오리진으로 공개 노출 없음;**
+- **다국어 SDK: Python / PHP / Node.js / Go / Rust용 5개 제로 의존성 SDK, 복사해서 바로 사용.**
+
+## 원클릭 설치
+
+권장: Docker Compose 원커맨드 배포 — 5개 서비스(Nginx / PHP / MySQL / Redis / Elasticsearch)를 헬스 체크와 데이터 영속성과 함께 시작합니다:
+
+```bash
+bash install.sh
+```
+
+리포지토리를 클론한 후:
+
+```bash
+cd integrated-global-logistics   # 프로젝트 루트로 이동
+bash install.sh                  # 기본 포트 80, NGINX_PORT=8080으로 변경 가능
+```
+
+스크립트가 Docker 환경을 확인하고 모든 서비스를 시작한 뒤 헬스 체크를 폴링합니다(최대 120초). 준비되면 `http://localhost/install`에 접속해 설치 마법사를 완료하세요(데이터베이스 초기화 + 관리자 생성). 자세한 Docker Compose 배포는 [admin/README.md](../../admin/README.md) 참조.
+
 ## 빠른 시작
 
 **admin 관리 콘솔**(PHP webman):

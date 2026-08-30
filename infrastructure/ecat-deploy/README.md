@@ -22,3 +22,9 @@ kubectl apply -f ecat-deploy/k8s-deployment.yaml
 # Helm
 helm install my-ecat ecat-deploy/helm/
 ```
+
+## Features
+
+- Multi-stage `Dockerfile` — Rust build → minimal runtime image
+- `k8s-deployment.yaml` — Kubernetes Deployment + Service manifest
+- `helm/` — Helm chart for templated deployments

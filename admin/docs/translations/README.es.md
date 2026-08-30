@@ -10,6 +10,9 @@ Sistema de panel de administración full-stack basado en webman v2 + Flutter.
 
 ## Lista de funciones
 
+<img src="../../../docs/diagrams/description.svg" alt="Lista de funciones" width="100%">
+
+
 | Dominio | Función | Descripción |
 |--------|------|------|
 | 🔐 Autenticación | Inicio de sesión/renovación de token/cierre de sesión | Captcha de clic + JWT + lista negra |

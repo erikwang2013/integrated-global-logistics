@@ -9,7 +9,10 @@ namespace app\admin\controller;
 
 use app\model\AdminUser;
 use app\common\EncryptionService;
+use app\common\PaymentService;
 use app\model\OperationLog;
+use app\model\Order;
+use app\model\TrackingQuery;
 use support\Redis;
 use support\Request;
 use support\Response;
@@ -59,6 +62,8 @@ class DashboardController extends BaseController
         $todayNew = AdminUser::whereDate('created_at', $today)->count();
         $todayActive = AdminUser::whereDate('last_login_at', $today)->count();
         $todayLogs = OperationLog::whereDate('created_at', $today)->count();
+        $todayQueries = TrackingQuery::whereDate('created_at', $today)->count();
+        $todayPaid = Order::where('status', 'paid')->whereDate('paid_at', $today)->count();
 
         return [
             [
@@ -85,6 +90,18 @@ class DashboardController extends BaseController
                 'value' => (string) $todayLogs,
                 'icon' => 'description',
                 'color' => '#722ED1',
+            ],
+            [
+                'label' => '今日查询',
+                'value' => (string) $todayQueries,
+                'icon' => 'search',
+                'color' => '#13C2C2',
+            ],
+            [
+                'label' => '今日支付',
+                'value' => (string) $todayPaid,
+                'icon' => 'pay-circle',
+                'color' => '#EB2F96',
             ],
         ];
     }
@@ -135,11 +152,21 @@ class DashboardController extends BaseController
 
     private function getDistribution(): array
     {
+        // 一次查询取各渠道订单数，按 PaymentService::CHANNELS 顺序输出
+        $channelStats = Order::selectRaw('channel, COUNT(*) as count')
+            ->groupBy('channel')
+            ->pluck('count', 'channel')
+            ->toArray();
+
         return [
             'user_status' => [
                 ['name' => '启用', 'value' => AdminUser::where('status', 1)->count()],
                 ['name' => '禁用', 'value' => AdminUser::where('status', 0)->count()],
             ],
+            'order_channel' => array_map(fn($channel) => [
+                'name' => $channel,
+                'value' => (int) ($channelStats[$channel] ?? 0),
+            ], PaymentService::CHANNELS),
         ];
     }
 

@@ -2,6 +2,21 @@
 
 Periodic and one-shot task scheduling for the e-cat ecosystem.
 
+## Installation
+
+```bash
+cargo add ecat-scheduler
+```
+
+## Features
+
+- `every(interval, job)` — repeating task, skips the immediate first tick
+- `once(delay, job)` — one-shot task after a delay
+- `run()` blocks until tasks finish; `shutdown()` aborts them
+- Pure tokio, no extra dependencies
+
+## Usage
+
 ```rust
 let mut sched = Scheduler::new();
 sched.every(Duration::from_secs(60), || async { /* cleanup */ });

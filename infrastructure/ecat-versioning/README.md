@@ -18,3 +18,15 @@ let router = VersionedRouter::new(VersionStrategy::PathPrefix)
     .default_version("v1")
     .build();
 ```
+
+## Installation
+
+```bash
+cargo add ecat-versioning
+```
+
+## Features
+
+- `VersionedRouter` with `PathPrefix` (`/v1/health`) and `Header` strategies
+- `add_version` / `default_version` builder API
+- `extract_version` header helper for custom routing

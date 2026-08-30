@@ -121,6 +121,7 @@ Route::group('/admin', function () {
 
     // 物流聚合 — 统计报表
     Route::get('/tracking/statistics', [app\admin\controller\StatisticsController::class, 'index']);
+    Route::get('/order/statistics', [app\admin\controller\StatisticsController::class, 'order']);
 
     // 物流聚合 — CDN 服务商
     Route::resource('/cdn/provider', app\admin\controller\CdnProviderController::class);

@@ -104,6 +104,36 @@ Pertahanan berlapis secara mendalam, poin-poin utamanya:
 - **Keamanan CDN**（M12）：paket gratis Cloudflare HTTPS penuh + WAF dua lapis (aturan terkelola di edge + deteksi lapisan aplikasi gateway); origin Tunnel tanpa eksposur sumber; callback via subdomain DNS langsung agar tidak kehilangan pesanan saat CDN down; rate limit dihitung per X-API-Key, tidak terpengaruh IP edge CDN; endpoint terautentikasi selalu no-store mencegah campur aduk cache antar pengguna;
 - **Manajemen kredensial CDN**（M13）：access_key / access_secret penyedia CDN dienkripsi `Encryptable` di tabel `logistics_cdn_provider`, dikonfigurasi di `/admin/cdn/provider`;
 
+## Fitur
+
+<img src="diagrams/description.svg" alt="Fitur platform" width="100%">
+
+- **Kueri pelacakan teragregasi: satu nomor resi di seluruh dunia — 187 aturan pola nomor otomatis mengenali kanal domestik/internasional dan kurir, 209 adaptor kurir menyatukan output ke 7 status standar `TrackStatus`;**
+- **Integrasi multi-kurir: 45 adaptor domestik + 164 internasional, cakupan penuh DHL / FedEx / UPS / USPS dan pos nasional S10, kredensial terenkripsi, nol kunci hardcoded;**
+- **RBAC panel admin: JWT + blacklist + izin granular method.path + jejak audit lengkap, filter keamanan memblokir XSS / SQL injection / CSRF / command injection;**
+- **Lingkaran pembayaran tertutup: Stripe / PayPal plus USDT TRC20 / BEP20 / ERC20, verifikasi tanda tangan webhook mengonfirmasi pesanan otomatis, metode pembayaran aktif via konfigurasi;**
+- **Portal klien & paket: API registrasi / login / manajemen aplikasi / paket / pesanan, X-API-Key diatur klien sendiri, JWT klien terisolasi dari admin;**
+- **Perlindungan gateway API: autentikasi API-Key, rate limit Redis (429), circuit breaker per kurir (503), proteksi SSRF, payload serangan diblokir di lapisan gateway;**
+- **Distribusi aman CDN: HTTPS penuh situs Cloudflare gratis + WAF ganda + cache edge, origin Tunnel tanpa eksposur publik;**
+- **SDK multibahasa: lima SDK tanpa dependensi untuk Python / PHP / Node.js / Go / Rust, salin dan jalankan.**
+
+## Instalasi Sekali Klik
+
+Direkomendasikan: deploy Docker Compose satu perintah — menjalankan 5 layanan (Nginx / PHP / MySQL / Redis / Elasticsearch) dengan health check dan persistensi data:
+
+```bash
+bash install.sh
+```
+
+Setelah mengkloning repositori:
+
+```bash
+cd integrated-global-logistics   # masuk ke root proyek
+bash install.sh                  # port default 80, bisa diganti NGINX_PORT=8080
+```
+
+Skrip memeriksa lingkungan Docker, menjalankan semua layanan, dan melakukan polling health check (maks. 120 detik); setelah siap buka `http://localhost/install` untuk menyelesaikan wizard instalasi (inisialisasi database + pembuatan admin). Lihat [admin/README.md](../../admin/README.md) untuk deploy Docker Compose detail.
+
 ## Mulai Cepat
 
 **admin backend** (PHP webman)：

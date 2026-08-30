@@ -104,6 +104,36 @@ integrated-global-logistics/
 - **CDN セキュリティ**（M12）：Cloudflare 無料プランで全サイト HTTPS + 二層 WAF（エッジ管理ルール + ゲートウェイのアプリケーション層検知）；Tunnel オリジンでソースをゼロ露出；コールバックは DNS 専用サブドメイン直結で CDN 障害時に注文を失わない；レート制限は X-API-Key 単位で CDN エッジ IP の影響を受けない；認証エンドポイントは常に no-store でユーザー間キャッシュ混入を防止；
 - **CDN 認証情報管理**（M13）：CDN プロバイダーの access_key / access_secret を `Encryptable` で暗号化して `logistics_cdn_provider` テーブルに保存、`/admin/cdn/provider` で設定；
 
+## 機能一覧
+
+<img src="diagrams/description.svg" alt="プラットフォーム機能" width="100%">
+
+- **追跡クエリ集約: 1 つの追跡番号で全世界を検索 — 187 の番号パターン規則が国内 / 国際チャネルと運送会社を自動判定し、209 社のアダプタが `TrackStatus` の 7 標準ステータスに出力を統一;**
+- **マルチキャリア連携: 国内 45 + 国際 164 アダプタ、DHL / FedEx / UPS / USPS と各国郵便 S10 を完全カバー、認証情報は暗号化保存、ハードコードなし;**
+- **管理画面 RBAC: JWT + ブラックリスト + method.path 粒度の権限 + 全操作監査、セキュリティフィルタが XSS / SQL インジェクション / CSRF / コマンドインジェクションを遮断;**
+- **決済クローズドループ: Stripe / PayPal に加え USDT TRC20 / BEP20 / ERC20、webhook 署名検証で注文を自動確定、決済手段は設定で即有効化;**
+- **クライアントポータルとプラン: 登録 / ログイン / アプリ管理 / プラン / 注文 API、X-API-Key はクライアントが自己設定、client JWT は admin と完全分離;**
+- **API ゲートウェイ防御: API-Key 認証、Redis レート制限（429）、キャリア別サーキットブレーカー（503）、SSRF 対策、攻撃ペイロードはゲートウェイ層で遮断;**
+- **CDN 安全配信: Cloudflare 無料版で全サイト HTTPS + 二重 WAF + エッジキャッシュ、Tunnel オリジンで公開露出ゼロ;**
+- **多言語 SDK: Python / PHP / Node.js / Go / Rust 向け 5 つのゼロ依存 SDK、コピーするだけ。**
+
+## ワンクリックインストール
+
+推奨: Docker Compose によるワンコマンドデプロイ — 5 つのサービス（Nginx / PHP / MySQL / Redis / Elasticsearch）をヘルスチェックとデータ永続化付きで起動します:
+
+```bash
+bash install.sh
+```
+
+リポジトリをクローンした後:
+
+```bash
+cd integrated-global-logistics   # プロジェクトルートへ移動
+bash install.sh                  # 既定ポート 80、NGINX_PORT=8080 で変更可能
+```
+
+スクリプトが Docker 環境を確認し、全サービスを起動してヘルスチェックをポーリング（最大 120 秒）; 準備完了後 `http://localhost/install` を開いてインストールウィザードを完了します（データベース初期化 + 管理者作成）。詳細な Docker Compose デプロイは [admin/README.md](../../admin/README.md) を参照。
+
 ## クイックスタート
 
 **admin 管理バックエンド**（PHP webman）：

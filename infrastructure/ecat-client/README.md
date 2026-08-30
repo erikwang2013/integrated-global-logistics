@@ -18,3 +18,15 @@ let resolver = StaticResolver::single("auth", "http://localhost:8080");
 let client = HttpClient::builder().resolver(resolver).build().unwrap();
 let resp = client.get("auth", "/health").await.unwrap();
 ```
+
+## Installation
+
+```bash
+cargo add ecat-client
+```
+
+## Features
+
+- `ServiceResolver` — resolve service names to endpoints (static or custom)
+- `LoadBalancer` — round-robin endpoint selection
+- `HttpClient` / `GrpcClient` — client with resolver + balancer

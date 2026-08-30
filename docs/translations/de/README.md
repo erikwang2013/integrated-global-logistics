@@ -104,6 +104,36 @@ Gestaffelte Defense-in-Depth, die Kernpunkte:
 - **CDN-Sicherheit**（M12）：Cloudflare kostenloser Plan — vollständiges HTTPS + zweischichtige WAF (verwaltete Edge-Regeln + Erkennung auf Anwendungsebene im Gateway); Tunnel-Origin hält die Quelle ohne öffentliche Exposition; Callbacks laufen über eine reine DNS-Subdomain direkt zum Ursprung, um bei CDN-Ausfällen keine Bestellungen zu verlieren; Rate-Limiting zählt nach X-API-Key und ist von CDN-Edge-IPs unabhängig; authentifizierte Endpunkte sind immer no-store gegen Cross-User-Cache-Vermischung;
 - **CDN-Zugangsdatenverwaltung**（M13）：access_key / access_secret der CDN-Anbieter werden mit `Encryptable` in der Tabelle `logistics_cdn_provider` verschlüsselt, konfiguriert über `/admin/cdn/provider`;
 
+## Funktionen
+
+<img src="diagrams/description.svg" alt="Plattformfunktionen" width="100%">
+
+- **Aggregierte Sendungsverfolgung: eine Sendungsnummer weltweit — 187 Nummern-Regeln erkennen automatisch den Inlands-/Auslandskanal und Carrier, 209 Carrier-Adapter vereinheitlichen die Ausgabe in 7 Standard-`TrackStatus`-Zustände;**
+- **Multi-Carrier-Anbindung: 45 Inlands- + 164 Auslandsadapter, volle Abdeckung von DHL / FedEx / UPS / USPS und nationaler Post S10, Zugangsdaten verschlüsselt, keine hartcodierten Schlüssel;**
+- **Admin-RBAC: JWT + Blacklist + method.path-granulare Berechtigungen + vollständiges Audit-Trail, Sicherheitsfilter blockt XSS / SQL-Injection / CSRF / Command-Injection;**
+- **Geschlossener Zahlungskreislauf: Stripe / PayPal plus USDT TRC20 / BEP20 / ERC20, Webhook-Signaturprüfung bestätigt Bestellungen automatisch, Zahlungsmethoden per Konfiguration aktiv;**
+- **Kundenportal & Tarife: Registrierung / Login / App-Verwaltung / Tarife / Bestell-API, X-API-Key vom Kunden selbst gesetzt, Client-JWT vollständig vom Admin getrennt;**
+- **API-Gateway-Schutz: API-Key-Authentifizierung, Redis-Rate-Limiting (429), Circuit Breaker pro Carrier (503), SSRF-Schutz, Angriffspayloads werden bereits am Gateway blockiert;**
+- **Sichere CDN-Auslieferung: Cloudflare Free Plan mit Full-Site-HTTPS + doppelter WAF + Edge-Cache, Tunnel-Origin ohne öffentliche Exposition;**
+- **Mehrsprachige SDKs: fünf SDKs ohne Abhängigkeiten für Python / PHP / Node.js / Go / Rust, kopieren und loslegen.**
+
+## Ein-Klick-Installation
+
+Empfohlen: One-Command-Docker-Compose-Deployment — startet 5 Dienste (Nginx / PHP / MySQL / Redis / Elasticsearch) mit Health Checks und Datenpersistenz:
+
+```bash
+bash install.sh
+```
+
+Nach dem Klonen des Repos:
+
+```bash
+cd integrated-global-logistics   # ins Projektverzeichnis wechseln
+bash install.sh                  # Port 80 Standard, mit NGINX_PORT=8080 überschreibbar
+```
+
+Das Skript prüft die Docker-Umgebung, startet alle Dienste und pollt die Health Checks (max. 120 Sekunden); danach `http://localhost/install` öffnen und den Installationsassistenten abschließen (Datenbank-Initialisierung + Admin-Erstellung). Details zum Docker-Compose-Deployment: [admin/README.md](../../admin/README.md).
+
 ## Schnellstart
 
 **admin Admin-Backend** (PHP webman):

@@ -278,6 +278,16 @@ e-cat/
 └── examples/                   # 示例项目
 ```
 
+## 一键安装
+
+仓库根目录提供 Docker Compose 一键安装脚本（启动 Nginx / PHP / MySQL / Redis / Elasticsearch 5 个服务）：
+
+```bash
+bash install.sh
+```
+
+脚本自动检查 Docker 环境、启动全部服务并轮询健康检查（最多 120 秒）；就绪后访问 `http://localhost/install` 完成安装向导（数据库初始化 + 管理员创建），对外端口可用环境变量 `NGINX_PORT` 修改。本目录的 Rust 网关部署方式见下文「快速开始」。
+
 ## 快速开始
 
 ### 前提条件

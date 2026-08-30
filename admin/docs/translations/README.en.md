@@ -6,6 +6,9 @@ A full-stack admin dashboard built with webman v2 + Flutter.
 
 ## Features
 
+<img src="../../../docs/diagrams/description.svg" alt="Features" width="100%">
+
+
 | Domain | Feature | Notes |
 |--------|---------|-------|
 | 🔐 Auth | Login/Refresh/Logout | Click captcha + JWT + blacklist |
