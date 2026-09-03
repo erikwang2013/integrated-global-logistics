@@ -83,7 +83,6 @@ flowchart TD
     subgraph "Capa de middleware Middleware Layer"
         M_RL["RateLimit<br/>Límite de peticiones con ventana deslizante Redis<br/>Cabeceras de respuesta X-RateLimit"]
         M_SF["SecurityFilter<br/>Bloqueo por detección de ataques<br/>XSS/inyección SQL/traversal de rutas/CSRF"]
-        M0["ApiVersion<br/>Validación de versión de API<br/>Inyecta apiVersion"]
         M1["AdminAuth<br/>Validación del token JWT<br/>Inyecta adminId"]
         M2["AdminPermission<br/>Autorización RBAC<br/>Coincidencia method.path<br/>Permisos en caché Redis 60s"]
     end
@@ -119,11 +118,11 @@ flowchart TD
         D3["Redis"]
     end
 
-    R1 --> M_SF --> M_RL --> M0
-    M0 --> M1
+    R1 --> M_SF --> M_RL
+    M_RL --> M1
     M1 --> M2
     M2 --> CT2 & CT3 & CT4 & CT5 & CT6
-    M0 --> CT7 & CT8
+    M_RL --> CT7 & CT8
     CT1 -.->|extends| CT2 & CT3 & CT4 & CT5 & CT6
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> S1 & S2 & S3
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> MD1 & MD2 & MD3 & MD4 & MD5
@@ -134,7 +133,6 @@ flowchart TD
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
-    style M0 fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
@@ -151,7 +149,6 @@ sequenceDiagram
     participant MW_LOC as Locale
     participant MW_SF as SecurityFilter
     participant MW_RL as RateLimit
-    participant MW0 as ApiVersion
     participant MW1 as AdminAuth
     participant MW2 as AdminPermission
     participant CTL as Controller
@@ -160,7 +157,7 @@ sequenceDiagram
     participant DB as MySQL
     participant OPLOG as OperationLog
 
-    C->>N: Petición HTTPS<br/>Cabecera: API-Version: v1, Accept-Language: zh_CN
+    C->>N: Petición HTTPS<br/>Cabecera: Accept-Language: zh_CN
     N->>MW_LOC: Reenvío
 
     MW_LOC->>MW_LOC: locale = zh_CN (Accept-Language / ?lang=)
@@ -182,13 +179,7 @@ sequenceDiagram
         MW_RL-->>C: 429 + Retry-After
     end
 
-    MW_RL->>MW0: Aprobado
-
-    alt Versión no soportada
-        MW0-->>C: 400 Versión de API no soportada
-    else Versión válida
-        MW0->>MW0: $request->apiVersion = v1
-    end
+    MW_RL->>MW1: Aprobado
 
     alt Token ausente o no válido
         MW1-->>C: 401 Unauthorized
@@ -240,7 +231,7 @@ sequenceDiagram
     participant CAP as Captcha Service
 
     Note over U,CAP: === Paso 1: Obtener el captcha ===
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP->>CAP: Genera la imagen de fondo 300×200
     CAP->>CAP: Coloca N objetivos en chino de forma aleatoria
@@ -255,7 +246,7 @@ sequenceDiagram
     CL->>CL: Recopila clicks: [{x,y}, {x,y}, {x,y}]
 
     Note over U,CAP: === Paso 3: Inicio de sesión ===
-    CL->>SV: POST /api/auth/login { username, password, captcha_key, clicks }
+    CL->>SV: POST /api/v1/auth/login { username, password, captcha_key, clicks }
     SV->>CAP: captcha_verify(key, 'click', clicks)
     alt Captcha incorrecto
         CAP-->>SV: false

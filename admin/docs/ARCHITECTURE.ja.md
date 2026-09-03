@@ -83,7 +83,6 @@ flowchart TD
     subgraph "ミドルウェア層 Middleware Layer"
         M_RL["RateLimit<br/>Redis スライディングウィンドウレート制限<br/>X-RateLimit レスポンスヘッダー"]
         M_SF["SecurityFilter<br/>攻撃検知ブロック<br/>XSS/SQLインジェクション/パストラバーサル/CSRF"]
-        M0["ApiVersion<br/>API バージョン検証<br/>apiVersion を注入"]
         M1["AdminAuth<br/>JWT Token 検証<br/>adminId を注入"]
         M2["AdminPermission<br/>RBAC 認可<br/>method.path マッチング<br/>Redis 60s 権限キャッシュ"]
     end
@@ -119,11 +118,11 @@ flowchart TD
         D3["Redis"]
     end
 
-    R1 --> M_SF --> M_RL --> M0
-    M0 --> M1
+    R1 --> M_SF --> M_RL
+    M_RL --> M1
     M1 --> M2
     M2 --> CT2 & CT3 & CT4 & CT5 & CT6
-    M0 --> CT7 & CT8
+    M_RL --> CT7 & CT8
     CT1 -.->|extends| CT2 & CT3 & CT4 & CT5 & CT6
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> S1 & S2 & S3
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> MD1 & MD2 & MD3 & MD4 & MD5
@@ -134,7 +133,6 @@ flowchart TD
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
-    style M0 fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
@@ -151,7 +149,6 @@ sequenceDiagram
     participant MW_LOC as Locale
     participant MW_SF as SecurityFilter
     participant MW_RL as RateLimit
-    participant MW0 as ApiVersion
     participant MW1 as AdminAuth
     participant MW2 as AdminPermission
     participant CTL as Controller
@@ -160,7 +157,7 @@ sequenceDiagram
     participant DB as MySQL
     participant OPLOG as OperationLog
 
-    C->>N: HTTPS リクエスト<br/>Header: API-Version: v1, Accept-Language: zh_CN
+    C->>N: HTTPS リクエスト<br/>Header: Accept-Language: zh_CN
     N->>MW_LOC: 転送
 
     MW_LOC->>MW_LOC: locale = zh_CN (Accept-Language / ?lang=)
@@ -182,13 +179,7 @@ sequenceDiagram
         MW_RL-->>C: 429 + Retry-After
     end
 
-    MW_RL->>MW0: 通過
-
-    alt サポートされていないバージョン
-        MW0-->>C: 400 サポートされていないAPIバージョン
-    else バージョン有効
-        MW0->>MW0: $request->apiVersion = v1
-    end
+    MW_RL->>MW1: 通過
 
     alt Token 欠落または無効
         MW1-->>C: 401 Unauthorized
@@ -240,7 +231,7 @@ sequenceDiagram
     participant CAP as Captcha Service
 
     Note over U,CAP: === ステップ 1: キャプチャ取得 ===
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP->>CAP: 300×200 背景画像を生成
     CAP->>CAP: 中国語のターゲットを N 個ランダム配置
@@ -255,7 +246,7 @@ sequenceDiagram
     CL->>CL: clicks: [{x,y}, {x,y}, {x,y}] を収集
 
     Note over U,CAP: === ステップ 3: ログイン ===
-    CL->>SV: POST /api/auth/login { username, password, captcha_key, clicks }
+    CL->>SV: POST /api/v1/auth/login { username, password, captcha_key, clicks }
     SV->>CAP: captcha_verify(key, 'click', clicks)
     alt キャプチャエラー
         CAP-->>SV: false

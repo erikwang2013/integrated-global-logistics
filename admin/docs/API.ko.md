@@ -9,7 +9,6 @@
 오픈 관리 백엔드 (open-admin)는 webman v2 기반으로 구축된 RESTful JSON API를 제공합니다. 모든 관리자 인터페이스는 JWT 인증과 RBAC 권한 검증이 필요하며, 공개 인터페이스는 API 버전 헤더를 통해 버전별 컨트롤러로 라우팅됩니다.
 
 - **기본 URL**: `http://localhost:8787`
-- **API 버전**: 요청 헤더 `API-Version: v1`로 제어 (미지정 시 기본 v1)
 - **언어**: `Accept-Language` 헤더 또는 `?lang=zh_CN|en` 파라미터로 전환 (기본 zh_CN), Locale 미들웨어가 자동 감지
 
 > **엔드포인트 총람**: 인증(5) | 대시보드(1) | 사용자(7) | 역할(4) | 권한(4) | 설정(4) | 로그(1) | 개인 센터(3) | 가져오기·내보내기(3) | 업로드(1) | 운영(4: health/metrics/docs/security.txt) | 총 37개 엔드포인트
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 캡차 생성
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **인증**: 불필요
-- **요청 헤더**: `API-Version: v1` (필수)
 - **레이트 리밋**: 전역 기본 (60회/분)
 
 **요청 본문**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 캡차 검증
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **인증**: 불필요
-- **요청 헤더**: `API-Version: v1` (필수)
 - **레이트 리밋**: 전역 기본 (60회/분)
 
 **요청 본문** — 클릭형 (`type: "click"`):
@@ -246,11 +243,10 @@ POST /api/captcha/verify
 ### 3.5 로그인
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **인증**: 불필요
-- **요청 헤더**: `API-Version: v1` (필수)
 - **레이트 리밋**: 10회/분 (IP + 경로 기준)
 
 **요청 본문**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | 예 | min:3, max:50 | 사용자 이름 |
 | password | string | 예 | min:6, max:32 (평문) | AES-256-CBC-HMAC 암호화 후 Base64 인코딩 (평문 호환) |
-| captcha_key | string | 예 | | 캡차 key (먼저 `/api/captcha/verify` 검증을 통과해야 함) |
+| captcha_key | string | 예 | | 캡차 key (먼저 `/api/v1/captcha/verify` 검증을 통과해야 함) |
 
 ### 비밀번호 암호화 프로토콜
 
@@ -315,7 +311,7 @@ POST /api/auth/login
 
 **가능한 오류**:
 - 422: 파라미터 검증 실패 (필수 필드 누락, 형식 불일치)
-- 422: 먼저 캡차 검증을 완료해야 함 (captcha_key가 `/api/captcha/verify`를 통과하지 못함)
+- 422: 먼저 캡차 검증을 완료해야 함 (captcha_key가 `/api/v1/captcha/verify`를 통과하지 못함)
 - 401: 사용자 이름 또는 비밀번호 오류
 - 403: 계정이 비활성화됨
 - 429: 계정이 잠겼습니다. 15분 후 다시 시도하세요 (연속 5회 로그인 실패 시)
@@ -323,11 +319,10 @@ POST /api/auth/login
 ### 3.6 회원가입
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **인증**: 불필요
-- **요청 헤더**: `API-Version: v1` (필수)
 - **레이트 리밋**: 5회/분 (IP + 경로 기준)
 
 **요청 본문**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | 예 | min:3, max:50 | 사용자 이름 (고유) |
 | password | string | 예 | min:6, max:32 (평문) | AES-256-CBC-HMAC 암호화 후 Base64 인코딩 |
 | real_name | string | 예 | max:50 | 실명 |
-| captcha_key | string | 예 | | 캡차 key (먼저 `/api/captcha/verify` 검증을 통과해야 함) |
+| captcha_key | string | 예 | | 캡차 key (먼저 `/api/v1/captcha/verify` 검증을 통과해야 함) |
 
 **응답 예시**:
 ```json
@@ -370,11 +365,10 @@ POST /api/auth/register
 ### 3.7 토큰 갱신
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **인증**: 불필요
-- **요청 헤더**: `API-Version: v1` (필수)
 - **레이트 리밋**: 전역 기본 (60회/분)
 
 **요청 본문**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ POST /admin/upload
 
 레이트 리밋 상세:
 - 기본 전역 제한: 60회/분 / IP+경로
-- 로그인 엔드포인트 `/api/auth/login`: 10회/분
-- 회원가입 엔드포인트 `/api/auth/register`: 5회/분
+- 로그인 엔드포인트 `/api/v1/auth/login`: 10회/분
+- 회원가입 엔드포인트 `/api/v1/auth/register`: 5회/분
 - Redis 원자적 슬라이딩 윈도우 알고리즘 (Lua ZSET) 사용, TOCTOU 경쟁 조건 방지
 - Redis 사용 불가 시 fail open (통과), 요청 차단하지 않음
 
@@ -1666,15 +1660,14 @@ POST /admin/upload
 전체 인증 시퀀스:
 
 ```
-1. 클라이언트가 POST /api/captcha/generate 요청
-   (요청 헤더: API-Version: v1)
+1. 클라이언트가 POST /api/v1/captcha/generate 요청
     ↓
    서버 반환: key + type(click|slider|rotate) + base64 이미지 + extra(유형 관련 데이터)
    
 2. 사용자가 캡차 작업을 완료 (클릭/드래그/회전), 클라이언트가 답안 수집
    
-3. 클라이언트가 POST /api/captcha/verify 요청
-   (요청 헤더: API-Version: v1, Content-Type: application/json)
+3. 클라이언트가 POST /api/v1/captcha/verify 요청
+   (요청 헤더: Content-Type: application/json)
    요청 본문: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // 좌표 배열
    - type=slider: clicks = 120                   // X 오프셋
@@ -1688,8 +1681,8 @@ POST /admin/upload
     ↓
    서버 반환: { valid: true/false }
 
-4. 클라이언트가 POST /api/auth/login 요청
-   (요청 헤더: API-Version: v1, Content-Type: application/json)
+4. 클라이언트가 POST /api/v1/auth/login 요청
+   (요청 헤더: Content-Type: application/json)
    요청 본문: { username, password(암호화), captcha_key }
     ↓
    서버:
@@ -1723,7 +1716,7 @@ POST /admin/upload
    Response + X-RateLimit-* 헤더
 
 6. Access Token 만료 전 갱신
-   클라이언트가 POST /api/auth/refresh 요청
+   클라이언트가 POST /api/v1/auth/refresh 요청
    요청 본문: { refresh_token: "..." }
     ↓
    서버가 refresh_token 디코딩 → 새 access + refresh 발급
@@ -1765,7 +1758,6 @@ Cors（크로스 도메인 전처리 + 응답 헤더）
   → Locale（Accept-Language 언어 감지 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP 메서드 제한/요청 본문 크기/Content-Type 검증/XSS/SQL 주입/경로 탐색/명령 주입/CSRF 공격 차단）
   → RateLimit（Redis 슬라이딩 윈도우 레이트 리밋 + 계정 잠금: 5회 로그인 실패 시 15분 잠금）
-  → ApiVersion（API 버전 검증, /api 라우트 그룹）
   → AdminAuth（JWT 인증 + 블랙리스트, /admin 라우트 그룹）
   → AdminPermission（RBAC 인가 / Redis 60s 캐시, /admin 라우트 그룹）
   → OperationLog（POST/PUT/DELETE 자동 기록, 출처 단말 감지 포함, /admin 라우트 그룹）

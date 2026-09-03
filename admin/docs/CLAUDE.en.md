@@ -67,7 +67,7 @@ open-admin/
 │   │   ├── HealthController.php    # Health check
 │   │   ├── DocsController.php      # OpenAPI docs
 │   │   └── MetricsController.php   # Prometheus metrics
-│   ├── api/v1/controller/      # API v1 controllers (version header control)
+│   ├── api/v1/controller/      # API v1 controllers (version in URL path)
 │   │   ├── CaptchaController.php
 │   │   └── AuthController.php
 │   ├── common/                 # Common utilities
@@ -75,11 +75,12 @@ open-admin/
 │   │   ├── SnowflakeService.php
 │   │   └── EncryptionService.php
 │   ├── common/                 # Common definitions (incl. Apidoc Definitions)
-│   ├── middleware/             # Middleware (8)
+│   ├── middleware/             # Middleware (8, in chain registration order)
 │   │   ├── Cors.php            # CORS (global)
+│   │   ├── Locale.php          # Locale detection (global: Accept-Language / ?lang=)
 │   │   ├── SecurityFilter.php  # Attack blocking (global: XSS/SQL injection/path traversal/command injection/CSRF)
 │   │   ├── RateLimit.php       # Redis rate limiting (global, Lua atomic)
-│   │   ├── ApiVersion.php      # API version validation
+│   │   ├── ClientAuth.php      # Client JWT (/api/v1 client portal route group)
 │   │   ├── AdminAuth.php       # JWT auth + blacklist
 │   │   ├── AdminPermission.php # RBAC permission check (Redis 60s cache)
 │   │   └── OperationLog.php    # Automatic operation logging (incl. client source detection)
@@ -143,7 +144,8 @@ open-admin/
 ```
 全局:  Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → {路由中间件}
 /admin: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → ApiVersion → Controller
+/api/v1 public: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
+/api/v1 client portal: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → ClientAuth → Controller
 /health: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 ```
 
@@ -158,13 +160,13 @@ open-admin/
 
 ## API Versioning Policy
 
-The version is controlled via the `API-Version` request header (default `v1`), not reflected in the URL:
+The version lives directly in the URL path: public endpoints are mounted under `/api/v1/*` (currently the only version, `v1`), resolved by the `config/route.php` route groups to the matching controller under `app/api/v1/controller/`. There is no version middleware; an unregistered version path naturally returns 404.
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
-Adding a new version only requires creating the `app/api/{version}/controller/` directory and registering it in the `ApiVersion` middleware.
+Adding a new version only requires creating controllers under `app/api/{version}/controller/` and appending a `Route::group('/api/v{version}', ...)` group (with the `v('v2', ...)` helper) in `config/route.php`.
 
 ## Rate Limiting Policy
 
@@ -203,7 +205,7 @@ Redis sliding window (Lua atomic), default 60 req/min/IP/route:
 
 ### HarmonyOS
 - Uses the `@ohos.net.http` native HTTP client
-- Seamless token refresh: auto-calls `/api/auth/refresh` on 401
+- Seamless token refresh: auto-calls `/api/v1/auth/refresh` on 401
 - Auto-redirects to the login page when refresh fails
 
 ## Deployment

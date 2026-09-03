@@ -48,7 +48,7 @@ config/
 
 - OPTIONS preflight requests return 204 directly
 - Non-preflight requests append `Access-Control-Allow-Origin: *` to response headers
-- Allowed headers: `Authorization, Content-Type, API-Version`
+- Allowed headers: `Authorization, Content-Type`
 - Max cache: 86400 seconds
 
 Mounted: global middleware (`config/middleware.php`)
@@ -60,8 +60,8 @@ Mounted: global middleware (`config/middleware.php`)
 - Storage: Redis Sorted Set sliding window
 - Default: 60 requests/minute/IP/route
 - Sensitive endpoints:
-  - `/api/auth/login`: 10 requests/minute
-  - `/api/auth/register`: 5 requests/minute
+  - `/api/v1/auth/login`: 10 requests/minute
+  - `/api/v1/auth/register`: 5 requests/minute
 - Returns `429 Too Many Requests` when exceeded
 
 Mounted: global middleware (`config/middleware.php`), after Cors and before ApiVersion

@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # Cross-Origin (global)
 │   │   └── (migriert in das Paket erikwang2013/security-php)  # 31 Angriffserkennungen
 │   │   ├── RateLimit.php       # Redis-Rate-Limiting (global, atomar per Lua)
-│   │   ├── ApiVersion.php      # API-Versionsprüfung
 │   │   ├── AdminAuth.php       # JWT-Authentifizierung + Blacklist
 │   │   ├── AdminPermission.php # RBAC-Berechtigungsprüfung (Redis-60s-Cache)
 │   │   └── OperationLog.php    # Automatische Aktionsprotokoll-Aufzeichnung (inkl. Quellenerkennung)
@@ -143,7 +142,7 @@ open-admin/
 ```
 Global:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → {Routen-Middleware}
 /admin: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 ```
 
@@ -165,7 +164,7 @@ Global:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/se
 Die Version wird über den Request-Header `API-Version` gesteuert (Standard `v1`) und erscheint nicht in der URL:
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 Eine neue Version erfordert lediglich die Erstellung des Verzeichnisses `app/api/{version}/controller/` und die Registrierung in der `ApiVersion`-Middleware.
@@ -207,7 +206,7 @@ Redis-Gleitfenster (atomar per Lua), Standard 60/Minute/IP/Route:
 
 ### HarmonyOS
 - Natives HTTP-Client `@ohos.net.http`
-- Nahtlose Token-Erneuerung: bei 401 automatisch `/api/auth/refresh` aufrufen
+- Nahtlose Token-Erneuerung: bei 401 automatisch `/api/v1/auth/refresh` aufrufen
 - Bei fehlgeschlagener Erneuerung automatische Weiterleitung zur Login-Seite
 
 ## Deployment

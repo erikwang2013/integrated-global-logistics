@@ -18,7 +18,7 @@ import {
 export class AuthService {
   static async login(username: string, password: string): Promise<LoginResponse> {
     const body: LoginRequest = { username, password };
-    const response = await apiService.post<LoginResponse>('/api/auth/login', body);
+    const response = await apiService.post<LoginResponse>('/api/v1/auth/login', body);
     if (response.code !== 0) {
       throw new Error(response.message);
     }
@@ -26,7 +26,7 @@ export class AuthService {
   }
 
   static async refreshToken(refreshToken: string): Promise<LoginResponse> {
-    const response = await apiService.post<LoginResponse>('/api/auth/refresh', {
+    const response = await apiService.post<LoginResponse>('/api/v1/auth/refresh', {
       refresh_token: refreshToken
     });
     if (response.code !== 0) {

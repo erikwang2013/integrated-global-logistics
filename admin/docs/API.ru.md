@@ -9,7 +9,6 @@
 Открытая админ-панель (open-admin) построена на webman v2 и предоставляет RESTful JSON API. Все эндпоинты админки требуют аутентификации JWT и проверки прав RBAC; публичные эндпоинты через заголовок версии API маршрутизируются к версионированным контроллерам.
 
 - **Базовый URL**: `http://localhost:8787`
-- **Версия API**: задаётся заголовком `API-Version: v1` (по умолчанию v1)
 - **Язык**: переключается заголовком `Accept-Language` или параметром `?lang=zh_CN|en` (по умолчанию zh_CN), автоматически определяется middleware Locale
 
 > **Обзор эндпоинтов**: аутентификация (5) | дашборд (1) | пользователи (7) | роли (4) | права (4) | настройки (4) | журнал (1) | личный кабинет (3) | импорт/экспорт (3) | загрузка (1) | эксплуатация (4: health/metrics/docs/security.txt) | всего 37 эндпоинтов
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 Генерация капчи
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **Аутентификация**: не требуется
-- **Заголовок запроса**: `API-Version: v1` (обязательно)
 - **Лимит запросов**: глобальный по умолчанию (60 раз/мин)
 
 **Тело запроса**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 Проверка капчи
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **Аутентификация**: не требуется
-- **Заголовок запроса**: `API-Version: v1` (обязательно)
 - **Лимит запросов**: глобальный по умолчанию (60 раз/мин)
 
 **Тело запроса** — тип «клик» (`type: "click"`):
@@ -246,11 +243,10 @@ POST /api/captcha/verify
 ### 3.5 Вход в систему
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **Аутентификация**: не требуется
-- **Заголовок запроса**: `API-Version: v1` (обязательно)
 - **Лимит запросов**: 10 раз/мин (по IP + пути)
 
 **Тело запроса**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | да | min:3, max:50 | Имя пользователя |
 | password | string | да | min:6, max:32 (открытый текст) | Шифрование AES-256-CBC-HMAC + Base64-кодирование (совместимо с открытым текстом) |
-| captcha_key | string | да | | Ключ капчи (сначала нужно пройти `/api/captcha/verify`) |
+| captcha_key | string | да | | Ключ капчи (сначала нужно пройти `/api/v1/captcha/verify`) |
 
 ### Протокол шифрования пароля
 
@@ -315,7 +311,7 @@ POST /api/auth/login
 
 **Возможные ошибки**:
 - 422: Ошибка валидации параметров (нет обязательных полей, неверный формат)
-- 422: Сначала пройдите проверку капчи (captcha_key не прошёл `/api/captcha/verify`)
+- 422: Сначала пройдите проверку капчи (captcha_key не прошёл `/api/v1/captcha/verify`)
 - 401: Неверное имя пользователя или пароль
 - 403: Учётная запись отключена
 - 429: Учётная запись заблокирована, попробуйте через 15 минут (после 5 неудачных попыток входа)
@@ -323,11 +319,10 @@ POST /api/auth/login
 ### 3.6 Регистрация
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **Аутентификация**: не требуется
-- **Заголовок запроса**: `API-Version: v1` (обязательно)
 - **Лимит запросов**: 5 раз/мин (по IP + пути)
 
 **Тело запроса**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | да | min:3, max:50 | Имя пользователя (уникальное) |
 | password | string | да | min:6, max:32 (открытый текст) | Шифрование AES-256-CBC-HMAC + Base64-кодирование |
 | real_name | string | да | max:50 | Реальное имя |
-| captcha_key | string | да | | Ключ капчи (сначала нужно пройти `/api/captcha/verify`) |
+| captcha_key | string | да | | Ключ капчи (сначала нужно пройти `/api/v1/captcha/verify`) |
 
 **Пример ответа**:
 ```json
@@ -370,11 +365,10 @@ POST /api/auth/register
 ### 3.7 Обновление токена
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **Аутентификация**: не требуется
-- **Заголовок запроса**: `API-Version: v1` (обязательно)
 - **Лимит запросов**: глобальный по умолчанию (60 раз/мин)
 
 **Тело запроса**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ POST /admin/upload
 
 Детали лимитов:
 - Лимит по умолчанию: 60 раз/мин / IP+путь
-- Эндпоинт входа `/api/auth/login`: 10 раз/мин
-- Эндпоинт регистрации `/api/auth/register`: 5 раз/мин
+- Эндпоинт входа `/api/v1/auth/login`: 10 раз/мин
+- Эндпоинт регистрации `/api/v1/auth/register`: 5 раз/мин
 - Атомарный алгоритм скользящего окна Redis (Lua ZSET), исключает гонку TOCTOU
 - При недоступности Redis — fail open (пропуск запросов), без блокировки
 
@@ -1666,15 +1660,14 @@ POST /admin/upload
 Полная последовательность аутентификации:
 
 ```
-1. 客户端请求 POST /api/captcha/generate
-   (请求头: API-Version: v1)
+1. 客户端请求 POST /api/v1/captcha/generate
     ↓
    服务端返回: key + type(click|slider|rotate) + base64 图片 + extra(类型相关数据)
    
 2. 用户交互完成验证码操作（点击/拖拽/旋转），客户端收集答案
    
-3. 客户端请求 POST /api/captcha/verify
-   (请求头: API-Version: v1, Content-Type: application/json)
+3. 客户端请求 POST /api/v1/captcha/verify
+   (请求头: Content-Type: application/json)
    请求体: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // 坐标数组
    - type=slider: clicks = 120                   // X 偏移量
@@ -1688,8 +1681,8 @@ POST /admin/upload
     ↓
    服务端返回: { valid: true/false }
 
-4. 客户端请求 POST /api/auth/login
-   (请求头: API-Version: v1, Content-Type: application/json)
+4. 客户端请求 POST /api/v1/auth/login
+   (请求头: Content-Type: application/json)
    请求体: { username, password(加密), captcha_key }
     ↓
    服务端:
@@ -1723,7 +1716,7 @@ POST /admin/upload
    Response + X-RateLimit-* 头
 
 6. Access Token 过期前刷新
-   客户端请求 POST /api/auth/refresh
+   客户端请求 POST /api/v1/auth/refresh
    请求体: { refresh_token: "..." }
     ↓
    服务端解码 refresh_token → 签发新 access + refresh
@@ -1765,7 +1758,7 @@ Cors（跨域预处理 + 响应头）
   → Locale（Accept-Language 语言检测 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP方法限制/请求体大小/Content-Type校验/XSS/SQL注入/路径遍历/命令注入/CSRF 攻击拦截）
   → RateLimit（Redis 滑动窗口限流 + 账号锁定：5次登录失败锁定15分钟）
-  → ApiVersion（API 版本校验，/api 路由组）
+  → ClientAuth（客户端 JWT 认证，token_type=client，/api/v1 客户端门户路由组）
   → AdminAuth（JWT 认证 + 黑名单，/admin 路由组）
   → AdminPermission（RBAC 鉴权 / Redis 60s 缓存，/admin 路由组）
   → OperationLog（POST/PUT/DELETE 自动记录，含来源端检测，/admin 路由组）

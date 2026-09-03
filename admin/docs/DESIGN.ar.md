@@ -62,7 +62,7 @@
 | الطبقة | الدليل | المسؤولية |
 |---|------|------|
 | المسارات | `config/route.php` | تعيين URL إلى وحدات التحكم، ربط الوسائط، المسارات حسب الإصدار |
-| الوسائط | `app/middleware/` | اعتراض الهجمات (SecurityFilter)، تحديد المعدل (RateLimit)، المصادقة (JWT)، التفويض (RBAC)، إصدار API (ApiVersion) |
+| الوسائط | `app/middleware/` | اعتراض الهجمات (SecurityFilter)، تحديد المعدل (RateLimit)، المصادقة (JWT)، التفويض (RBAC)، إصدار API  |
 | وحدات التحكم | 14 وحدة: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (الإدارة) + Captcha/Auth (API v1) | التحقق من معاملات الطلب، استدعاء منطق الأعمال، تنسيق الاستجابات |
 | خدمات الأعمال | `app/service/` | منطق الأعمال القابل لإعادة الاستخدام (محجوز) |
 | نماذج البيانات | `app/model/` | تعيين ORM، العلاقات، تشفير وفك تشفير الحقول |
@@ -89,9 +89,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -174,8 +171,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 مواصفات URL
 
 ```
-公开接口:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+公开接口:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ logistics_system_config (系统配置) — 独立表
 يُتحكم في إصدار API عبر ترويسة الطلب، **ولا يظهر في مسار URL**:
 
 ```http
-API-Version: v1
 ```
 
 | الآلية | الوصف |
@@ -219,13 +215,13 @@ API-Version: v1
 
 ```bash
 # استخدام v1
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # استخدام v2
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # بدون إرسال، الافتراضي v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 استراتيجية تحديد المعدل
@@ -235,8 +231,8 @@ curl /api/auth/login
 | الواجهة | الحد |
 |------|------|
 | الافتراضي | 60 مرة/دقيقة/IP/المسار |
-| POST /api/auth/login | 10 مرات/دقيقة |
-| POST /api/auth/register | 5 مرات/دقيقة |
+| POST /api/v1/auth/login | 10 مرات/دقيقة |
+| POST /api/v1/auth/register | 5 مرات/دقيقة |
 
 عند تجاوز الحد يُرجع 429، وتتضمن ترويسات الاستجابة X-RateLimit-Limit / Remaining / Reset / Retry-After.
 
@@ -265,12 +261,12 @@ curl /api/auth/login
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

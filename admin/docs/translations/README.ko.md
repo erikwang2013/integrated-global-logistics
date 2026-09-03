@@ -86,7 +86,6 @@ open-admin/
 │   │   ├── Cors.php            # 크로스 도메인
 │   │   ├── SecurityFilter.php  # 공격 탐지 차단 (HTTP 메서드 제한/XSS/SQL 주입/경로 탐색/명령 주입/CSRF)
 │   │   ├── RateLimit.php       # Redis 레이트 리밋 (슬라이딩 윈도우 + 응답 헤더)
-│   │   ├── ApiVersion.php      # API 버전 검증
 │   │   ├── AdminAuth.php       # JWT 인증 + 블랙리스트
 │   │   ├── AdminPermission.php # RBAC 권한 검증
 │   │   └── OperationLog.php    # 작업 로그 자동 기록 (출처 단말 감지 포함)
@@ -225,7 +224,6 @@ docker-compose up -d
 
 - **통합 응답 형식**: `{ "code": 0, "message": "success", "data": {...} }`, `code=0`은 성공을 의미
 - **오류 코드**: `400` 파라미터 오류 / `401` 미로그인 / `403` 권한 없음 / `404` 존재하지 않음 / `422` 검증 실패 / `429` 레이트 리밋 / `500` 서버 오류
-- **API 버전**: 요청 헤더 `API-Version: v1`로 제어 (미지정 시 기본 v1), URL에 나타나지 않음
 - **인증**: `Authorization: Bearer <token>`; access_token 유효기간 2시간, refresh_token 14일
 - **ID 처리**: 요청/응답의 ID는 hashids 암호화 문자열로, 실제 DB ID가 노출되지 않음
 

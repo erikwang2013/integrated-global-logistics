@@ -9,7 +9,6 @@
 نظام الإدارة المفتوح (open-admin) مبني على webman v2 ويوفّر واجهات RESTful JSON API. جميع واجهات الإدارة تتطلب مصادقة JWT وتحقق صلاحيات RBAC، بينما تُوجَّه الواجهات العامة عبر ترويسة إصدار API إلى وحدات التحكم حسب الإصدار.
 
 - **عنوان URL الأساسي**: `http://localhost:8787`
-- **إصدار API**: يُتحكم عبر ترويسة الطلب `API-Version: v1` (الافتراضي v1 عند الغياب)
 - **اللغة**: التبديل عبر ترويسة `Accept-Language` أو المعامل `?lang=zh_CN|en` (الافتراضي zh_CN)، ويتم الكشف تلقائيًا عبر وسيط Locale
 
 > **نظرة عامة على النقاط الطرفية**: المصادقة(5) | لوحة التحكم(1) | المستخدمون(7) | الأدوار(4) | الصلاحيات(4) | الإعدادات(4) | السجلات(1) | الملف الشخصي(3) | الاستيراد والتصدير(3) | الرفع(1) | التشغيل والصيانة(4: health/metrics/docs/security.txt) | بإجمالي 37 نقطة طرفية
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 توليد كود التحقق
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **المصادقة**: غير مطلوبة
-- **ترويسة الطلب**: `API-Version: v1` (إلزامية)
 - **تحديد المعدل**: الافتراضي العام (60 مرة/دقيقة)
 
 **جسم الطلب**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 التحقق من كود التحقق
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **المصادقة**: غير مطلوبة
-- **ترويسة الطلب**: `API-Version: v1` (إلزامية)
 - **تحديد المعدل**: الافتراضي العام (60 مرة/دقيقة)
 
 **جسم الطلب** — نوع النقر (`type: "click"`):
@@ -246,11 +243,10 @@ POST /api/captcha/verify
 ### 3.5 تسجيل الدخول
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **المصادقة**: غير مطلوبة
-- **ترويسة الطلب**: `API-Version: v1` (إلزامية)
 - **تحديد المعدل**: 10 مرات/دقيقة (حسب IP + المسار)
 
 **جسم الطلب**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | نعم | min:3, max:50 | اسم المستخدم |
 | password | string | نعم | min:6, max:32 (نص صريح) | مشفّر بـ AES-256-CBC-HMAC ثم ترميز Base64 (متوافق مع النص الصريح) |
-| captcha_key | string | نعم | | مفتاح كود التحقق (يجب اجتياز `/api/captcha/verify` أولاً) |
+| captcha_key | string | نعم | | مفتاح كود التحقق (يجب اجتياز `/api/v1/captcha/verify` أولاً) |
 
 ### بروتوكول تشفير كلمة المرور
 
@@ -315,7 +311,7 @@ POST /api/auth/login
 
 **الأخطاء المحتملة**:
 - 422: فشل التحقق من المعاملات (حقول إلزامية مفقودة، تنسيق غير مطابق)
-- 422: يُرجى إكمال التحقق من كود التحقق أولاً (captcha_key لم يجتز `/api/captcha/verify`)
+- 422: يُرجى إكمال التحقق من كود التحقق أولاً (captcha_key لم يجتز `/api/v1/captcha/verify`)
 - 401: اسم المستخدم أو كلمة المرور خاطئة
 - 403: الحساب معطّل
 - 429: الحساب مقفول، يُرجى المحاولة بعد 15 دقيقة (يُفعَّل بعد 5 محاولات دخول فاشلة)
@@ -323,11 +319,10 @@ POST /api/auth/login
 ### 3.6 التسجيل
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **المصادقة**: غير مطلوبة
-- **ترويسة الطلب**: `API-Version: v1` (إلزامية)
 - **تحديد المعدل**: 5 مرات/دقيقة (حسب IP + المسار)
 
 **جسم الطلب**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | نعم | min:3, max:50 | اسم المستخدم (فريد) |
 | password | string | نعم | min:6, max:32 (نص صريح) | مشفّر بـ AES-256-CBC-HMAC ثم ترميز Base64 |
 | real_name | string | نعم | max:50 | الاسم الحقيقي |
-| captcha_key | string | نعم | | مفتاح كود التحقق (يجب اجتياز `/api/captcha/verify` أولاً) |
+| captcha_key | string | نعم | | مفتاح كود التحقق (يجب اجتياز `/api/v1/captcha/verify` أولاً) |
 
 **مثال على الاستجابة**:
 ```json
@@ -370,11 +365,10 @@ POST /api/auth/register
 ### 3.7 تحديث الرمز
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **المصادقة**: غير مطلوبة
-- **ترويسة الطلب**: `API-Version: v1` (إلزامية)
 - **تحديد المعدل**: الافتراضي العام (60 مرة/دقيقة)
 
 **جسم الطلب**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ POST /admin/upload
 
 تفاصيل تحديد المعدل:
 - الحد العام الافتراضي: 60 مرة/دقيقة / IP+المسار
-- نقطة الدخول `/api/auth/login`: 10 مرات/دقيقة
-- نقطة التسجيل `/api/auth/register`: 5 مرات/دقيقة
+- نقطة الدخول `/api/v1/auth/login`: 10 مرات/دقيقة
+- نقطة التسجيل `/api/v1/auth/register`: 5 مرات/دقيقة
 - استخدام خوارزمية نافذة منزلقة ذرّية في Redis (Lua ZSET) لتجنب سباق TOCTOU
 - عند تعذر الوصول إلى Redis يُفعَّل fail open (تمرير الطلبات)، دون حجب الطلبات
 
@@ -1666,15 +1660,14 @@ POST /admin/upload
 التسلسل الكامل للمصادقة:
 
 ```
-1. 客户端请求 POST /api/captcha/generate
-   (请求头: API-Version: v1)
+1. 客户端请求 POST /api/v1/captcha/generate
     ↓
    服务端返回: key + type(click|slider|rotate) + base64 图片 + extra(类型相关数据)
    
 2. 用户交互完成验证码操作（点击/拖拽/旋转），客户端收集答案
    
-3. 客户端请求 POST /api/captcha/verify
-   (请求头: API-Version: v1, Content-Type: application/json)
+3. 客户端请求 POST /api/v1/captcha/verify
+   (请求头: Content-Type: application/json)
    请求体: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // 坐标数组
    - type=slider: clicks = 120                   // X 偏移量
@@ -1688,8 +1681,8 @@ POST /admin/upload
     ↓
    服务端返回: { valid: true/false }
 
-4. 客户端请求 POST /api/auth/login
-   (请求头: API-Version: v1, Content-Type: application/json)
+4. 客户端请求 POST /api/v1/auth/login
+   (请求头: Content-Type: application/json)
    请求体: { username, password(加密), captcha_key }
     ↓
    服务端:
@@ -1723,7 +1716,7 @@ POST /admin/upload
    Response + X-RateLimit-* 头
 
 6. Access Token 过期前刷新
-   客户端请求 POST /api/auth/refresh
+   客户端请求 POST /api/v1/auth/refresh
    请求体: { refresh_token: "..." }
     ↓
    服务端解码 refresh_token → 签发新 access + refresh
@@ -1765,7 +1758,7 @@ Cors（跨域预处理 + 响应头）
   → Locale（Accept-Language 语言检测 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP方法限制/请求体大小/Content-Type校验/XSS/SQL注入/路径遍历/命令注入/CSRF 攻击拦截）
   → RateLimit（Redis 滑动窗口限流 + 账号锁定：5次登录失败锁定15分钟）
-  → ApiVersion（API 版本校验，/api 路由组）
+  → ClientAuth（客户端 JWT 认证，token_type=client，/api/v1 客户端门户路由组）
   → AdminAuth（JWT 认证 + 黑名单，/admin 路由组）
   → AdminPermission（RBAC 鉴权 / Redis 60s 缓存，/admin 路由组）
   → OperationLog（POST/PUT/DELETE 自动记录，含来源端检测，/admin 路由组）

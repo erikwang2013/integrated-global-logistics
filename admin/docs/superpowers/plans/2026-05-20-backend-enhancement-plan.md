@@ -90,7 +90,7 @@ class Cors implements MiddlewareInterface
             return response('', 204, [
                 'Access-Control-Allow-Origin'      => '*',
                 'Access-Control-Allow-Methods'     => 'GET,POST,PUT,DELETE,OPTIONS',
-                'Access-Control-Allow-Headers'     => 'Authorization,Content-Type,API-Version',
+                'Access-Control-Allow-Headers'     => 'Authorization,Content-Type',
                 'Access-Control-Max-Age'           => '86400',
             ]);
         }
@@ -147,8 +147,8 @@ class RateLimit implements MiddlewareInterface
     private int $defaultWindow = 60;
 
     private array $sensitive = [
-        '/api/auth/login'    => ['limit' => 10, 'window' => 60],
-        '/api/auth/register' => ['limit' => 5,  'window' => 60],
+        '/api/v1/auth/login'    => ['limit' => 10, 'window' => 60],
+        '/api/v1/auth/register' => ['limit' => 5,  'window' => 60],
     ];
 
     public function process(Request $request, callable $handler): Response
@@ -1212,10 +1212,10 @@ php start.php status
 curl http://localhost:8787/health
 
 # 4. 验证码 + 登录
-curl -X POST http://localhost:8787/api/captcha/generate -H "API-Version: v1"
+curl -X POST http://localhost:8787/api/v1/captcha/generate
 
 # 5. CORS 预检
-curl -X OPTIONS http://localhost:8787/api/auth/login -H "Origin: http://example.com" -I
+curl -X OPTIONS http://localhost:8787/api/v1/auth/login -H "Origin: http://example.com" -I
 
 # 6. 停止服务
 php start.php stop

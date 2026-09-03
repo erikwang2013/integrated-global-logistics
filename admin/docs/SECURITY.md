@@ -64,7 +64,7 @@
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | 允许任意源跨域（内网管理后台场景） |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | 允许的方法集合 |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | 允许的自定义头 |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | 允许的自定义头 |
 | Access-Control-Max-Age | `86400` | 预检请求缓存 24 小时 |
 | X-Content-Type-Options | `nosniff` | 禁止浏览器 MIME 嗅探 |
 | X-Frame-Options | `DENY` | 禁止所有 iframe 嵌入，防点击劫持 |
@@ -116,8 +116,8 @@ Lua 脚本在 Redis 服务端单线程执行，**天然原子化**，消除 TOCT
 | 路由 | 限制 | 窗口 | 场景 |
 |------|------|------|------|
 | 默认（所有路由） | 60 次/分钟 | 60s | 通用 API |
-| `/api/auth/login` | 10 次/分钟 | 60s | 登录（防暴力破解） |
-| `/api/auth/register` | 5 次/分钟 | 60s | 注册（防批量注册） |
+| `/api/v1/auth/login` | 10 次/分钟 | 60s | 登录（防暴力破解） |
+| `/api/v1/auth/register` | 5 次/分钟 | 60s | 注册（防批量注册） |
 
 ### 响应头
 

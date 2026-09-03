@@ -83,7 +83,6 @@ flowchart TD
     subgraph "미들웨어 계층 Middleware Layer"
         M_RL["RateLimit<br/>Redis 슬라이딩 윈도우 레이트 리밋<br/>X-RateLimit 응답 헤더"]
         M_SF["SecurityFilter<br/>공격 탐지 차단<br/>XSS/SQL 주입/경로 탐색/CSRF"]
-        M0["ApiVersion<br/>API 버전 검증<br/>apiVersion 주입"]
         M1["AdminAuth<br/>JWT Token 검증<br/>adminId 주입"]
         M2["AdminPermission<br/>RBAC 인가<br/>method.path 매칭<br/>Redis 60s 권한 캐시"]
     end
@@ -119,11 +118,11 @@ flowchart TD
         D3["Redis"]
     end
 
-    R1 --> M_SF --> M_RL --> M0
-    M0 --> M1
+    R1 --> M_SF --> M_RL
+    M_RL --> M1
     M1 --> M2
     M2 --> CT2 & CT3 & CT4 & CT5 & CT6
-    M0 --> CT7 & CT8
+    M_RL --> CT7 & CT8
     CT1 -.->|extends| CT2 & CT3 & CT4 & CT5 & CT6
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> S1 & S2 & S3
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> MD1 & MD2 & MD3 & MD4 & MD5
@@ -134,7 +133,6 @@ flowchart TD
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
-    style M0 fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
@@ -151,7 +149,6 @@ sequenceDiagram
     participant MW_LOC as Locale
     participant MW_SF as SecurityFilter
     participant MW_RL as RateLimit
-    participant MW0 as ApiVersion
     participant MW1 as AdminAuth
     participant MW2 as AdminPermission
     participant CTL as Controller
@@ -160,7 +157,7 @@ sequenceDiagram
     participant DB as MySQL
     participant OPLOG as OperationLog
 
-    C->>N: HTTPS 요청<br/>Header: API-Version: v1, Accept-Language: zh_CN
+    C->>N: HTTPS 요청<br/>Header: Accept-Language: zh_CN
     N->>MW_LOC: 전달
 
     MW_LOC->>MW_LOC: locale = zh_CN (Accept-Language / ?lang=)
@@ -182,13 +179,7 @@ sequenceDiagram
         MW_RL-->>C: 429 + Retry-After
     end
 
-    MW_RL->>MW0: 통과
-
-    alt 지원하지 않는 버전
-        MW0-->>C: 400 지원하지 않는 API 버전
-    else 버전 유효
-        MW0->>MW0: $request->apiVersion = v1
-    end
+    MW_RL->>MW1: 통과
 
     alt Token 누락 또는 무효
         MW1-->>C: 401 Unauthorized
@@ -240,7 +231,7 @@ sequenceDiagram
     participant CAP as Captcha Service
 
     Note over U,CAP: === 1단계: 캡차 획득 ===
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP->>CAP: 300×200 배경 이미지 생성
     CAP->>CAP: N개의 중국어 대상 무작위 배치
@@ -255,7 +246,7 @@ sequenceDiagram
     CL->>CL: clicks 수집: [{x,y}, {x,y}, {x,y}]
 
     Note over U,CAP: === 3단계: 로그인 ===
-    CL->>SV: POST /api/auth/login { username, password, captcha_key, clicks }
+    CL->>SV: POST /api/v1/auth/login { username, password, captcha_key, clicks }
     SV->>CAP: captcha_verify(key, 'click', clicks)
     alt 캡차 오류
         CAP-->>SV: false

@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # क्रॉस-ओरिजिन（ग्लोबल）
 │   │   └── (erikwang2013/security-php पैकेज में स्थानांतरित)  # 31 प्रकार की अटैक डिटेक्शन
 │   │   ├── RateLimit.php       # Redis रेट लिमिट（ग्लोबल，Lua एटॉमिक）
-│   │   ├── ApiVersion.php      # API संस्करण सत्यापन
 │   │   ├── AdminAuth.php       # JWT प्रमाणीकरण + ब्लैकलिस्ट
 │   │   ├── AdminPermission.php # RBAC अनुमति सत्यापन（Redis 60s कैश）
 │   │   └── OperationLog.php    # ऑपरेशन लॉग स्वचालित रिकॉर्डिंग（स्रोत डिवाइस पहचान सहित）
@@ -143,7 +142,7 @@ open-admin/
 ```
 ग्लोबल:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → {रूट मिडलवेयर}
 /admin: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 ```
 
@@ -165,7 +164,7 @@ open-admin/
 संस्करण रिक्वेस्ट हेडर `API-Version` द्वारा नियंत्रित होता है（डिफ़ॉल्ट `v1`），URL में नहीं दिखता：
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 नया संस्करण जोड़ने के लिए केवल `app/api/{version}/controller/` डायरेक्टरी बनाकर `ApiVersion` मिडलवेयर में रजिस्टर करें।
@@ -207,7 +206,7 @@ Redis स्लाइडिंग विंडो（Lua एटॉमिक），
 
 ### HarmonyOS
 - `@ohos.net.http` नेटिव HTTP क्लाइंट उपयोग करें
-- टोकन सीमलेस रीफ़्रेश：401 पर स्वचालित रूप से `/api/auth/refresh` कॉल
+- टोकन सीमलेस रीफ़्रेश：401 पर स्वचालित रूप से `/api/v1/auth/refresh` कॉल
 - रीफ़्रेश विफल होने पर स्वचालित रूप से लॉगिन पेज पर रीडायरेक्ट
 
 ## डिप्लॉयमेंट

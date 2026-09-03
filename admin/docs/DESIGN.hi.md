@@ -62,7 +62,7 @@
 | परत | डायरेक्टरी | ज़िम्मेदारी |
 |---|------|------|
 | रूटिंग | `config/route.php` | URL से कंट्रोलर मैपिंग, मिडलवेयर बाइंडिंग, संस्करण-नियंत्रित रूट |
-| मिडलवेयर | `app/middleware/` | अटैक इंटरसेप्शन(SecurityFilter)、रेट लिमिट(RateLimit)、प्रमाणीकरण(JWT)、अनुमति(RBAC)、API संस्करण(ApiVersion) |
+| मिडलवेयर | `app/middleware/` | अटैक इंटरसेप्शन(SecurityFilter)、रेट लिमिट(RateLimit)、प्रमाणीकरण(JWT)、अनुमति(RBAC)、API संस्करण |
 | कंट्रोलर | 14: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (एडमिन साइड) + Captcha/Auth (API v1) | रिक्वेस्ट पैरामीटर सत्यापन, बिज़नेस लॉजिक कॉल, रिस्पॉन्स फॉर्मेटिंग |
 | बिज़नेस सेवा | `app/service/` | पुन: प्रयोज्य बिज़नेस लॉजिक (आरक्षित) |
 | डेटा मॉडल | `app/model/` | ORM मैपिंग, संबंध, फ़ील्ड एन्क्रिप्शन/डिक्रिप्शन |
@@ -89,9 +89,6 @@ Route मिलान
   ▼
   RateLimit ───────────► Redis स्लाइडिंग विंडो रेट लिमिट
   │ (विफल होने पर 429 + Retry-After हेडर)
-  ▼
-  ApiVersion ─────────► API-Version हेडर सत्यापन, $request->apiVersion इंजेक्ट
-  │ (विफल होने पर 400)
   ▼
   AdminAuth ──────────► JWT सत्यापन, $request->adminId इंजेक्ट
   │ (विफल होने पर 401)
@@ -174,8 +171,8 @@ logistics_system_config (सिस्टम कॉन्फ़िगरेशन
 ### 4.1 URL मानक
 
 ```
-सार्वजनिक इंटरफ़ेस:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+सार्वजनिक इंटरफ़ेस:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 एडमिन साइड:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ logistics_system_config (सिस्टम कॉन्फ़िगरेशन
 API संस्करण रिक्वेस्ट हेडर द्वारा नियंत्रित होता है, **URL पाथ में नहीं दिखता**:
 
 ```http
-API-Version: v1
 ```
 
 | तंत्र | विवरण |
@@ -219,13 +215,13 @@ API-Version: v1
 
 ```bash
 # v1 उपयोग करें
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # v2 उपयोग करें
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # न भेजें, डिफ़ॉल्ट v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 रेट लिमिट नीति
@@ -235,8 +231,8 @@ Redis Sorted Set स्लाइडिंग विंडो एल्गोर�
 | इंटरफ़ेस | सीमा |
 |------|------|
 | डिफ़ॉल्ट | 60 बार/मिनट/IP/रूट |
-| POST /api/auth/login | 10 बार/मिनट |
-| POST /api/auth/register | 5 बार/मिनट |
+| POST /api/v1/auth/login | 10 बार/मिनट |
+| POST /api/v1/auth/register | 5 बार/मिनट |
 
 सीमा से अधिक होने पर 429 लौटता है, रिस्पॉन्स हेडर में X-RateLimit-Limit / Remaining / Reset / Retry-After।
 
@@ -265,12 +261,12 @@ Redis Sorted Set स्लाइडिंग विंडो एल्गोर�
 ```
 क्लाइंट                               सर्वर
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② उपयोगकर्ता छवि में टेक्स्ट स्थान पर क्लिक करता है    │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

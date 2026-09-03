@@ -62,7 +62,7 @@
 | লেয়ার | ডিরেক্টরি | দায়িত্ব |
 |---|------|------|
 | রাউট | `config/route.php` | URL থেকে কন্ট্রোলার ম্যাপিং, মিডলওয়্যার বাইন্ডিং, ভার্সনযুক্ত রাউট |
-| মিডলওয়্যার | `app/middleware/` | আক্রমণ ব্লকিং(SecurityFilter), রেট লিমিট(RateLimit), অথেনটিকেশন(JWT), অথোরাইজেশন(RBAC), API ভার্সন(ApiVersion) |
+| মিডলওয়্যার | `app/middleware/` | আক্রমণ ব্লকিং(SecurityFilter), রেট লিমিট(RateLimit), অথেনটিকেশন(JWT), অথোরাইজেশন(RBAC), API ভার্সন |
 | কন্ট্রোলার | ১৪টি: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (অ্যাডমিন) + Captcha/Auth (API v1) | রিকোয়েস্ট প্যারামিটার ভ্যালিডেশন, বিজনেস লজিক কল, রেসপন্স ফরম্যাটিং |
 | বিজনেস সার্ভিস | `app/service/` | পুনর্ব্যবহারযোগ্য বিজনেস লজিক (রিজার্ভ) |
 | ডেটা মডেল | `app/model/` | ORM ম্যাপিং, সম্পর্ক, ফিল্ড এনক্রিপশন/ডিক্রিপশন |
@@ -89,9 +89,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -174,8 +171,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 URL নিয়মাবলি
 
 ```
-公开接口:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+公开接口:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ logistics_system_config (系统配置) — 独立表
 API ভার্সন রিকোয়েস্ট হেডার দিয়ে নিয়ন্ত্রিত হয়, **URL পাথে প্রকাশিত হয় না**:
 
 ```http
-API-Version: v1
 ```
 
 | মেকানিজম | বর্ণনা |
@@ -219,13 +215,13 @@ API-Version: v1
 
 ```bash
 # v1 ব্যবহার
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # v2 ব্যবহার
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # না দিলে, ডিফল্ট v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 রেট লিমিট পলিসি
@@ -235,8 +231,8 @@ Redis Sorted Set স্লাইডিং উইন্ডো অ্যালগ�
 | ইন্টারফেস | সীমা |
 |------|------|
 | ডিফল্ট | ৬০ বার/মিনিট/IP/রাউট |
-| POST /api/auth/login | ১০ বার/মিনিট |
-| POST /api/auth/register | ৫ বার/মিনিট |
+| POST /api/v1/auth/login | ১০ বার/মিনিট |
+| POST /api/v1/auth/register | ৫ বার/মিনিট |
 
 সীমা অতিক্রম করলে 429 রিটার্ন, রেসপন্স হেডারে X-RateLimit-Limit / Remaining / Reset / Retry-After থাকে।
 
@@ -265,12 +261,12 @@ Redis Sorted Set স্লাইডিং উইন্ডো অ্যালগ�
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

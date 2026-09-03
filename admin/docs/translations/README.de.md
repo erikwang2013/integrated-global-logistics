@@ -86,7 +86,6 @@ open-admin/
 │   │   ├── Cors.php            # Cross-Origin
 │   │   ├── SecurityFilter.php  # Angriffserkennung (HTTP-Methodenlimitierung/XSS/SQL-Injection/Pfad-Traversal/Befehlsinjektion/CSRF)
 │   │   ├── RateLimit.php       # Redis-Rate-Limiting (gleitendes Fenster + Response-Header)
-│   │   ├── ApiVersion.php      # API-Versionsprüfung
 │   │   ├── AdminAuth.php       # JWT-Authentifizierung + Blacklist
 │   │   ├── AdminPermission.php # RBAC-Berechtigungsprüfung
 │   │   └── OperationLog.php    # Automatische Aufzeichnung von Aktionsprotokollen (inkl. Quellenerkennung)
@@ -224,7 +223,6 @@ Die vollständige API-Referenz (einheitliches Antwortformat, Fehlercodes, alle E
 
 - **Einheitliches Antwortformat**: `{ "code": 0, "message": "success", "data": {...} }`, `code=0` bedeutet Erfolg
 - **Fehlercodes**: `400` Parameterfehler / `401` nicht angemeldet / `403` keine Berechtigung / `404` nicht vorhanden / `422` Validierungsfehler / `429` Rate-Limit / `500` Serverfehler
-- **API-Version**: Steuerung über den Request-Header `API-Version: v1` (Standard v1, wenn fehlend), nicht in der URL sichtbar
 - **Authentifizierung**: `Authorization: Bearer <token>`; access_token gültig 2 Stunden, refresh_token 14 Tage
 - **ID-Behandlung**: IDs in Requests/Responses sind hashids-verschlüsselte Zeichenketten, echte Datenbank-IDs werden nicht preisgegeben
 

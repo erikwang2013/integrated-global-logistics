@@ -15,18 +15,18 @@ use support\Request;
  * - /health   健康检查（无需认证）
  *
  * API 版本策略:
- * - 版本号通过请求头 API-Version 携带（如 "v1"、"v2"），不在 URL 中体现
- * - 缺失时默认使用 v1
- * - 由 ApiVersion 中间件校验，路由闭包按版本解析对应控制器
+ * - 版本号位于 URL 路径中: /api/{version}/*（如 /api/v1/auth/login），不在 header 中体现
+ * - 由 v() 闭包按路径前缀解析对应版本控制器，未知版本自然 404
  */
 
 /**
  * 创建版本化 API 路由闭包
+ *
+ * @param string $version   版本前缀，如 "v1"、"v2"，须与路由分组前缀一致
  */
-function v(string $controller, string $action): \Closure
+function v(string $version, string $controller, string $action): \Closure
 {
-    return function (Request $request) use ($controller, $action) {
-        $version = $request->apiVersion ?? 'v1';
+    return function (Request $request) use ($version, $controller, $action) {
         $class = "\\app\\api\\{$version}\\controller\\{$controller}";
         return (new $class)->{$action}($request);
     };
@@ -154,12 +154,12 @@ Route::get('/admin/profile', [app\admin\controller\ProfileController::class, 'sh
     ->middleware([app\middleware\AdminAuth::class]);
 
 // ============================================================
-// 公开接口（通过 API-Version 头路由到版本化控制器）
+// 公开接口 v1（版本号在 URL 路径中: /api/v1/*）
 // ============================================================
-Route::group('/api', function () {
+Route::group('/api/v1', function () {
     // 点击验证码
-    Route::post('/captcha/generate', v('CaptchaController', 'generate'));
-    Route::post('/captcha/verify', v('CaptchaController', 'verify'));
+    Route::post('/captcha/generate', v('v1', 'CaptchaController', 'generate'));
+    Route::post('/captcha/verify', v('v1', 'CaptchaController', 'verify'));
 
     // 认证（client=1 走客户端门户登录，否则为管理端登录）
     Route::post('/auth/login', function (Request $request) {
@@ -168,24 +168,21 @@ Route::group('/api', function () {
         }
         return (new \app\api\v1\controller\AuthController)->login($request);
     });
-    Route::post('/auth/register', v('ClientAuthController', 'register'));
-    Route::post('/auth/refresh', v('AuthController', 'refresh'));
-})->middleware([
-    app\middleware\ApiVersion::class,
-]);
+    Route::post('/auth/register', v('v1', 'ClientAuthController', 'register'));
+    Route::post('/auth/refresh', v('v1', 'AuthController', 'refresh'));
+});
 
-// 客户端门户（需客户端 JWT，token_type=client）
-Route::group('/api', function () {
-    Route::get('/plan', v('ClientAppController', 'plans'));
-    Route::get('/app', v('ClientAppController', 'index'));
-    Route::post('/app', v('ClientAppController', 'store'));
+// 客户端门户 v1（需客户端 JWT，token_type=client）
+Route::group('/api/v1', function () {
+    Route::get('/plan', v('v1', 'ClientAppController', 'plans'));
+    Route::get('/app', v('v1', 'ClientAppController', 'index'));
+    Route::post('/app', v('v1', 'ClientAppController', 'store'));
     // webman 闭包 DI 按参数名绑定、不支持变参闭包，带参路由改用数组语法注入 {id}
     Route::put('/app/{id}/key', [\app\api\v1\controller\ClientAppController::class, 'resetKey']);
     Route::put('/app/{id}', [\app\api\v1\controller\ClientAppController::class, 'update']);
     Route::post('/app/{id}/order', [\app\api\v1\controller\ClientAppController::class, 'order']);
     Route::post('/order/{id}/pay', [\app\api\v1\controller\ClientAppController::class, 'pay']);
 })->middleware([
-    app\middleware\ApiVersion::class,
     app\middleware\ClientAuth::class,
 ]);
 
@@ -196,7 +193,7 @@ Route::fallback(function (\support\Request $request) {
         return response('', 204, [
             'Access-Control-Allow-Origin'      => '*',
             'Access-Control-Allow-Methods'     => 'GET,POST,PUT,DELETE,OPTIONS',
-            'Access-Control-Allow-Headers'     => 'Authorization,Content-Type,API-Version,Accept-Language',
+            'Access-Control-Allow-Headers'     => 'Authorization,Content-Type,Accept-Language',
             'Access-Control-Max-Age'           => '86400',
         ]);
     }

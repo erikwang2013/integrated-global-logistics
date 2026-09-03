@@ -70,7 +70,7 @@ Tous les en-têtes sont injectés dans le middleware `Cors` et ajoutés à chaqu
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | Autorise le CORS depuis toute origine (scénario de panneau d'administration en intranet) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | Ensemble des méthodes autorisées |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | En-têtes personnalisés autorisés |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | En-têtes personnalisés autorisés |
 | Access-Control-Max-Age | `86400` | Cache des requêtes de pré-vérification pendant 24 heures |
 | X-Content-Type-Options | `nosniff` | Interdit le sniffing MIME par le navigateur |
 | X-Frame-Options | `DENY` | Interdit tout embarquement iframe, contre le clickjacking |
@@ -122,8 +122,8 @@ Le script Lua s'exécute en monothread côté serveur Redis, **naturellement ato
 | Route | Limite | Fenêtre | Scénario |
 |------|------|------|------|
 | Défaut (toutes les routes) | 60 requêtes/minute | 60 s | API générale |
-| `/api/auth/login` | 10 requêtes/minute | 60 s | Connexion (contre le brute force) |
-| `/api/auth/register` | 5 requêtes/minute | 60 s | Inscription (contre l'inscription de masse) |
+| `/api/v1/auth/login` | 10 requêtes/minute | 60 s | Connexion (contre le brute force) |
+| `/api/v1/auth/register` | 5 requêtes/minute | 60 s | Inscription (contre l'inscription de masse) |
 
 ### En-têtes de réponse
 

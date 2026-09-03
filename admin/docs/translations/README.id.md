@@ -86,7 +86,6 @@ open-admin/
 │   │   ├── Cors.php            # CORS lintas domain
 │   │   ├── SecurityFilter.php  # Interception deteksi serangan (pembatasan metode HTTP/XSS/Injeksi SQL/Path traversal/Injeksi perintah/CSRF)
 │   │   ├── RateLimit.php       # Rate limit Redis (sliding window + header respons)
-│   │   ├── ApiVersion.php      # Validasi versi API
 │   │   ├── AdminAuth.php       # Autentikasi JWT + blacklist
 │   │   ├── AdminPermission.php # Validasi hak akses RBAC
 │   │   └── OperationLog.php    # Pencatatan log operasi otomatis (termasuk deteksi sumber)
@@ -225,7 +224,6 @@ Referensi API lengkap (format respons terpadu, kode kesalahan, detail semua endp
 
 - **Format respons terpadu**: `{ "code": 0, "message": "success", "data": {...} }`, `code=0` berarti sukses
 - **Kode kesalahan**: `400` kesalahan parameter / `401` belum login / `403` tanpa izin / `404` tidak ditemukan / `422` gagal validasi / `429` rate limit / `500` kesalahan server
-- **Versi API**: Dikontrol melalui header `API-Version: v1` (default v1 jika tidak ada), tidak tampil di URL
 - **Autentikasi**: `Authorization: Bearer <token>`; masa berlaku access_token 2 jam, refresh_token 14 hari
 - **Penanganan ID**: ID pada permintaan/respons adalah string terenkripsi hashids, tidak mengekspos ID basis data asli
 

@@ -48,7 +48,7 @@ config/
 
 - OPTIONS プリフライトリクエストは 204 を直接返す
 - プリフライト以外のリクエストにはレスポンスヘッダーに `Access-Control-Allow-Origin: *` を追加
-- 許可ヘッダー: `Authorization, Content-Type, API-Version`
+- 許可ヘッダー: `Authorization, Content-Type`
 - 最大キャッシュ: 86400 秒
 
 マウント：グローバルミドルウェア（`config/middleware.php`）
@@ -60,8 +60,8 @@ config/
 - 保存：Redis Sorted Set スライディングウィンドウ
 - デフォルト：60 回/分/IP/ルート
 - 機密インターフェース：
-  - `/api/auth/login`: 10 回/分
-  - `/api/auth/register`: 5 回/分
+  - `/api/v1/auth/login`: 10 回/分
+  - `/api/v1/auth/register`: 5 回/分
 - 超過時は `429 Too Many Requests` を返す
 
 マウント：グローバルミドルウェア（`config/middleware.php`）、Cors の後、ApiVersion の前

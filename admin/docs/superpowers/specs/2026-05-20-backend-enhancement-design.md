@@ -44,7 +44,7 @@ config/
 
 - OPTIONS 预检请求直接返回 204
 - 非预检请求在响应头追加 `Access-Control-Allow-Origin: *`
-- 允许头: `Authorization, Content-Type, API-Version`
+- 允许头: `Authorization, Content-Type`
 - 最大缓存: 86400 秒
 
 挂载：全局中间件（`config/middleware.php`）
@@ -56,8 +56,8 @@ config/
 - 存储：Redis Sorted Set 滑动窗口
 - 默认：60 次/分钟/IP/路由
 - 敏感接口：
-  - `/api/auth/login`: 10 次/分钟
-  - `/api/auth/register`: 5 次/分钟
+  - `/api/v1/auth/login`: 10 次/分钟
+  - `/api/v1/auth/register`: 5 次/分钟
 - 超限返回 `429 Too Many Requests`
 
 挂载：全局中间件（`config/middleware.php`），在 Cors 之后、ApiVersion 之前

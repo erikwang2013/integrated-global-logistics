@@ -73,7 +73,6 @@ open-admin/
 │   │   ├── Cors.php            # クロスドメイン（グローバル）
 │   │   ├── SecurityFilter.php  # 攻撃ブロック（グローバル：XSS/SQL インジェクション/パストラバーサル/コマンドインジェクション/CSRF）
 │   │   ├── RateLimit.php       # Redis レート制限（グローバル、Lua アトミック）
-│   │   ├── ApiVersion.php      # API バージョン検証
 │   │   ├── AdminAuth.php       # JWT 認証 + ブラックリスト
 │   │   ├── AdminPermission.php # RBAC 権限検証（Redis 60 秒キャッシュ）
 │   │   └── OperationLog.php    # 操作ログ自動記録（クライアント検出含む）
@@ -137,7 +136,7 @@ open-admin/
 ```
 全局:  Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → {路由中间件}
 /admin: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 ```
 
@@ -155,7 +154,7 @@ open-admin/
 バージョンはリクエストヘッダー `API-Version` で制御（デフォルト `v1`）、URL には表れません：
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 新しいバージョンを追加するには、`app/api/{version}/controller/` ディレクトリを作成し、`ApiVersion` ミドルウェアに登録するだけです。
@@ -188,7 +187,7 @@ Redis スライディングウィンドウ（Lua アトミック）、デフォ�
 
 ### HarmonyOS
 - `@ohos.net.http` ネイティブ HTTP クライアントを使用
-- Token の無感リフレッシュ：401 時に `/api/auth/refresh` を自動呼び出し
+- Token の無感リフレッシュ：401 時に `/api/v1/auth/refresh` を自動呼び出し
 - リフレッシュ失敗時は自動でログインページにリダイレクト
 
 ## デプロイ

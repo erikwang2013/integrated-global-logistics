@@ -70,7 +70,7 @@
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | السماح بالوصول عبر النطاقات من أي مصدر (سيناريو لوحة الإدارة الداخلية) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | مجموعة الطرق المسموحة |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | الترويسات المخصصة المسموحة |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | الترويسات المخصصة المسموحة |
 | Access-Control-Max-Age | `86400` | تخزين طلب الفحص المسبق مؤقتًا لمدة 24 ساعة |
 | X-Content-Type-Options | `nosniff` | منع المتصفح من فحص MIME |
 | X-Frame-Options | `DENY` | منع كل تضمين iframe، ضد اختطاف النقر |
@@ -122,8 +122,8 @@ redis.call('EXPIRE', KEYS[1], window + 10)
 | المسار | الحد | النافذة | السيناريو |
 |------|------|------|------|
 | الافتراضي (جميع المسارات) | 60 مرة/دقيقة | 60s | API عام |
-| `/api/auth/login` | 10 مرات/دقيقة | 60s | تسجيل الدخول (ضد القوة الغاشمة) |
-| `/api/auth/register` | 5 مرات/دقيقة | 60s | التسجيل (ضد التسجيل الجماعي) |
+| `/api/v1/auth/login` | 10 مرات/دقيقة | 60s | تسجيل الدخول (ضد القوة الغاشمة) |
+| `/api/v1/auth/register` | 5 مرات/دقيقة | 60s | التسجيل (ضد التسجيل الجماعي) |
 
 ### ترويسات الاستجابة
 

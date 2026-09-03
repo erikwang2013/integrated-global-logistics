@@ -83,7 +83,6 @@ flowchart TD
     subgraph "মিডলওয়্যার লেয়ার Middleware Layer"
         M_RL["RateLimit<br/>Redis স্লাইডিং উইন্ডো রেট লিমিট<br/>X-RateLimit রেসপন্স হেডার"]
         M_SF["SecurityFilter<br/>আক্রমণ ডিটেকশন ও ব্লকিং<br/>XSS/SQL ইনজেকশন/পাথ ট্রাভার্সাল/CSRF"]
-        M0["ApiVersion<br/>API ভার্সন ভেরিফিকেশন<br/>apiVersion ইনজেক্ট"]
         M1["AdminAuth<br/>JWT Token ভেরিফিকেশন<br/>adminId ইনজেক্ট"]
         M2["AdminPermission<br/>RBAC অথোরাইজেশন<br/>method.path ম্যাচিং<br/>Redis 60s পারমিশন ক্যাশ"]
     end
@@ -119,11 +118,11 @@ flowchart TD
         D3["Redis"]
     end
 
-    R1 --> M_SF --> M_RL --> M0
-    M0 --> M1
+    R1 --> M_SF --> M_RL
+    M_RL --> M1
     M1 --> M2
     M2 --> CT2 & CT3 & CT4 & CT5 & CT6
-    M0 --> CT7 & CT8
+    M_RL --> CT7 & CT8
     CT1 -.->|extends| CT2 & CT3 & CT4 & CT5 & CT6
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> S1 & S2 & S3
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> MD1 & MD2 & MD3 & MD4 & MD5
@@ -134,7 +133,6 @@ flowchart TD
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
-    style M0 fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
@@ -151,7 +149,6 @@ sequenceDiagram
     participant MW_LOC as Locale
     participant MW_SF as SecurityFilter
     participant MW_RL as RateLimit
-    participant MW0 as ApiVersion
     participant MW1 as AdminAuth
     participant MW2 as AdminPermission
     participant CTL as Controller
@@ -160,7 +157,7 @@ sequenceDiagram
     participant DB as MySQL
     participant OPLOG as OperationLog
 
-    C->>N: HTTPS রিকোয়েস্ট<br/>Header: API-Version: v1, Accept-Language: zh_CN
+    C->>N: HTTPS রিকোয়েস্ট<br/>Header: Accept-Language: zh_CN
     N->>MW_LOC: ফরোয়ার্ড
 
     MW_LOC->>MW_LOC: locale = zh_CN (Accept-Language / ?lang=)
@@ -182,13 +179,7 @@ sequenceDiagram
         MW_RL-->>C: 429 + Retry-After
     end
 
-    MW_RL->>MW0: পাস
-
-    alt অসমর্থিত ভার্সন
-        MW0-->>C: 400 অসমর্থিত API ভার্সন
-    else ভার্সন বৈধ
-        MW0->>MW0: $request->apiVersion = v1
-    end
+    MW_RL->>MW1: পাস
 
     alt Token অনুপস্থিত বা অবৈধ
         MW1-->>C: 401 Unauthorized
@@ -240,7 +231,7 @@ sequenceDiagram
     participant CAP as Captcha Service
 
     Note over U,CAP: === ধাপ ১: ক্যাপচা প্রাপ্তি ===
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP->>CAP: 300×200 ব্যাকগ্রাউন্ড ইমেজ তৈরি
     CAP->>CAP: এলোমেলোভাবে Nটি চাইনিজ টার্গেট বসানো
@@ -255,7 +246,7 @@ sequenceDiagram
     CL->>CL: clicks সংগ্রহ: [{x,y}, {x,y}, {x,y}]
 
     Note over U,CAP: === ধাপ ৩: লগইন ===
-    CL->>SV: POST /api/auth/login { username, password, captcha_key, clicks }
+    CL->>SV: POST /api/v1/auth/login { username, password, captcha_key, clicks }
     SV->>CAP: captcha_verify(key, 'click', clicks)
     alt ক্যাপচা ভুল
         CAP-->>SV: false

@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # مشاركة الموارد عبر النطاقات (عام)
 │   │   └── (已迁移至 erikwang2013/security-php 包)  # كشف 31 نوع هجوم
 │   │   ├── RateLimit.php       # تحديد معدل Redis (عام، Lua ذرّي)
-│   │   ├── ApiVersion.php      # التحقق من إصدار API
 │   │   ├── AdminAuth.php       # مصادقة JWT + قائمة سوداء
 │   │   ├── AdminPermission.php # التحقق من صلاحيات RBAC (ذاكرة Redis مؤقتة 60 ثانية)
 │   │   └── OperationLog.php    # تسجيل تلقائي لسجلات العمليات (يتضمن كشف جهة المصدر)
@@ -143,7 +142,7 @@ open-admin/
 ```
 全局:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → {路由中间件}
 /admin: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 ```
 
@@ -165,7 +164,7 @@ open-admin/
 يُتحكم في الإصدار عبر ترويسة الطلب `API-Version` (الافتراضي `v1`)، ولا يظهر في URL:
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 لإضافة إصدار جديد يكفي إنشاء دليل `app/api/{version}/controller/` وتسجيله في وسيط `ApiVersion`.
@@ -207,7 +206,7 @@ curl -H "API-Version: v1" http://localhost:8787/api/auth/login
 
 ### HarmonyOS
 - استخدام عميل HTTP الأصلي `@ohos.net.http`
-- تحديث الرمز دون إشعار: استدعاء تلقائي لـ `/api/auth/refresh` عند 401
+- تحديث الرمز دون إشعار: استدعاء تلقائي لـ `/api/v1/auth/refresh` عند 401
 - إعادة توجيه تلقائية إلى صفحة الدخول عند فشل التحديث
 
 ## النشر

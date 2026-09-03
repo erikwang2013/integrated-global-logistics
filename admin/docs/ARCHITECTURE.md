@@ -20,7 +20,7 @@ flowchart TB
     end
 
     subgraph "应用层 (webman v2)"
-        C0["ApiVersion 中间件<br/>API-Version 头校验"]
+        C0["路由匹配 / 版本解析<br/>/admin → 管理端<br/>/api/v1 → 公开控制器"]
         C1["AdminAuth 中间件<br/>JWT 验证"]
         C2["AdminPermission 中间件<br/>RBAC 权限校验"]
         C3["管理端 Controller<br/>Dashboard / User / Role / Permission"]
@@ -81,7 +81,6 @@ flowchart TD
     subgraph "中间件层 Middleware Layer"
         M_RL["RateLimit<br/>Redis 滑动窗口限流<br/>X-RateLimit 响应头"]
         M_SF["SecurityFilter<br/>攻击检测拦截<br/>XSS/SQL注入/路径遍历/CSRF"]
-        M0["ApiVersion<br/>API 版本校验<br/>注入 apiVersion"]
         M1["AdminAuth<br/>JWT Token 校验<br/>注入 adminId"]
         M2["AdminPermission<br/>RBAC 鉴权<br/>method.path 匹配<br/>Redis 60s 缓存权限"]
     end
@@ -117,11 +116,11 @@ flowchart TD
         D3["Redis"]
     end
 
-    R1 --> M_SF --> M_RL --> M0
-    M0 --> M1
+    R1 --> M_SF --> M_RL
+    M_RL --> M1
     M1 --> M2
     M2 --> CT2 & CT3 & CT4 & CT5 & CT6
-    M0 --> CT7 & CT8
+    M_RL --> CT7 & CT8
     CT1 -.->|extends| CT2 & CT3 & CT4 & CT5 & CT6
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> S1 & S2 & S3
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> MD1 & MD2 & MD3 & MD4 & MD5
@@ -132,7 +131,6 @@ flowchart TD
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
-    style M0 fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
@@ -149,7 +147,6 @@ sequenceDiagram
     participant MW_LOC as Locale
     participant MW_SF as SecurityFilter
     participant MW_RL as RateLimit
-    participant MW0 as ApiVersion
     participant MW1 as AdminAuth
     participant MW2 as AdminPermission
     participant CTL as Controller
@@ -158,7 +155,7 @@ sequenceDiagram
     participant DB as MySQL
     participant OPLOG as OperationLog
 
-    C->>N: HTTPS 请求<br/>Header: API-Version: v1, Accept-Language: zh_CN
+    C->>N: HTTPS 请求<br/>Header: Accept-Language: zh_CN
     N->>MW_LOC: 转发
 
     MW_LOC->>MW_LOC: locale = zh_CN (Accept-Language / ?lang=)
@@ -180,13 +177,7 @@ sequenceDiagram
         MW_RL-->>C: 429 + Retry-After
     end
 
-    MW_RL->>MW0: 通过
-
-    alt 不支持的版本
-        MW0-->>C: 400 不支持的API版本
-    else 版本有效
-        MW0->>MW0: $request->apiVersion = v1
-    end
+    Note over MW_RL,MW1: URL 版本解析：/api/v1/* 由路由层完成，无版本中间件
 
     alt Token 缺失或无效
         MW1-->>C: 401 Unauthorized
@@ -238,7 +229,7 @@ sequenceDiagram
     participant CAP as Captcha Service
 
     Note over U,CAP: === 第一步: 获取验证码 ===
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP->>CAP: 生成 300×200 背景图
     CAP->>CAP: 随机放置 N 个中文目标
@@ -253,7 +244,7 @@ sequenceDiagram
     CL->>CL: 收集 clicks: [{x,y}, {x,y}, {x,y}]
 
     Note over U,CAP: === 第三步: 登录 ===
-    CL->>SV: POST /api/auth/login { username, password, captcha_key, clicks }
+    CL->>SV: POST /api/v1/auth/login { username, password, captcha_key, clicks }
     SV->>CAP: captcha_verify(key, 'click', clicks)
     alt 验证码错误
         CAP-->>SV: false

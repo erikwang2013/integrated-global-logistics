@@ -83,7 +83,6 @@ flowchart TD
     subgraph "मिडलवेयर परत Middleware Layer"
         M_RL["RateLimit<br/>Redis स्लाइडिंग विंडो रेट लिमिट<br/>X-RateLimit रिस्पॉन्स हेडर"]
         M_SF["SecurityFilter<br/>अटैक डिटेक्शन इंटरसेप्शन<br/>XSS/SQL इंजेक्शन/पाथ ट्रैवर्सल/CSRF"]
-        M0["ApiVersion<br/>API संस्करण सत्यापन<br/>apiVersion इंजेक्ट"]
         M1["AdminAuth<br/>JWT टोकन सत्यापन<br/>adminId इंजेक्ट"]
         M2["AdminPermission<br/>RBAC प्रमाणीकरण<br/>method.path मिलान<br/>Redis 60s कैश अनुमतियाँ"]
     end
@@ -119,11 +118,11 @@ flowchart TD
         D3["Redis"]
     end
 
-    R1 --> M_SF --> M_RL --> M0
-    M0 --> M1
+    R1 --> M_SF --> M_RL
+    M_RL --> M1
     M1 --> M2
     M2 --> CT2 & CT3 & CT4 & CT5 & CT6
-    M0 --> CT7 & CT8
+    M_RL --> CT7 & CT8
     CT1 -.->|extends| CT2 & CT3 & CT4 & CT5 & CT6
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> S1 & S2 & S3
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> MD1 & MD2 & MD3 & MD4 & MD5
@@ -134,7 +133,6 @@ flowchart TD
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
-    style M0 fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
@@ -151,7 +149,6 @@ sequenceDiagram
     participant MW_LOC as Locale
     participant MW_SF as SecurityFilter
     participant MW_RL as RateLimit
-    participant MW0 as ApiVersion
     participant MW1 as AdminAuth
     participant MW2 as AdminPermission
     participant CTL as Controller
@@ -160,7 +157,7 @@ sequenceDiagram
     participant DB as MySQL
     participant OPLOG as OperationLog
 
-    C->>N: HTTPS रिक्वेस्ट<br/>Header: API-Version: v1, Accept-Language: zh_CN
+    C->>N: HTTPS रिक्वेस्ट<br/>Header: Accept-Language: zh_CN
     N->>MW_LOC: फॉरवर्ड
 
     MW_LOC->>MW_LOC: locale = zh_CN (Accept-Language / ?lang=)
@@ -182,13 +179,7 @@ sequenceDiagram
         MW_RL-->>C: 429 + Retry-After
     end
 
-    MW_RL->>MW0: पास
-
-    alt असमर्थित संस्करण
-        MW0-->>C: 400 असमर्थित API संस्करण
-    else संस्करण मान्य
-        MW0->>MW0: $request->apiVersion = v1
-    end
+    MW_RL->>MW1: पास
 
     alt टोकन अनुपस्थित या अमान्य
         MW1-->>C: 401 Unauthorized
@@ -240,7 +231,7 @@ sequenceDiagram
     participant CAP as Captcha Service
 
     Note over U,CAP: === चरण 1: कैप्चा प्राप्त करें ===
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP->>CAP: 300×200 बैकग्राउंड इमेज जनरेट
     CAP->>CAP: N चीनी लक्ष्य बेतरतीब ढंग से रखें
@@ -255,7 +246,7 @@ sequenceDiagram
     CL->>CL: clicks एकत्र करें: [{x,y}, {x,y}, {x,y}]
 
     Note over U,CAP: === चरण 3: लॉगिन ===
-    CL->>SV: POST /api/auth/login { username, password, captcha_key, clicks }
+    CL->>SV: POST /api/v1/auth/login { username, password, captcha_key, clicks }
     SV->>CAP: captcha_verify(key, 'click', clicks)
     alt कैप्चा गलत
         CAP-->>SV: false

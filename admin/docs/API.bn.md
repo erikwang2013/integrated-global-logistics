@@ -9,7 +9,6 @@
 ওপেন অ্যাডমিন (open-admin) webman v2-ভিত্তিক, RESTful JSON API প্রদান করে। সব অ্যাডমিন এন্ডপয়েন্টে JWT অথেনটিকেশন ও RBAC পারমিশন ভেরিফিকেশন প্রয়োজন, পাবলিক এন্ডপয়েন্টগুলো API ভার্সন হেডারের মাধ্যমে ভার্সনযুক্ত কন্ট্রোলারে রাউট হয়।
 
 - **বেস URL**: `http://localhost:8787`
-- **API ভার্সন**: রিকোয়েস্ট হেডার `API-Version: v1` দিয়ে নিয়ন্ত্রিত (না দিলে ডিফল্ট v1)
 - **ভাষা**: `Accept-Language` হেডার বা `?lang=zh_CN|en` প্যারামিটার দিয়ে সুইচ করা হয় (ডিফল্ট zh_CN), Locale মিডলওয়্যার স্বয়ংক্রিয় ডিটেক্ট করে
 
 > **এন্ডপয়েন্ট ওভারভিউ**: অথেনটিকেশন(5) | ড্যাশবোর্ড(1) | ইউজার(7) | রোল(4) | পারমিশন(4) | কনফিগ(4) | লগ(1) | প্রোফাইল(3) | ইমপোর্ট-এক্সপোর্ট(3) | আপলোড(1) | অপারেশন(4: health/metrics/docs/security.txt) | মোট ৩৭টি এন্ডপয়েন্ট
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 ক্যাপচা জেনারেট
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **অথেনটিকেশন**: প্রয়োজন নেই
-- **রিকোয়েস্ট হেডার**: `API-Version: v1` (বাধ্যতামূলক)
 - **রেট লিমিট**: গ্লোবাল ডিফল্ট (৬০ বার/মিনিট)
 
 **রিকোয়েস্ট বডি**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 ক্যাপচা ভেরিফাই
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **অথেনটিকেশন**: প্রয়োজন নেই
-- **রিকোয়েস্ট হেডার**: `API-Version: v1` (বাধ্যতামূলক)
 - **রেট লিমিট**: গ্লোবাল ডিফল্ট (৬০ বার/মিনিট)
 
 **রিকোয়েস্ট বডি** — ক্লিক টাইপ (`type: "click"`):
@@ -246,11 +243,10 @@ POST /api/captcha/verify
 ### 3.5 লগইন
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **অথেনটিকেশন**: প্রয়োজন নেই
-- **রিকোয়েস্ট হেডার**: `API-Version: v1` (বাধ্যতামূলক)
 - **রেট লিমিট**: ১০ বার/মিনিট (IP + পাথ অনুযায়ী)
 
 **রিকোয়েস্ট বডি**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | হ্যাঁ | min:3, max:50 | ইউজারনেম |
 | password | string | হ্যাঁ | min:6, max:32 (প্লেইনটেক্সট) | AES-256-CBC-HMAC এনক্রিপশনের পর Base64 এনকোড (প্লেইনটেক্সট কম্প্যাটিবল) |
-| captcha_key | string | হ্যাঁ | | ক্যাপচা key (আগে `/api/captcha/verify` দিয়ে ভেরিফাই করতে হবে) |
+| captcha_key | string | হ্যাঁ | | ক্যাপচা key (আগে `/api/v1/captcha/verify` দিয়ে ভেরিফাই করতে হবে) |
 
 ### পাসওয়ার্ড এনক্রিপশন প্রোটোকল
 
@@ -315,7 +311,7 @@ POST /api/auth/login
 
 **সম্ভাব্য এরর**:
 - 422: প্যারামিটার ভ্যালিডেশন ব্যর্থ (আবশ্যক ফিল্ড অনুপস্থিত, ফরম্যাট সঠিক নয়)
-- 422: আগে ক্যাপচা ভেরিফিকেশন সম্পন্ন করুন (captcha_key `/api/captcha/verify` পাস করেনি)
+- 422: আগে ক্যাপচা ভেরিফিকেশন সম্পন্ন করুন (captcha_key `/api/v1/captcha/verify` পাস করেনি)
 - 401: ইউজারনেম বা পাসওয়ার্ড ভুল
 - 403: অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে
 - 429: অ্যাকাউন্ট লক হয়েছে, অনুগ্রহ করে ১৫ মিনিট পর আবার চেষ্টা করুন (টানা ৫ বার লগইন ব্যর্থ হলে ট্রিগার)
@@ -323,11 +319,10 @@ POST /api/auth/login
 ### 3.6 রেজিস্টার
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **অথেনটিকেশন**: প্রয়োজন নেই
-- **রিকোয়েস্ট হেডার**: `API-Version: v1` (বাধ্যতামূলক)
 - **রেট লিমিট**: ৫ বার/মিনিট (IP + পাথ অনুযায়ী)
 
 **রিকোয়েস্ট বডি**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | হ্যাঁ | min:3, max:50 | ইউজারনেম (ইউনিক) |
 | password | string | হ্যাঁ | min:6, max:32 (প্লেইনটেক্সট) | AES-256-CBC-HMAC এনক্রিপশনের পর Base64 এনকোড |
 | real_name | string | হ্যাঁ | max:50 | প্রকৃত নাম |
-| captcha_key | string | হ্যাঁ | | ক্যাপচা key (আগে `/api/captcha/verify` দিয়ে ভেরিফাই করতে হবে) |
+| captcha_key | string | হ্যাঁ | | ক্যাপচা key (আগে `/api/v1/captcha/verify` দিয়ে ভেরিফাই করতে হবে) |
 
 **রেসপন্স উদাহরণ**:
 ```json
@@ -370,11 +365,10 @@ POST /api/auth/register
 ### 3.7 টোকেন রিফ্রেশ
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **অথেনটিকেশন**: প্রয়োজন নেই
-- **রিকোয়েস্ট হেডার**: `API-Version: v1` (বাধ্যতামূলক)
 - **রেট লিমিট**: গ্লোবাল ডিফল্ট (৬০ বার/মিনিট)
 
 **রিকোয়েস্ট বডি**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ POST /admin/upload
 
 রেট লিমিট বিস্তারিত:
 - ডিফল্ট গ্লোবাল লিমিট: ৬০ বার/মিনিট / IP+পাথ
-- লগইন এন্ডপয়েন্ট `/api/auth/login`: ১০ বার/মিনিট
-- রেজিস্টার এন্ডপয়েন্ট `/api/auth/register`: ৫ বার/মিনিট
+- লগইন এন্ডপয়েন্ট `/api/v1/auth/login`: ১০ বার/মিনিট
+- রেজিস্টার এন্ডপয়েন্ট `/api/v1/auth/register`: ৫ বার/মিনিট
 - Redis অ্যাটমিক স্লাইডিং উইন্ডো অ্যালগরিদম (Lua ZSET) ব্যবহার করে, TOCTOU রেস কন্ডিশন এড়ায়
 - Redis অনুপলব্ধ হলে fail open (পাস), রিকোয়েস্ট ব্লক করে না
 
@@ -1666,15 +1660,14 @@ POST /admin/upload
 সম্পূর্ণ অথেনটিকেশন সিকোয়েন্স:
 
 ```
-1. 客户端请求 POST /api/captcha/generate
-   (请求头: API-Version: v1)
+1. 客户端请求 POST /api/v1/captcha/generate
     ↓
    服务端返回: key + type(click|slider|rotate) + base64 图片 + extra(类型相关数据)
    
 2. 用户交互完成验证码操作（点击/拖拽/旋转），客户端收集答案
    
-3. 客户端请求 POST /api/captcha/verify
-   (请求头: API-Version: v1, Content-Type: application/json)
+3. 客户端请求 POST /api/v1/captcha/verify
+   (请求头: Content-Type: application/json)
    请求体: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // 坐标数组
    - type=slider: clicks = 120                   // X 偏移量
@@ -1688,8 +1681,8 @@ POST /admin/upload
     ↓
    服务端返回: { valid: true/false }
 
-4. 客户端请求 POST /api/auth/login
-   (请求头: API-Version: v1, Content-Type: application/json)
+4. 客户端请求 POST /api/v1/auth/login
+   (请求头: Content-Type: application/json)
    请求体: { username, password(加密), captcha_key }
     ↓
    服务端:
@@ -1723,7 +1716,7 @@ POST /admin/upload
    Response + X-RateLimit-* 头
 
 6. Access Token 过期前刷新
-   客户端请求 POST /api/auth/refresh
+   客户端请求 POST /api/v1/auth/refresh
    请求体: { refresh_token: "..." }
     ↓
    服务端解码 refresh_token → 签发新 access + refresh
@@ -1765,7 +1758,7 @@ Cors（跨域预处理 + 响应头）
   → Locale（Accept-Language 语言检测 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP方法限制/请求体大小/Content-Type校验/XSS/SQL注入/路径遍历/命令注入/CSRF 攻击拦截）
   → RateLimit（Redis 滑动窗口限流 + 账号锁定：5次登录失败锁定15分钟）
-  → ApiVersion（API 版本校验，/api 路由组）
+  → ClientAuth（客户端 JWT 认证，token_type=client，/api/v1 客户端门户路由组）
   → AdminAuth（JWT 认证 + 黑名单，/admin 路由组）
   → AdminPermission（RBAC 鉴权 / Redis 60s 缓存，/admin 路由组）
   → OperationLog（POST/PUT/DELETE 自动记录，含来源端检测，/admin 路由组）

@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # Lintas domain (global)
 │   │   └── (telah dimigrasikan ke paket erikwang2013/security-php)  # 31 jenis deteksi serangan
 │   │   ├── RateLimit.php       # Rate limit Redis (global, atomik Lua)
-│   │   ├── ApiVersion.php      # Validasi versi API
 │   │   ├── AdminAuth.php       # Autentikasi JWT + blacklist
 │   │   ├── AdminPermission.php # Validasi hak akses RBAC (cache Redis 60s)
 │   │   └── OperationLog.php    # Pencatatan log operasi otomatis (termasuk deteksi sumber)
@@ -143,7 +142,7 @@ open-admin/
 ```
 全局:  Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → {路由中间件}
 /admin: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 ```
 
@@ -161,7 +160,7 @@ open-admin/
 Versi dikontrol melalui header `API-Version` (default `v1`), tidak tampil di URL:
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 Menambah versi baru hanya perlu membuat direktori `app/api/{version}/controller/` dan mendaftarkannya ke middleware `ApiVersion`.
@@ -194,7 +193,7 @@ Sliding window Redis (atomik Lua), default 60 kali/menit/IP/rute:
 
 ### HarmonyOS
 - Menggunakan klien HTTP native `@ohos.net.http`
-- Refresh token tanpa terasa: saat 401 otomatis memanggil `/api/auth/refresh`
+- Refresh token tanpa terasa: saat 401 otomatis memanggil `/api/v1/auth/refresh`
 - Gagal refresh otomatis dialihkan ke halaman login
 
 ## Deployment

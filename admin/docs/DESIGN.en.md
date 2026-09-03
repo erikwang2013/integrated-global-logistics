@@ -62,7 +62,7 @@
 | Layer | Directory | Responsibilities |
 |---|------|------|
 | Routing | `config/route.php` | URL-to-controller mapping, middleware binding, versioned routes |
-| Middleware | `app/middleware/` | Attack blocking (SecurityFilter), rate limiting (RateLimit), authentication (JWT), authorization (RBAC), API versioning (ApiVersion) |
+| Middleware | `app/middleware/` | Attack blocking (SecurityFilter), rate limiting (RateLimit), authentication (JWT), authorization (RBAC) |
 | Controllers | 14 total: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (admin) + Captcha/Auth (API v1) | Request parameter validation, business logic calls, response formatting |
 | Business services | `app/service/` | Reusable business logic (reserved) |
 | Data models | `app/model/` | ORM mapping, relations, field encryption |
@@ -89,9 +89,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -174,8 +171,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 URL Conventions
 
 ```
-公开接口:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+公开接口:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -199,33 +196,23 @@ logistics_system_config (系统配置) — 独立表
 
 ### 4.2 API Versioning Strategy
 
-API version is controlled via request headers and is **not reflected in the URL path**:
-
-```http
-API-Version: v1
-```
+API version numbers live directly in the URL path (`/api/v1/*`), resolved by route groups to the matching controllers under `app/api/{version}/controller/`:
 
 | Mechanism | Description |
 |------|------|
-| Default version | Defaults to `v1` when the `API-Version` header is absent |
-| Validation | Validated by the `ApiVersion` middleware; unsupported versions return 400 |
-| Routing | The `v()` helper resolves controller classes dynamically by version |
+| URL shape | `POST /api/v1/auth/login` — the version is the first path segment; no request header needed |
+| Resolution | `Route::group('/api/v1', ...)` in `config/route.php` binds the version directory directly; the `v()` helper resolves controller classes by version |
 | Directory | Controllers organized by version: `app/api/{version}/controller/` |
+| Unknown version | Path matches no route group → 404 |
 
 Extension example — adding a v2 API:
-1. Create `app/api/v2/controller/AuthController.php`
-2. Add `'v2'` to the `SUPPORTED` constant of the `ApiVersion` middleware
-3. No route definition changes needed
+1. Create controllers under `app/api/v2/controller/...`
+2. Append `Route::group('/api/v2', ...)` in `config/route.php` (reusing the `v('v2', ...)` helper)
+3. The v1 group and existing requests are unaffected
 
 ```bash
-# 使用 v1
-curl -H "API-Version: v1" /api/auth/login
-
-# 使用 v2
-curl -H "API-Version: v2" /api/auth/login
-
-# 不传，默认 v1
-curl /api/auth/login
+curl /api/v1/auth/login   # v1 (current)
+curl /api/v2/auth/login   # v2 (after adding the group)
 ```
 
 ### 4.3 Rate Limiting Strategy
@@ -235,8 +222,8 @@ Based on the Redis Sorted Set sliding window algorithm, executed as atomic Lua s
 | Endpoint | Limit |
 |------|------|
 | Default | 60/min per IP/route |
-| POST /api/auth/login | 10/min |
-| POST /api/auth/register | 5/min |
+| POST /api/v1/auth/login | 10/min |
+| POST /api/v1/auth/register | 5/min |
 
 Exceeding the limit returns 429; response headers include X-RateLimit-Limit / Remaining / Reset / Retry-After.
 
@@ -265,12 +252,12 @@ Exceeding the limit returns 429; response headers include X-RateLimit-Limit / Re
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

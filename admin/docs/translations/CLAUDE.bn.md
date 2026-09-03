@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # ক্রস-অরিজিন（গ্লোবাল）
 │   │   └── (erikwang2013/security-php প্যাকেজে স্থানান্তরিত)  # 31 种攻击检测
 │   │   ├── RateLimit.php       # Redis রেট লিমিট（গ্লোবাল，Lua অ্যাটমিক）
-│   │   ├── ApiVersion.php      # API ভার্সন ভ্যালিডেশন
 │   │   ├── AdminAuth.php       # JWT অথেনটিকেশন + ব্ল্যাকলিস্ট
 │   │   ├── AdminPermission.php # RBAC পারমিশন ভ্যালিডেশন（Redis 60s ক্যাশ）
 │   │   └── OperationLog.php    # অপারেশন লগ অটো রেকর্ডিং（সোর্স ডিটেকশন সহ）
@@ -143,7 +142,7 @@ open-admin/
 ```
 全局:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → {路由中间件}
 /admin: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 ```
 
@@ -165,7 +164,7 @@ open-admin/
 ভার্সন রিকোয়েস্ট হেডার `API-Version` দিয়ে নিয়ন্ত্রিত হয়（ডিফল্ট `v1`），URL এ প্রকাশ করা হয় না：
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 নতুন ভার্সন যোগ করতে শুধু `app/api/{version}/controller/` ডিরেক্টরি তৈরি করে `ApiVersion` মিডলওয়্যারে রেজিস্টার করুন।
@@ -207,7 +206,7 @@ Redis স্লাইডিং উইন্ডো（Lua অ্যাটমিক
 
 ### HarmonyOS
 - `@ohos.net.http` নেটিভ HTTP ক্লায়েন্ট ব্যবহার করুন
-- Token নির্বিঘ্ন রিফ্রেশ：401 হলে স্বয়ংক্রিয়ভাবে `/api/auth/refresh` কল হয়
+- Token নির্বিঘ্ন রিফ্রেশ：401 হলে স্বয়ংক্রিয়ভাবে `/api/v1/auth/refresh` কল হয়
 - রিফ্রেশ ব্যর্থ হলে স্বয়ংক্রিয়ভাবে লগইন পৃষ্ঠায় রিডাইরেক্ট হয়
 
 ## ডিপ্লয়মেন্ট

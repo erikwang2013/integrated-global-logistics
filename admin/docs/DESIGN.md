@@ -60,7 +60,7 @@
 | 层 | 目录 | 职责 |
 |---|------|------|
 | 路由 | `config/route.php` | URL 到控制器的映射，中间件绑定，版本化路由 |
-| 中间件 | `app/middleware/` | 攻击拦截(SecurityFilter)、限流(RateLimit)、认证(JWT)、授权(RBAC)、API版本(ApiVersion) |
+| 中间件 | `app/middleware/` | 攻击拦截(SecurityFilter)、限流(RateLimit)、认证(JWT)、授权(RBAC) |
 | 控制器 | 14 个：Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (管理端) + Captcha/Auth (API v1) | 请求参数校验、调用业务逻辑、响应格式化 |
 | 业务服务 | `app/service/` | 可复用的业务逻辑（预留） |
 | 数据模型 | `app/model/` | ORM 映射、关联关系、字段加解密 |
@@ -87,9 +87,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -172,8 +169,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 URL 规范
 
 ```
-公开接口:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+公开接口:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -197,33 +194,23 @@ logistics_system_config (系统配置) — 独立表
 
 ### 4.2 API 版本策略
 
-API 版本通过请求头控制，**不在 URL 路径中体现**：
-
-```http
-API-Version: v1
-```
+API 版本号直接体现在 URL 路径中（`/api/v1/*`），由路由分组解析到 `app/api/{version}/controller/` 下对应控制器：
 
 | 机制 | 说明 |
 |------|------|
-| 默认版本 | 未携带 `API-Version` 头时默认 `v1` |
-| 校验 | `ApiVersion` 中间件校验，不支持的版本返回 400 |
-| 路由 | `v()` 辅助函数根据版本动态解析控制器类 |
+| URL 形态 | `POST /api/v1/auth/login` — 版本号是路径首段，无需请求头 |
+| 解析 | `config/route.php` 中 `Route::group('/api/v1', ...)` 直接绑定版本目录，`v()` 辅助函数按版本解析控制器类 |
 | 目录 | 控制器按版本组织: `app/api/{version}/controller/` |
+| 未知版本 | 路径不匹配任何路由分组 → 404 |
 
 扩展示例——新增 v2 API：
-1. 创建 `app/api/v2/controller/AuthController.php`
-2. `ApiVersion` 中间件 `SUPPORTED` 常量添加 `'v2'`
-3. 路由定义无需修改
+1. 创建 `app/api/v2/controller/...` 控制器
+2. `config/route.php` 追加 `Route::group('/api/v2', ...)`（复用 `v('v2', ...)` 写法）
+3. v1 分组与存量请求不受影响
 
 ```bash
-# 使用 v1
-curl -H "API-Version: v1" /api/auth/login
-
-# 使用 v2
-curl -H "API-Version: v2" /api/auth/login
-
-# 不传，默认 v1
-curl /api/auth/login
+curl /api/v1/auth/login   # v1（当前）
+curl /api/v2/auth/login   # v2（新增分组后）
 ```
 
 ### 4.3 限流策略
@@ -233,8 +220,8 @@ curl /api/auth/login
 | 接口 | 限制 |
 |------|------|
 | 默认 | 60 次/分钟/IP/路由 |
-| POST /api/auth/login | 10 次/分钟 |
-| POST /api/auth/register | 5 次/分钟 |
+| POST /api/v1/auth/login | 10 次/分钟 |
+| POST /api/v1/auth/register | 5 次/分钟 |
 
 超限返回 429，响应头包含 X-RateLimit-Limit / Remaining / Reset / Retry-After。
 
@@ -263,12 +250,12 @@ curl /api/auth/login
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

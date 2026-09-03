@@ -70,7 +70,7 @@ Alle Header werden in der `Cors`-Middleware injiziert und über `$response->with
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | Beliebige Origin für Cross-Origin erlauben (Intranet-Admin-Szenario) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | Erlaubte Methoden |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | Erlaubte benutzerdefinierte Header |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | Erlaubte benutzerdefinierte Header |
 | Access-Control-Max-Age | `86400` | Preflight-Request-Cache 24 Stunden |
 | X-Content-Type-Options | `nosniff` | Browser-MIME-Sniffing verbieten |
 | X-Frame-Options | `DENY` | Alle iframe-Einbettungen verbieten, verhindert Clickjacking |
@@ -122,8 +122,8 @@ Das Lua-Skript wird serverseitig in Redis single-threaded ausgeführt und ist **
 | Route | Limit | Fenster | Szenario |
 |------|------|------|------|
 | Standard (alle Routen) | 60/Minute | 60s | Allgemeine API |
-| `/api/auth/login` | 10/Minute | 60s | Login (verhindert Brute-Force) |
-| `/api/auth/register` | 5/Minute | 60s | Registrierung (verhindert Massenregistrierung) |
+| `/api/v1/auth/login` | 10/Minute | 60s | Login (verhindert Brute-Force) |
+| `/api/v1/auth/register` | 5/Minute | 60s | Registrierung (verhindert Massenregistrierung) |
 
 ### Response-Header
 

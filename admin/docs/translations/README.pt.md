@@ -86,7 +86,6 @@ open-admin/
 │   │   ├── Cors.php            # Cross-origin
 │   │   ├── SecurityFilter.php  # Bloqueio de detecção de ataques (restrição de método HTTP/XSS/Injeção SQL/Path traversal/Injeção de comandos/CSRF)
 │   │   ├── RateLimit.php       # Rate limit Redis (janela deslizante + cabeçalhos de resposta)
-│   │   ├── ApiVersion.php      # Validação de versão da API
 │   │   ├── AdminAuth.php       # Autenticação JWT + blacklist
 │   │   ├── AdminPermission.php # Validação de permissões RBAC
 │   │   └── OperationLog.php    # Registro automático de logs de operação (inclui detecção de origem)
@@ -225,7 +224,6 @@ A referência completa da API (formato unificado de resposta, códigos de erro, 
 
 - **Formato unificado de resposta**: `{ "code": 0, "message": "success", "data": {...} }`, `code=0` indica sucesso
 - **Códigos de erro**: `400` erro de parâmetro / `401` não autenticado / `403` sem permissão / `404` não encontrado / `422` falha de validação / `429` rate limit / `500` erro do servidor
-- **Versão da API**: controlada pelo cabeçalho `API-Version: v1` (padrão v1 quando ausente), não refletida na URL
 - **Autenticação**: `Authorization: Bearer <token>`; validade do access_token de 2 horas, refresh_token de 14 dias
 - **Tratamento de IDs**: IDs em requisições/respostas são strings criptografadas com hashids, sem expor os IDs reais do banco
 

@@ -73,7 +73,7 @@ class ClientAppController
      * @Apidoc\Title("套餐列表")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("GET")
-     * @Apidoc\Url("/api/plan")
+     * @Apidoc\Url("/api/v1/plan")
      */
     public function plans(Request $request): Response
     {
@@ -91,7 +91,7 @@ class ClientAppController
      * @Apidoc\Title("我的应用列表")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("GET")
-     * @Apidoc\Url("/api/app")
+     * @Apidoc\Url("/api/v1/app")
      */
     public function index(Request $request): Response
     {
@@ -121,7 +121,7 @@ class ClientAppController
      * @Apidoc\Title("创建应用")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("POST")
-     * @Apidoc\Url("/api/app")
+     * @Apidoc\Url("/api/v1/app")
      * @Apidoc\Desc("创建应用申请，提交后进入 pending 待管理员审核。api_key 可自设（>=16位且含字母数字），否则服务端生成；明文仅本次返回")
      * @Apidoc\Param("name", type="string", require=true, desc="应用名称(1-50)")
      * @Apidoc\Param("purpose", type="string", require=false, desc="申请用途(<=200)")
@@ -171,7 +171,7 @@ class ClientAppController
      * @Apidoc\Title("重置密钥")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("PUT")
-     * @Apidoc\Url("/api/app/{id}/key")
+     * @Apidoc\Url("/api/v1/app/{id}/key")
      * @Apidoc\Desc("重置API密钥，旧密钥立即失效（删除网关Redis记录）；已通过审核的应用新密钥即时生效")
      * @Apidoc\Param("api_key", type="string", require=false, desc="自设新密钥，留空则自动生成")
      * @Apidoc\Returned("api_key", type="string", desc="新密钥明文（仅本次返回）")
@@ -213,7 +213,7 @@ class ClientAppController
      * @Apidoc\Title("修改应用信息")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("PUT")
-     * @Apidoc\Url("/api/app/{id}")
+     * @Apidoc\Url("/api/v1/app/{id}")
      * @Apidoc\Desc("修改应用名称/用途；被驳回的应用修改后回到待审核状态")
      */
     public function update(Request $request, string $id): Response
@@ -251,7 +251,7 @@ class ClientAppController
      * @Apidoc\Title("按套餐下单")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("POST")
-     * @Apidoc\Url("/api/app/{id}/order")
+     * @Apidoc\Url("/api/v1/app/{id}/order")
      * @Apidoc\Param("plan_id", type="string", require=true, desc="套餐ID(hashid)")
      * @Apidoc\Param("channel", type="string", require=false, desc="支付渠道: stripe|paypal|crypto|manual", default="manual")
      * @Apidoc\Param("chain", type="string", require=false, desc="虚拟币网络: trc20/bep20/erc20（channel=crypto 时必填）")
@@ -311,7 +311,7 @@ class ClientAppController
      * @Apidoc\Title("发起支付")
      * @Apidoc\Group("客户端门户")
      * @Apidoc\Method("POST")
-     * @Apidoc\Url("/api/order/{id}/pay")
+     * @Apidoc\Url("/api/v1/order/{id}/pay")
      * @Apidoc\Desc("按订单渠道发起支付：stripe 返回 Checkout Session 跳转链接，paypal 返回 approve 链接，manual 返回模拟支付码由管理员人工确认")
      * @Apidoc\Returned("pay_url", type="string", desc="支付跳转链接（manual 渠道返回 payment_code）")
      */

@@ -40,7 +40,6 @@ return [
         'params' => [
             'header' => [
                 ['name' => 'Authorization', 'type' => 'string', 'require' => false, 'desc' => 'JWT Token（管理端接口必填）'],
-                ['name' => 'API-Version', 'type' => 'string', 'require' => false, 'default' => 'v1', 'desc' => 'API 版本号'],
                 ['name' => 'Accept-Language', 'type' => 'string', 'require' => false, 'default' => 'zh_CN', 'desc' => '语言 (zh_CN | en)'],
             ],
         ],

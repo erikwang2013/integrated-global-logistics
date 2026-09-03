@@ -62,7 +62,7 @@
 | Capa | Directorio | Responsabilidad |
 |---|------|------|
 | Rutas | `config/route.php` | Asignación de URLs a controllers, enlace de middleware, rutas versionadas |
-| Middleware | `app/middleware/` | Bloqueo de ataques(SecurityFilter), límite de peticiones(RateLimit), autenticación(JWT), autorización(RBAC), versión de API(ApiVersion) |
+| Middleware | `app/middleware/` | Bloqueo de ataques(SecurityFilter), límite de peticiones(RateLimit), autenticación(JWT), autorización(RBAC), versión de API |
 | Controllers | 14: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (panel de administración) + Captcha/Auth (API v1) | Validación de parámetros de petición, lógica de negocio, formateo de respuestas |
 | Servicios de negocio | `app/service/` | Lógica de negocio reutilizable (reservado) |
 | Modelos de datos | `app/model/` | Mapeo ORM, relaciones, cifrado/descifrado de campos |
@@ -89,9 +89,6 @@ Cadena de middleware:
   ▼
   RateLimit ───────────► Límite de peticiones con ventana deslizante Redis
   │ (si falla devuelve 429 + cabecera Retry-After)
-  ▼
-  ApiVersion ─────────► Validación de la cabecera API-Version, inyecta $request->apiVersion
-  │ (si falla devuelve 400)
   ▼
   AdminAuth ──────────► Validación JWT, inyecta $request->adminId
   │ (si falla devuelve 401)
@@ -174,8 +171,8 @@ logistics_system_config (configuración del sistema) — tabla independiente
 ### 4.1 Normas de URLs
 
 ```
-Interfaces públicas:  /api/captcha/{generate|verify}
-                      /api/auth/{login|register|refresh}
+Interfaces públicas:  /api/v1/captcha/{generate|verify}
+                      /api/v1/auth/{login|register|refresh}
 
 Panel de administración:  /admin/{resource}[/{hashid}]
                           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ Health:                     /health
 La versión de la API se controla mediante una cabecera y **no aparece en la ruta de la URL**:
 
 ```http
-API-Version: v1
 ```
 
 | Mecanismo | Descripción |
@@ -219,13 +215,13 @@ Ejemplo de ampliación — añadir una API v2:
 
 ```bash
 # Usar v1
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # Usar v2
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # Sin cabecera, por defecto v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 Estrategia de límite de peticiones
@@ -235,8 +231,8 @@ Basada en el algoritmo de ventana deslizante con Redis Sorted Set, ejecutada con
 | Interfaz | Límite |
 |------|------|
 | Por defecto | 60 peticiones/minuto/IP/ruta |
-| POST /api/auth/login | 10 peticiones/minuto |
-| POST /api/auth/register | 5 peticiones/minuto |
+| POST /api/v1/auth/login | 10 peticiones/minuto |
+| POST /api/v1/auth/register | 5 peticiones/minuto |
 
 Al superar el límite se devuelve 429; las cabeceras de respuesta incluyen X-RateLimit-Limit / Remaining / Reset / Retry-After.
 
@@ -265,13 +261,13 @@ Al superar el límite se devuelve 429; las cabeceras de respuesta incluyen X-Rat
 ```
 Cliente                                Servidor
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② el usuario hace clic en las     │
   │     posiciones del texto           │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

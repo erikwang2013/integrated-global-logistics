@@ -86,7 +86,6 @@ open-admin/
 │   │   ├── Cors.php            # クロスオリジン
 │   │   ├── SecurityFilter.php  # 攻撃検知ブロック（HTTP メソッド制限/XSS/SQL インジェクション/パストラバーサル/コマンドインジェクション/CSRF）
 │   │   ├── RateLimit.php       # Redis レート制限（スライディングウィンドウ + レスポンスヘッダー）
-│   │   ├── ApiVersion.php      # API バージョン検証
 │   │   ├── AdminAuth.php       # JWT 認証 + ブラックリスト
 │   │   ├── AdminPermission.php # RBAC 権限検証
 │   │   └── OperationLog.php    # 操作ログ自動記録（ソース端検出含む）
@@ -225,7 +224,6 @@ docker-compose up -d
 
 - **統一レスポンス形式**: `{ "code": 0, "message": "success", "data": {...} }`、`code=0` は成功を意味
 - **エラーコード**: `400` パラメータエラー / `401` 未ログイン / `403` 権限なし / `404` 存在しない / `422` 検証失敗 / `429` レート制限 / `500` サーバーエラー
-- **API バージョン**: リクエストヘッダー `API-Version: v1` で制御（未指定時はデフォルト v1）、URL には含めない
 - **認証**: `Authorization: Bearer <token>`；access_token の有効期限は 2 時間、refresh_token は 14 日
 - **ID 処理**: リクエスト/レスポンス内の ID は hashids 暗号化文字列、実際のデータベース ID を公開しない
 

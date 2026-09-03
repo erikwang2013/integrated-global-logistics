@@ -9,7 +9,6 @@
 Open Admin (open-admin) est construit sur webman v2 et fournit une API RESTful JSON. Toutes les interfaces du panneau d'administration nécessitent une authentification JWT et une validation des permissions RBAC ; les interfaces publiques sont routées vers des contrôleurs versionnés via l'en-tête de version API.
 
 - **URL de base** : `http://localhost:8787`
-- **Version API** : contrôlée par l'en-tête `API-Version: v1` (v1 par défaut si absent)
 - **Langue** : bascule via l'en-tête `Accept-Language` ou le paramètre `?lang=zh_CN|en` (zh_CN par défaut), détection automatique par le middleware Locale
 
 > **Vue d'ensemble des points de terminaison** : authentification (5) | tableau de bord (1) | utilisateurs (7) | rôles (4) | permissions (4) | configuration (4) | journaux (1) | espace personnel (3) | import/export (3) | upload (1) | exploitation (4 : health/metrics/docs/security.txt) | 37 points de terminaison au total
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 Génération du captcha
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **Authentification** : aucune
-- **En-tête de requête** : `API-Version: v1` (obligatoire)
 - **Limitation de débit** : défaut global (60 requêtes/minute)
 
 **Corps de requête** :
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 Validation du captcha
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **Authentification** : aucune
-- **En-tête de requête** : `API-Version: v1` (obligatoire)
 - **Limitation de débit** : défaut global (60 requêtes/minute)
 
 **Corps de requête** — type clic (`type: "click"`) :
@@ -246,11 +243,10 @@ En cas d'échec de validation, `code` vaut 422, `message` est `"验证失败，�
 ### 3.5 Connexion
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **Authentification** : aucune
-- **En-tête de requête** : `API-Version: v1` (obligatoire)
 - **Limitation de débit** : 10 requêtes/minute (par IP + chemin)
 
 **Corps de requête** :
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | Oui | min:3, max:50 | Nom d'utilisateur |
 | password | string | Oui | min:6, max:32 (en clair) | Chiffré AES-256-CBC-HMAC puis encodé en Base64 (compatible texte en clair) |
-| captcha_key | string | Oui | | Clé du captcha (doit d'abord être validée via `/api/captcha/verify`) |
+| captcha_key | string | Oui | | Clé du captcha (doit d'abord être validée via `/api/v1/captcha/verify`) |
 
 ### Protocole de chiffrement du mot de passe
 
@@ -315,7 +311,7 @@ La clé publique est intégrée dans l'application frontend et n'a pas besoin d'
 
 **Erreurs possibles** :
 - 422 : échec de la validation des paramètres (champ obligatoire manquant, format invalide)
-- 422 : veuillez d'abord valider le captcha (captcha_key n'a pas passé `/api/captcha/verify`)
+- 422 : veuillez d'abord valider le captcha (captcha_key n'a pas passé `/api/v1/captcha/verify`)
 - 401 : nom d'utilisateur ou mot de passe incorrect
 - 403 : compte désactivé
 - 429 : compte verrouillé, réessayez dans 15 minutes (déclenché par 5 échecs de connexion consécutifs)
@@ -323,11 +319,10 @@ La clé publique est intégrée dans l'application frontend et n'a pas besoin d'
 ### 3.6 Inscription
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **Authentification** : aucune
-- **En-tête de requête** : `API-Version: v1` (obligatoire)
 - **Limitation de débit** : 5 requêtes/minute (par IP + chemin)
 
 **Corps de requête** :
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | Oui | min:3, max:50 | Nom d'utilisateur (unique) |
 | password | string | Oui | min:6, max:32 (en clair) | Chiffré AES-256-CBC-HMAC puis encodé en Base64 |
 | real_name | string | Oui | max:50 | Nom réel |
-| captcha_key | string | Oui | | Clé du captcha (doit d'abord être validée via `/api/captcha/verify`) |
+| captcha_key | string | Oui | | Clé du captcha (doit d'abord être validée via `/api/v1/captcha/verify`) |
 
 **Exemple de réponse** :
 ```json
@@ -370,11 +365,10 @@ Après inscription réussie, les jetons JWT sont directement renvoyés ; le comp
 ### 3.7 Rafraîchissement du jeton
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **Authentification** : aucune
-- **En-tête de requête** : `API-Version: v1` (obligatoire)
 - **Limitation de débit** : défaut global (60 requêtes/minute)
 
 **Corps de requête** :
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ Toutes les interfaces (injectés au niveau des middlewares globaux) incluent les
 
 Détails de la limitation de débit :
 - Limite globale par défaut : 60 requêtes/minute / IP+chemin
-- Point de terminaison de connexion `/api/auth/login` : 10 requêtes/minute
-- Point de terminaison d'inscription `/api/auth/register` : 5 requêtes/minute
+- Point de terminaison de connexion `/api/v1/auth/login` : 10 requêtes/minute
+- Point de terminaison d'inscription `/api/v1/auth/register` : 5 requêtes/minute
 - Algorithme de fenêtre glissante atomique Redis (Lua ZSET), éliminant la course TOCTOU
 - Si Redis est indisponible, fail-open (laisse passer), sans bloquer les requêtes
 
@@ -1666,15 +1660,14 @@ Détails de la limitation de débit :
 Séquence d'authentification complète :
 
 ```
-1. Le client demande POST /api/captcha/generate
-   (en-tête : API-Version: v1)
+1. Le client demande POST /api/v1/captcha/generate
     ↓
    Le serveur renvoie : key + type(click|slider|rotate) + image base64 + extra(données liées au type)
    
 2. L'utilisateur interagit pour résoudre le captcha (clic/glisser/tourner), le client collecte la réponse
    
-3. Le client demande POST /api/captcha/verify
-   (en-tête : API-Version: v1, Content-Type: application/json)
+3. Le client demande POST /api/v1/captcha/verify
+   (en-tête : Content-Type: application/json)
    Corps de requête : { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // tableau de coordonnées
    - type=slider: clicks = 120                   // décalage X
@@ -1688,8 +1681,8 @@ Séquence d'authentification complète :
     ↓
    Le serveur renvoie : { valid: true/false }
 
-4. Le client demande POST /api/auth/login
-   (en-tête : API-Version: v1, Content-Type: application/json)
+4. Le client demande POST /api/v1/auth/login
+   (en-tête : Content-Type: application/json)
    Corps de requête : { username, password(chiffré), captcha_key }
     ↓
    Serveur :
@@ -1723,7 +1716,7 @@ Séquence d'authentification complète :
    Response + en-têtes X-RateLimit-*
 
 6. Rafraîchissement avant expiration de l'Access Token
-   Le client demande POST /api/auth/refresh
+   Le client demande POST /api/v1/auth/refresh
    Corps de requête : { refresh_token: "..." }
     ↓
    Le serveur décode refresh_token → émet de nouveaux access + refresh
@@ -1765,7 +1758,6 @@ Cors (prétraitement CORS + en-têtes de réponse)
   → Locale (détection de langue Accept-Language / ?lang=zh_CN|en)
   → SecurityFilter (limitation des méthodes HTTP/taille du corps/validation Content-Type/XSS/injection SQL/traversée de chemin/injection de commandes/interception des attaques CSRF)
   → RateLimit (limitation de débit par fenêtre glissante Redis + verrouillage du compte : 5 échecs de connexion ⇒ verrouillage de 15 minutes)
-  → ApiVersion (validation de la version API, groupe de routes /api)
   → AdminAuth (authentification JWT + liste noire, groupe de routes /admin)
   → AdminPermission (autorisation RBAC / cache Redis 60 s, groupe de routes /admin)
   → OperationLog (enregistrement automatique des POST/PUT/DELETE, avec détection de la source, groupe de routes /admin)

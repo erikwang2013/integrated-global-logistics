@@ -70,7 +70,7 @@
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | Разрешены кросс-доменные запросы с любых источников (сценарий внутренней админ-панели) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | Разрешённые методы |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | Разрешённые пользовательские заголовки |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | Разрешённые пользовательские заголовки |
 | Access-Control-Max-Age | `86400` | Кэширование preflight-запроса 24 часа |
 | X-Content-Type-Options | `nosniff` | Запрет MIME-сниффинга в браузере |
 | X-Frame-Options | `DENY` | Запрет встраивания в любые iframe, защита от clickjacking |
@@ -122,8 +122,8 @@ Lua-скрипт исполняется на сервере Redis в одном 
 | Маршрут | Лимит | Окно | Сценарий |
 |------|------|------|------|
 | По умолчанию (все маршруты) | 60 раз/мин | 60s | Обычные API |
-| `/api/auth/login` | 10 раз/мин | 60s | Вход (защита от brute force) |
-| `/api/auth/register` | 5 раз/мин | 60s | Регистрация (защита от массовой регистрации) |
+| `/api/v1/auth/login` | 10 раз/мин | 60s | Вход (защита от brute force) |
+| `/api/v1/auth/register` | 5 раз/мин | 60s | Регистрация (защита от массовой регистрации) |
 
 ### Заголовки ответа
 

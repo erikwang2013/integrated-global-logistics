@@ -48,7 +48,7 @@ config/
 
 - Las peticiones de preflight OPTIONS devuelven directamente 204
 - Las peticiones que no son preflight añaden `Access-Control-Allow-Origin: *` a los encabezados de la respuesta
-- Encabezados permitidos: `Authorization, Content-Type, API-Version`
+- Encabezados permitidos: `Authorization, Content-Type`
 - Cache máxima: 86400 segundos
 
 Montaje: middleware global (`config/middleware.php`)
@@ -60,8 +60,8 @@ Montaje: middleware global (`config/middleware.php`)
 - Almacenamiento: ventana deslizante con Redis Sorted Set
 - Por defecto: 60 peticiones/minuto/IP/ruta
 - Interfaces sensibles:
-  - `/api/auth/login`: 10 peticiones/minuto
-  - `/api/auth/register`: 5 peticiones/minuto
+  - `/api/v1/auth/login`: 10 peticiones/minuto
+  - `/api/v1/auth/register`: 5 peticiones/minuto
 - Al superar el límite devuelve `429 Too Many Requests`
 
 Montaje: middleware global (`config/middleware.php`), después de Cors y antes de ApiVersion

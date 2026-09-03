@@ -14,7 +14,7 @@ sequenceDiagram
 
     rect rgb(230, 240, 255)
     Note over U,CAP: 1단계: 캡차 가져오기
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP-->>SV: key, image(base64 PNG), targets
     SV-->>CL: 200 {key, image, extra.targets}
@@ -29,7 +29,7 @@ sequenceDiagram
 
     rect rgb(255, 240, 230)
     Note over U,CAP: 3단계: 로그인 검증
-    CL->>SV: POST /api/auth/login {username,password,captcha_key,clicks}
+    CL->>SV: POST /api/v1/auth/login {username,password,captcha_key,clicks}
     SV->>CAP: captcha_verify(key,'click',clicks)
 
     alt 캡차 오류

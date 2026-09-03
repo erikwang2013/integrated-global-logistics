@@ -23,7 +23,7 @@ class CaptchaDialog extends StatefulWidget {
 
   /// 显示验证码弹框，返回 captcha key（取消返回 null）
   static Future<String?> show(BuildContext context) {
-    final svc = CaptchaService(Dio(BaseOptions(baseUrl: ApiService.baseUrl, headers: {'API-Version': 'v1'})));
+    final svc = CaptchaService(Dio(BaseOptions(baseUrl: ApiService.baseUrl)));
     final clickKey = GlobalKey<ClickCaptchaState>();
     final sliderKey = GlobalKey<SliderCaptchaState>();
     final rotateKey = GlobalKey<RotateCaptchaState>();

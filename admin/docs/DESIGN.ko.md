@@ -62,7 +62,7 @@
 | 계층 | 디렉터리 | 책임 |
 |---|------|------|
 | 라우트 | `config/route.php` | URL과 컨트롤러 매핑, 미들웨어 바인딩, 버전별 라우팅 |
-| 미들웨어 | `app/middleware/` | 공격 차단(SecurityFilter), 레이트 리밋(RateLimit), 인증(JWT), 인가(RBAC), API 버전(ApiVersion) |
+| 미들웨어 | `app/middleware/` | 공격 차단(SecurityFilter), 레이트 리밋(RateLimit), 인증(JWT), 인가(RBAC), API 버전 |
 | 컨트롤러 | 14개: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (관리자) + Captcha/Auth (API v1) | 요청 파라미터 검증, 비즈니스 로직 호출, 응답 포맷팅 |
 | 비즈니스 서비스 | `app/service/` | 재사용 가능한 비즈니스 로직 (예약) |
 | 데이터 모델 | `app/model/` | ORM 매핑, 연결 관계, 필드 암·복호화 |
@@ -89,9 +89,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -174,8 +171,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 URL 규칙
 
 ```
-公开接口:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+公开接口:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ logistics_system_config (系统配置) — 独立表
 API 버전은 요청 헤더로 제어되며 **URL 경로에 나타나지 않습니다**:
 
 ```http
-API-Version: v1
 ```
 
 | 메커니즘 | 설명 |
@@ -219,13 +215,13 @@ API-Version: v1
 
 ```bash
 # v1 사용
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # v2 사용
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # 미지정 시 기본 v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 레이트 리밋 정책
@@ -235,8 +231,8 @@ Redis Sorted Set 슬라이딩 윈도우 알고리즘 기반, 원자적 Lua 스�
 | 인터페이스 | 제한 |
 |------|------|
 | 기본 | 60회/분/IP/라우트 |
-| POST /api/auth/login | 10회/분 |
-| POST /api/auth/register | 5회/분 |
+| POST /api/v1/auth/login | 10회/분 |
+| POST /api/v1/auth/register | 5회/분 |
 
 초과 시 429를 반환하며, 응답 헤더에 X-RateLimit-Limit / Remaining / Reset / Retry-After가 포함됩니다.
 
@@ -265,12 +261,12 @@ Redis Sorted Set 슬라이딩 윈도우 알고리즘 기반, 원자적 Lua 스�
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

@@ -70,7 +70,7 @@ Todas las cabeceras se inyectan en el middleware `Cors` y se añaden a cada resp
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | Permite CORS desde cualquier origen (escenario de panel de administración en intranet) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | Conjunto de métodos permitidos |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | Cabeceras personalizadas permitidas |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | Cabeceras personalizadas permitidas |
 | Access-Control-Max-Age | `86400` | Caché de la petición de preflight durante 24 horas |
 | X-Content-Type-Options | `nosniff` | Prohíbe la detección de MIME por parte del navegador |
 | X-Frame-Options | `DENY` | Prohíbe la incrustación en iframes, previene el clickjacking |
@@ -122,8 +122,8 @@ El script Lua se ejecuta en un solo hilo en el servidor Redis, por lo que es **n
 | Ruta | Límite | Ventana | Escenario |
 |------|------|------|------|
 | Por defecto (todas las rutas) | 60 peticiones/minuto | 60s | API general |
-| `/api/auth/login` | 10 peticiones/minuto | 60s | Inicio de sesión (previene la fuerza bruta) |
-| `/api/auth/register` | 5 peticiones/minuto | 60s | Registro (previene el registro masivo) |
+| `/api/v1/auth/login` | 10 peticiones/minuto | 60s | Inicio de sesión (previene la fuerza bruta) |
+| `/api/v1/auth/register` | 5 peticiones/minuto | 60s | Registro (previene el registro masivo) |
 
 ### Cabeceras de respuesta
 

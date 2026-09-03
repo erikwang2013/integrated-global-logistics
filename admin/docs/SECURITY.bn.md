@@ -70,7 +70,7 @@
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | যেকোনো অরিজিনের ক্রস-অরিজিন অনুমতি (ইন্ট্রানেট অ্যাডমিন ব্যাকএন্ড দৃশ্য) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | অনুমোদিত মেথড সেট |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | অনুমোদিত কাস্টম হেডার |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | অনুমোদিত কাস্টম হেডার |
 | Access-Control-Max-Age | `86400` | প্রিফ্লাইট রিকোয়েস্ট ক্যাশ ২৪ ঘণ্টা |
 | X-Content-Type-Options | `nosniff` | ব্রাউজার MIME স্নিফিং নিষিদ্ধ |
 | X-Frame-Options | `DENY` | সব iframe এমবেড নিষিদ্ধ, ক্লিকজ্যাকিং প্রতিরোধ |
@@ -122,8 +122,8 @@ Lua স্ক্রিপ্ট Redis সার্ভার সাইডে স�
 | রাউট | সীমা | উইন্ডো | দৃশ্য |
 |------|------|------|------|
 | ডিফল্ট (সব রাউট) | ৬০ বার/মিনিট | 60s | সাধারণ API |
-| `/api/auth/login` | ১০ বার/মিনিট | 60s | লগইন (ব্রুট-ফোর্স প্রতিরোধ) |
-| `/api/auth/register` | ৫ বার/মিনিট | 60s | রেজিস্টার (বাল্ক রেজিস্টার প্রতিরোধ) |
+| `/api/v1/auth/login` | ১০ বার/মিনিট | 60s | লগইন (ব্রুট-ফোর্স প্রতিরোধ) |
+| `/api/v1/auth/register` | ৫ বার/মিনিট | 60s | রেজিস্টার (বাল্ক রেজিস্টার প্রতিরোধ) |
 
 ### রেসপন্স হেডার
 

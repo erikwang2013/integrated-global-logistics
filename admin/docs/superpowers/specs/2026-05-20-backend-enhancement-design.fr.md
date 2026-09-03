@@ -48,7 +48,7 @@ config/
 
 - Répond directement 204 aux requêtes de pré-vérification OPTIONS
 - Pour les requêtes non pré-vérifiées, ajoute `Access-Control-Allow-Origin: *` aux en-têtes de réponse
-- En-têtes autorisés : `Authorization, Content-Type, API-Version`
+- En-têtes autorisés : `Authorization, Content-Type`
 - Cache maximal : 86400 secondes
 
 Montage : middleware global (`config/middleware.php`)
@@ -60,8 +60,8 @@ Montage : middleware global (`config/middleware.php`)
 - Stockage : fenêtre glissante Redis Sorted Set
 - Défaut : 60 requêtes/minute/IP/route
 - Interfaces sensibles :
-  - `/api/auth/login` : 10 requêtes/minute
-  - `/api/auth/register` : 5 requêtes/minute
+  - `/api/v1/auth/login` : 10 requêtes/minute
+  - `/api/v1/auth/register` : 5 requêtes/minute
 - En cas de dépassement, retourne `429 Too Many Requests`
 
 Montage : middleware global (`config/middleware.php`), après Cors, avant ApiVersion

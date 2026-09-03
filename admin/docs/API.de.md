@@ -9,7 +9,6 @@
 Das offene Admin-Panel (open-admin) basiert auf webman v2 und bietet eine RESTful-JSON-API. Alle Admin-Endpunkte erfordern JWT-Authentifizierung und RBAC-Berechtigungsprüfung; öffentliche Endpunkte werden über den API-Versionsheader an versionierte Controller geroutet.
 
 - **Basis-URL**: `http://localhost:8787`
-- **API-Version**: Steuerung über den Request-Header `API-Version: v1` (Standard v1, wenn fehlend)
 - **Sprache**: Umschaltung über den `Accept-Language`-Header oder den Parameter `?lang=zh_CN|en` (Standard zh_CN); die Locale-Middleware erkennt dies automatisch
 
 > **Endpunktübersicht**: Authentifizierung(5) | Dashboard(1) | Benutzer(7) | Rollen(4) | Berechtigungen(4) | Konfiguration(4) | Protokoll(1) | Persönlicher Bereich(3) | Import/Export(3) | Upload(1) | Betrieb(4: health/metrics/docs/security.txt) | Insgesamt 37 Endpunkte
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 Captcha erzeugen
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **Authentifizierung**: nicht erforderlich
-- **Request-Header**: `API-Version: v1` (erforderlich)
 - **Rate-Limiting**: globaler Standard (60/Minute)
 
 **Request-Body**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 Captcha validieren
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **Authentifizierung**: nicht erforderlich
-- **Request-Header**: `API-Version: v1` (erforderlich)
 - **Rate-Limiting**: globaler Standard (60/Minute)
 
 **Request-Body** — Klick-Typ (`type: "click"`):
@@ -246,11 +243,10 @@ Bei fehlgeschlagener Validierung ist `code` 422, `message` lautet `"验证失败
 ### 3.5 Login
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **Authentifizierung**: nicht erforderlich
-- **Request-Header**: `API-Version: v1` (erforderlich)
 - **Rate-Limiting**: 10/Minute (pro IP + Pfad)
 
 **Request-Body**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | ja | min:3, max:50 | Benutzername |
 | password | string | ja | min:6, max:32 (Klartext) | AES-256-CBC-HMAC-verschlüsselt und Base64-kodiert (Klartext kompatibel) |
-| captcha_key | string | ja | | Captcha-Key (muss zuvor über `/api/captcha/verify` validiert worden sein) |
+| captcha_key | string | ja | | Captcha-Key (muss zuvor über `/api/v1/captcha/verify` validiert worden sein) |
 
 ### Passwort-Verschlüsselungsprotokoll
 
@@ -315,7 +311,7 @@ Der öffentliche Schlüssel ist im Frontend eingebaut und muss nicht über das N
 
 **Mögliche Fehler**:
 - 422: Parametervalidierung fehlgeschlagen (Pflichtfelder fehlen, Format nicht korrekt)
-- 422: Bitte zuerst die Captcha-Validierung abschließen (captcha_key nicht über `/api/captcha/verify` validiert)
+- 422: Bitte zuerst die Captcha-Validierung abschließen (captcha_key nicht über `/api/v1/captcha/verify` validiert)
 - 401: Benutzername oder Passwort falsch
 - 403: Konto wurde deaktiviert
 - 429: Konto wurde gesperrt, bitte in 15 Minuten erneut versuchen (ausgelöst durch 5 aufeinanderfolgende Fehlversuche)
@@ -323,11 +319,10 @@ Der öffentliche Schlüssel ist im Frontend eingebaut und muss nicht über das N
 ### 3.6 Registrierung
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **Authentifizierung**: nicht erforderlich
-- **Request-Header**: `API-Version: v1` (erforderlich)
 - **Rate-Limiting**: 5/Minute (pro IP + Pfad)
 
 **Request-Body**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | ja | min:3, max:50 | Benutzername (eindeutig) |
 | password | string | ja | min:6, max:32 (Klartext) | AES-256-CBC-HMAC-verschlüsselt und Base64-kodiert |
 | real_name | string | ja | max:50 | Echter Name |
-| captcha_key | string | ja | | Captcha-Key (muss zuvor über `/api/captcha/verify` validiert worden sein) |
+| captcha_key | string | ja | | Captcha-Key (muss zuvor über `/api/v1/captcha/verify` validiert worden sein) |
 
 **Antwortbeispiel**:
 ```json
@@ -370,11 +365,10 @@ Nach erfolgreicher Registrierung werden direkt die JWT-Tokens zurückgegeben; de
 ### 3.7 Token erneuern
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **Authentifizierung**: nicht erforderlich
-- **Request-Header**: `API-Version: v1` (erforderlich)
 - **Rate-Limiting**: globaler Standard (60/Minute)
 
 **Request-Body**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ Alle Endpunkte (über die globale Middleware-Ebene injiziert) enthalten die folg
 
 Rate-Limiting-Details:
 - Standard-Globallimit: 60/Minute / IP+Pfad
-- Login-Endpunkt `/api/auth/login`: 10/Minute
-- Registrierungs-Endpunkt `/api/auth/register`: 5/Minute
+- Login-Endpunkt `/api/v1/auth/login`: 10/Minute
+- Registrierungs-Endpunkt `/api/v1/auth/register`: 5/Minute
 - Nutzung des atomaren Redis-Gleitfenster-Algorithmus (Lua ZSET), vermeidet TOCTOU-Race-Conditions
 - Bei Redis-Ausfall fail-open (durchlassen), blockiert keine Requests
 
@@ -1666,15 +1660,14 @@ Rate-Limiting-Details:
 Vollständige Authentifizierungs-Sequenz:
 
 ```
-1. Client ruft POST /api/captcha/generate auf
-   (Request-Header: API-Version: v1)
+1. Client ruft POST /api/v1/captcha/generate auf
     ↓
    Server liefert: key + type(click|slider|rotate) + base64-Bild + extra(typspezifische Daten)
 
 2. Der Benutzer führt die Captcha-Operation aus (Klick/Ziehen/Drehen), der Client sammelt die Antwort
 
-3. Client ruft POST /api/captcha/verify auf
-   (Request-Header: API-Version: v1, Content-Type: application/json)
+3. Client ruft POST /api/v1/captcha/verify auf
+   (Request-Header: Content-Type: application/json)
    Request-Body: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // Koordinatenarray
    - type=slider: clicks = 120                   // X-Versatz
@@ -1688,8 +1681,8 @@ Vollständige Authentifizierungs-Sequenz:
     ↓
    Server liefert: { valid: true/false }
 
-4. Client ruft POST /api/auth/login auf
-   (Request-Header: API-Version: v1, Content-Type: application/json)
+4. Client ruft POST /api/v1/auth/login auf
+   (Request-Header: Content-Type: application/json)
    Request-Body: { username, password(verschlüsselt), captcha_key }
     ↓
    Server:
@@ -1723,7 +1716,7 @@ Vollständige Authentifizierungs-Sequenz:
    Response + X-RateLimit-*-Header
 
 6. Access-Token vor Ablauf erneuern
-   Client ruft POST /api/auth/refresh auf
+   Client ruft POST /api/v1/auth/refresh auf
    Request-Body: { refresh_token: "..." }
     ↓
    Server dekodiert refresh_token → stellt neue access + refresh aus
@@ -1765,7 +1758,6 @@ Cors (CORS-Vorverarbeitung + Response-Header)
   → Locale (Accept-Language-Spracherkennung / ?lang=zh_CN|en)
   → SecurityFilter (HTTP-Methodenlimitierung/Body-Größe/Content-Type-Prüfung/XSS/SQL-Injection/Pfad-Traversal/Befehlsinjektion/CSRF-Angriffsblock)
   → RateLimit (Redis-Gleitfenster-Rate-Limiting + Kontosperrung: 5 Fehlversuche → 15 Min. Sperrung)
-  → ApiVersion (API-Versionsprüfung, /api-Routengruppe)
   → AdminAuth (JWT-Authentifizierung + Blacklist, /admin-Routengruppe)
   → AdminPermission (RBAC-Autorisierung / Redis-60s-Cache, /admin-Routengruppe)
   → OperationLog (automatische Aufzeichnung von POST/PUT/DELETE, inkl. Quellenerkennung, /admin-Routengruppe)

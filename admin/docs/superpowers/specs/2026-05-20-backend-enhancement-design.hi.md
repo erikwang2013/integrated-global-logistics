@@ -46,7 +46,7 @@ config/
 
 - OPTIONS प्रीफ़्लाइट अनुरोध सीधे 204 लौटाता है
 - गैर-प्रीफ़्लाइट अनुरोध के रिस्पॉन्स हेडर में `Access-Control-Allow-Origin: *` जोड़ा जाता है
-- अनुमत हेडर: `Authorization, Content-Type, API-Version`
+- अनुमत हेडर: `Authorization, Content-Type`
 - अधिकतम कैश: 86400 सेकंड
 
 माउंटिंग: ग्लोबल मिडलवेयर (`config/middleware.php`)
@@ -58,8 +58,8 @@ config/
 - स्टोरेज: Redis Sorted Set स्लाइडिंग विंडो
 - डिफ़ॉल्ट: 60 अनुरोध/मिनट/IP/रूट
 - संवेदनशील इंटरफ़ेस:
-  - `/api/auth/login`: 10 अनुरोध/मिनट
-  - `/api/auth/register`: 5 अनुरोध/मिनट
+  - `/api/v1/auth/login`: 10 अनुरोध/मिनट
+  - `/api/v1/auth/register`: 5 अनुरोध/मिनट
 - सीमा पार होने पर `429 Too Many Requests` लौटाता है
 
 माउंटिंग: ग्लोबल मिडलवेयर (`config/middleware.php`), Cors के बाद और ApiVersion से पहले

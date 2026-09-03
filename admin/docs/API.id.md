@@ -9,7 +9,6 @@
 Panel Admin Terbuka (open-admin) dibangun di atas webman v2 dan menyediakan RESTful JSON API. Semua antarmuka sisi admin memerlukan autentikasi JWT dan validasi hak akses RBAC; antarmuka publik dirutekan ke kontroler ber-versi melalui header versi API.
 
 - **URL dasar**: `http://localhost:8787`
-- **Versi API**: Dikontrol melalui header `API-Version: v1` (default v1 jika tidak ada)
 - **Bahasa**: Berpindah melalui header `Accept-Language` atau parameter `?lang=zh_CN|en` (default zh_CN), dideteksi otomatis oleh middleware Locale
 
 > **Ringkasan endpoint**: Autentikasi(5) | Dasbor(1) | Pengguna(7) | Peran(4) | Hak Akses(4) | Konfigurasi(4) | Log(1) | Pusat Akun(3) | Impor Ekspor(3) | Upload(1) | Operasional(4: health/metrics/docs/security.txt) | Total 37 endpoint
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 Membuat Captcha
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **Autentikasi**: Tidak diperlukan
-- **Header permintaan**: `API-Version: v1` (wajib)
 - **Rate limit**: Default global (60 kali/menit)
 
 **Body permintaan**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 Verifikasi Captcha
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **Autentikasi**: Tidak diperlukan
-- **Header permintaan**: `API-Version: v1` (wajib)
 - **Rate limit**: Default global (60 kali/menit)
 
 **Body permintaan** — tipe klik (`type: "click"`):
@@ -246,11 +243,10 @@ Saat verifikasi gagal, `code` adalah 422, `message` adalah `"验证失败，请�
 ### 3.5 Login
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **Autentikasi**: Tidak diperlukan
-- **Header permintaan**: `API-Version: v1` (wajib)
 - **Rate limit**: 10 kali/menit (per IP + path)
 
 **Body permintaan**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | Ya | min:3, max:50 | Nama pengguna |
 | password | string | Ya | min:6, max:32 (teks polos) | Dienkripsi AES-256-CBC-HMAC lalu di-encode Base64 (kompatibel teks polos) |
-| captcha_key | string | Ya | | Key captcha (harus lolos verifikasi `/api/captcha/verify` terlebih dahulu) |
+| captcha_key | string | Ya | | Key captcha (harus lolos verifikasi `/api/v1/captcha/verify` terlebih dahulu) |
 
 ### Protokol Enkripsi Kata Sandi
 
@@ -315,7 +311,7 @@ Kunci publik tertanam di aplikasi frontend, tidak perlu dikirim melalui jaringan
 
 **Kesalahan yang mungkin**:
 - 422: Gagal validasi parameter (bidang wajib kosong, format tidak sesuai)
-- 422: Selesaikan verifikasi captcha terlebih dahulu (captcha_key tidak lolos `/api/captcha/verify`)
+- 422: Selesaikan verifikasi captcha terlebih dahulu (captcha_key tidak lolos `/api/v1/captcha/verify`)
 - 401: Nama pengguna atau kata sandi salah
 - 403: Akun telah dinonaktifkan
 - 429: Akun telah terkunci, coba lagi setelah 15 menit (dipicu 5 kali kegagalan login berturut-turut)
@@ -323,11 +319,10 @@ Kunci publik tertanam di aplikasi frontend, tidak perlu dikirim melalui jaringan
 ### 3.6 Registrasi
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **Autentikasi**: Tidak diperlukan
-- **Header permintaan**: `API-Version: v1` (wajib)
 - **Rate limit**: 5 kali/menit (per IP + path)
 
 **Body permintaan**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | Ya | min:3, max:50 | Nama pengguna (unik) |
 | password | string | Ya | min:6, max:32 (teks polos) | Dienkripsi AES-256-CBC-HMAC lalu di-encode Base64 |
 | real_name | string | Ya | max:50 | Nama asli |
-| captcha_key | string | Ya | | Key captcha (harus lolos verifikasi `/api/captcha/verify` terlebih dahulu) |
+| captcha_key | string | Ya | | Key captcha (harus lolos verifikasi `/api/v1/captcha/verify` terlebih dahulu) |
 
 **Contoh respons**:
 ```json
@@ -370,11 +365,10 @@ Setelah registrasi berhasil, token JWT langsung dikembalikan, status pengguna de
 ### 3.7 Refresh Token
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **Autentikasi**: Tidak diperlukan
-- **Header permintaan**: `API-Version: v1` (wajib)
 - **Rate limit**: Default global (60 kali/menit)
 
 **Body permintaan**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ Semua antarmuka (disuntikkan pada lapisan middleware global) menyertakan header 
 
 Detail rate limit:
 - Batas global default: 60 kali/menit / IP+path
-- Endpoint login `/api/auth/login`: 10 kali/menit
-- Endpoint registrasi `/api/auth/register`: 5 kali/menit
+- Endpoint login `/api/v1/auth/login`: 10 kali/menit
+- Endpoint registrasi `/api/v1/auth/register`: 5 kali/menit
 - Menggunakan algoritma sliding window atomik Redis (Lua ZSET), menghindari race condition TOCTOU
 - Saat Redis tidak tersedia, fail open (membiarkan lewat), tidak memblokir permintaan
 
@@ -1666,15 +1660,14 @@ Detail rate limit:
 Urutan autentikasi lengkap:
 
 ```
-1. 客户端请求 POST /api/captcha/generate
-   (请求头: API-Version: v1)
+1. 客户端请求 POST /api/v1/captcha/generate
     ↓
    服务端返回: key + type(click|slider|rotate) + base64 图片 + extra(类型相关数据)
    
 2. 用户交互完成验证码操作（点击/拖拽/旋转），客户端收集答案
    
-3. 客户端请求 POST /api/captcha/verify
-   (请求头: API-Version: v1, Content-Type: application/json)
+3. 客户端请求 POST /api/v1/captcha/verify
+   (请求头: Content-Type: application/json)
    请求体: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // 坐标数组
    - type=slider: clicks = 120                   // X 偏移量
@@ -1688,8 +1681,8 @@ Urutan autentikasi lengkap:
     ↓
    服务端返回: { valid: true/false }
 
-4. 客户端请求 POST /api/auth/login
-   (请求头: API-Version: v1, Content-Type: application/json)
+4. 客户端请求 POST /api/v1/auth/login
+   (请求头: Content-Type: application/json)
    请求体: { username, password(加密), captcha_key }
     ↓
    服务端:
@@ -1723,7 +1716,7 @@ Urutan autentikasi lengkap:
    Response + X-RateLimit-* 头
 
 6. Access Token 过期前刷新
-   客户端请求 POST /api/auth/refresh
+   客户端请求 POST /api/v1/auth/refresh
    请求体: { refresh_token: "..." }
     ↓
    服务端解码 refresh_token → 签发新 access + refresh
@@ -1765,7 +1758,7 @@ Cors（跨域预处理 + 响应头）
   → Locale（Accept-Language 语言检测 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP方法限制/请求体大小/Content-Type校验/XSS/SQL注入/路径遍历/命令注入/CSRF 攻击拦截）
   → RateLimit（Redis 滑动窗口限流 + 账号锁定：5次登录失败锁定15分钟）
-  → ApiVersion（API 版本校验，/api 路由组）
+  → ClientAuth（客户端 JWT 认证，token_type=client，/api/v1 客户端门户路由组）
   → AdminAuth（JWT 认证 + 黑名单，/admin 路由组）
   → AdminPermission（RBAC 鉴权 / Redis 60s 缓存，/admin 路由组）
   → OperationLog（POST/PUT/DELETE 自动记录，含来源端检测，/admin 路由组）

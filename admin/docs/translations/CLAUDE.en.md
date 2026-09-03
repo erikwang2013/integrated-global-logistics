@@ -67,7 +67,7 @@ open-admin/
 │   │   ├── HealthController.php    # Health check
 │   │   ├── DocsController.php      # OpenAPI docs
 │   │   └── MetricsController.php   # Prometheus metrics
-│   ├── api/v1/controller/      # API v1 controllers (version header control)
+│   ├── api/v1/controller/      # API v1 controllers (version in URL path)
 │   │   ├── CaptchaController.php
 │   │   └── AuthController.php
 │   ├── common/                 # Common utilities
@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # CORS (global)
 │   │   └── (migrated to erikwang2013/security-php package)  # 31 attack detectors
 │   │   ├── RateLimit.php       # Redis rate limiting (global, Lua atomic)
-│   │   ├── ApiVersion.php      # API version validation
 │   │   ├── AdminAuth.php       # JWT auth + blacklist
 │   │   ├── AdminPermission.php # RBAC permission check (Redis 60s cache)
 │   │   └── OperationLog.php    # Automatic operation logging (incl. client source detection)
@@ -142,7 +141,7 @@ open-admin/
 ```
 全局:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → {路由中间件}
 /admin: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 ```
 
@@ -164,7 +163,7 @@ open-admin/
 The version is controlled via the `API-Version` request header (default `v1`), not reflected in the URL:
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 Adding a new version only requires creating the `app/api/{version}/controller/` directory and registering it in the `ApiVersion` middleware.
@@ -206,7 +205,7 @@ Redis sliding window (Lua atomic), default 60 req/min/IP/route:
 
 ### HarmonyOS
 - Uses the `@ohos.net.http` native HTTP client
-- Seamless token refresh: auto-calls `/api/auth/refresh` on 401
+- Seamless token refresh: auto-calls `/api/v1/auth/refresh` on 401
 - Auto-redirects to the login page when refresh fails
 
 ## Deployment

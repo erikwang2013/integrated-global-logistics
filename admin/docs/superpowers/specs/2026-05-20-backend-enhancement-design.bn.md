@@ -48,7 +48,7 @@ config/
 
 - OPTIONS প্রি-ফ্লাইট অনুরোধ সরাসরি 204 রিটার্ন করে
 - নন-প্রি-ফ্লাইট অনুরোধে রেসপন্স হেডারে `Access-Control-Allow-Origin: *` যুক্ত হয়
-- অনুমোদিত হেডার: `Authorization, Content-Type, API-Version`
+- অনুমোদিত হেডার: `Authorization, Content-Type`
 - সর্বোচ্চ ক্যাশ: 86400 সেকেন্ড
 
 মাউন্ট: গ্লোবাল মিডলওয়্যার (`config/middleware.php`)
@@ -60,8 +60,8 @@ config/
 - স্টোরেজ: Redis Sorted Set স্লাইডিং উইন্ডো
 - ডিফল্ট: 60 বার/মিনিট/IP/রাউট
 - সংবেদনশীল এন্ডপয়েন্ট:
-  - `/api/auth/login`: 10 বার/মিনিট
-  - `/api/auth/register`: 5 বার/মিনিট
+  - `/api/v1/auth/login`: 10 বার/মিনিট
+  - `/api/v1/auth/register`: 5 বার/মিনিট
 - লিমিট অতিক্রম করলে `429 Too Many Requests` রিটার্ন হয়
 
 মাউন্ট: গ্লোবাল মিডলওয়্যার (`config/middleware.php`), Cors-এর পরে, ApiVersion-এর আগে

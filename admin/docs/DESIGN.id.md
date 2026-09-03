@@ -62,7 +62,7 @@
 | Lapisan | Direktori | Tanggung jawab |
 |---|------|------|
 | Routing | `config/route.php` | Pemetaan URL ke controller, pengikatan middleware, routing ber-versi |
-| Middleware | `app/middleware/` | Interception serangan(SecurityFilter), rate limit(RateLimit), autentikasi(JWT), otorisasi(RBAC), versi API(ApiVersion) |
+| Middleware | `app/middleware/` | Interception serangan(SecurityFilter), rate limit(RateLimit), autentikasi(JWT), otorisasi(RBAC), versi API |
 | Controller | 14: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (sisi admin) + Captcha/Auth (API v1) | Validasi parameter permintaan, pemanggilan logika bisnis, format respons |
 | Layanan bisnis | `app/service/` | Logika bisnis yang dapat digunakan ulang (dicadangkan) |
 | Model data | `app/model/` | Pemetaan ORM, relasi, enkripsi/dekripsi bidang |
@@ -89,9 +89,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -174,8 +171,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 Standar URL
 
 ```
-公开接口:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+公开接口:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ logistics_system_config (系统配置) — 独立表
 Versi API dikontrol melalui header permintaan, **tidak tampil di path URL**:
 
 ```http
-API-Version: v1
 ```
 
 | Mekanisme | Keterangan |
@@ -219,13 +215,13 @@ Contoh ekstensi — menambah API v2:
 
 ```bash
 # 使用 v1
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # 使用 v2
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # 不传，默认 v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 Kebijakan Rate Limit
@@ -235,8 +231,8 @@ Berdasarkan algoritma sliding window Redis Sorted Set, dieksekusi dengan skrip L
 | Antarmuka | Batasan |
 |------|------|
 | Default | 60 kali/menit/IP/rute |
-| POST /api/auth/login | 10 kali/menit |
-| POST /api/auth/register | 5 kali/menit |
+| POST /api/v1/auth/login | 10 kali/menit |
+| POST /api/v1/auth/register | 5 kali/menit |
 
 Melebihi batas mengembalikan 429, header respons berisi X-RateLimit-Limit / Remaining / Reset / Retry-After.
 
@@ -265,12 +261,12 @@ Melebihi batas mengembalikan 429, header respons berisi X-RateLimit-Limit / Rema
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

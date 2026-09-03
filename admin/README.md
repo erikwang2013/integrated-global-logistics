@@ -70,7 +70,7 @@ open-admin/
 │   │   ├── DocsController.php      # OpenAPI 文档
 │   │   └── BaseController.php      # 基础控制器
 │   ├── api/
-│   │   └── v1/controller/          # API v1 控制器（版本由请求头 API-Version 控制）
+│   │   └── v1/controller/          # API v1 控制器（版本号位于 URL 路径）
 │   │       ├── CaptchaController.php # 点击验证码
 │   │       └── AuthController.php    # 登录/刷新令牌
 │   ├── common/                 # 公共工具类
@@ -79,9 +79,10 @@ open-admin/
 │   │   └── EncryptionService.php # 数据加解密 + 脱敏
 │   ├── middleware/             # 中间件
 │   │   ├── Cors.php            # 跨域
+│   │   ├── Locale.php          # 语言检测（全局：Accept-Language / ?lang=）
 │   │   ├── SecurityFilter.php  # 攻击检测拦截（HTTP方法限制/XSS/SQL注入/路径遍历/命令注入/CSRF）
 │   │   ├── RateLimit.php       # Redis 限流（滑动窗口 + 响应头）
-│   │   ├── ApiVersion.php      # API 版本校验
+│   │   ├── ClientAuth.php      # 客户端 JWT（/api/v1 客户端门户路由组）
 │   │   ├── AdminAuth.php       # JWT 认证 + 黑名单
 │   │   ├── AdminPermission.php # RBAC 权限校验
 │   │   └── OperationLog.php    # 操作日志自动记录（含来源端检测）
@@ -220,7 +221,6 @@ docker-compose up -d
 
 - **统一响应格式**: `{ "code": 0, "message": "success", "data": {...} }`，`code=0` 表示成功
 - **错误码**: `400` 参数错误 / `401` 未登录 / `403` 无权限 / `404` 不存在 / `422` 验证失败 / `429` 限流 / `500` 服务器错误
-- **API 版本**: 通过请求头 `API-Version: v1` 控制（缺失时默认 v1），不在 URL 中体现
 - **认证**: `Authorization: Bearer <token>`；access_token 有效期 2 小时，refresh_token 14 天
 - **ID 处理**: 请求/响应中的 ID 为 hashids 加密字符串，不暴露真实数据库 ID
 

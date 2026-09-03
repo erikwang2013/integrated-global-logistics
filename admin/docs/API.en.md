@@ -6,10 +6,9 @@
 
 ## 1. Overview
 
-open-admin is built on webman v2 and provides a RESTful JSON API. All admin endpoints require JWT authentication and RBAC permission checks; public endpoints are routed to versioned controllers via the API version header.
+open-admin is built on webman v2 and provides a RESTful JSON API. All admin endpoints require JWT authentication and RBAC permission checks; public endpoints carry the API version directly in the URL path (`/api/v1/*`), resolved by route groups to versioned controllers.
 
 - **Base URL**: `http://localhost:8787`
-- **API version**: controlled via the `API-Version: v1` request header (defaults to v1 when absent)
 - **Language**: switched via the `Accept-Language` header or the `?lang=zh_CN|en` parameter (default zh_CN), auto-detected by the Locale middleware
 
 > **Endpoint overview**: Auth (5) | Dashboard (1) | Users (7) | Roles (4) | Permissions (4) | Config (4) | Logs (1) | Profile (3) | Import/Export (3) | Upload (1) | Ops (4: health/metrics/docs/security.txt) | 37 endpoints in total
@@ -44,7 +43,7 @@ open-admin is built on webman v2 and provides a RESTful JSON API. All admin endp
 
 ## 3. Public Endpoints
 
-All public endpoints are mounted under the `/api` group and dispatched by the `ApiVersion` middleware to the corresponding versioned controller according to the `API-Version` header (e.g. `app\api\v1\controller\AuthController`).
+All public endpoints are mounted under the `/api/v1` route group (bound directly via `Route::group('/api/v1', ...)` in `config/route.php`); the version `v1` is the first path segment, resolved by routing to the corresponding versioned controller (e.g. `app\api\v1\controller\AuthController`).
 
 ### 3.1 Health Check
 
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 Generate Captcha
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **Authentication**: none
-- **Request header**: `API-Version: v1` (required)
 - **Rate limit**: global default (60/min)
 
 **Request body**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 Verify Captcha
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **Authentication**: none
-- **Request header**: `API-Version: v1` (required)
 - **Rate limit**: global default (60/min)
 
 **Request body** — click type (`type: "click"`):
@@ -246,11 +243,10 @@ On failure, `code` is 422, `message` is `"验证失败，请重试"`, and `data.
 ### 3.5 Login
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **Authentication**: none
-- **Request header**: `API-Version: v1` (required)
 - **Rate limit**: 10/min (per IP + path)
 
 **Request body**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | Yes | min:3, max:50 | Username |
 | password | string | Yes | min:6, max:32 (plaintext) | AES-256-CBC-HMAC encrypted then Base64 encoded (plaintext accepted) |
-| captcha_key | string | Yes | | Captcha key (must first pass `/api/captcha/verify`) |
+| captcha_key | string | Yes | | Captcha key (must first pass `/api/v1/captcha/verify`) |
 
 ### Password Encryption Protocol
 
@@ -315,7 +311,7 @@ The public key is built into the frontend application and is never transmitted o
 
 **Possible errors**:
 - 422: Parameter validation failed (missing required fields, invalid format)
-- 422: Complete the captcha verification first (captcha_key has not passed `/api/captcha/verify`)
+- 422: Complete the captcha verification first (captcha_key has not passed `/api/v1/captcha/verify`)
 - 401: Incorrect username or password
 - 403: Account has been disabled
 - 429: Account is locked, try again in 15 minutes (triggered by 5 consecutive login failures)
@@ -323,11 +319,10 @@ The public key is built into the frontend application and is never transmitted o
 ### 3.6 Register
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **Authentication**: none
-- **Request header**: `API-Version: v1` (required)
 - **Rate limit**: 5/min (per IP + path)
 
 **Request body**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | Yes | min:3, max:50 | Username (unique) |
 | password | string | Yes | min:6, max:32 (plaintext) | AES-256-CBC-HMAC encrypted then Base64 encoded |
 | real_name | string | Yes | max:50 | Real name |
-| captcha_key | string | Yes | | Captcha key (must first pass `/api/captcha/verify`) |
+| captcha_key | string | Yes | | Captcha key (must first pass `/api/v1/captcha/verify`) |
 
 **Example response**:
 ```json
@@ -370,11 +365,10 @@ A JWT token is returned immediately after successful registration; the user is e
 ### 3.7 Refresh Token
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **Authentication**: none
-- **Request header**: `API-Version: v1` (required)
 - **Rate limit**: global default (60/min)
 
 **Request body**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ All endpoints (injected at the global middleware layer) include the following re
 
 Rate limit details:
 - Default global limit: 60/min per IP + path
-- Login endpoint `/api/auth/login`: 10/min
-- Register endpoint `/api/auth/register`: 5/min
+- Login endpoint `/api/v1/auth/login`: 10/min
+- Register endpoint `/api/v1/auth/register`: 5/min
 - Uses the Redis atomic sliding window algorithm (Lua ZSET) to avoid TOCTOU races
 - Fails open when Redis is unavailable (requests pass), never blocking traffic
 
@@ -1666,15 +1660,14 @@ Rate limit details:
 The complete authentication sequence:
 
 ```
-1. Client requests POST /api/captcha/generate
-   (Request header: API-Version: v1)
+1. Client requests POST /api/v1/captcha/generate
     ↓
    Server returns: key + type(click|slider|rotate) + base64 image + extra(type-specific data)
    
 2. The user completes the captcha interaction (click/drag/rotate), and the client collects the answer
    
-3. Client requests POST /api/captcha/verify
-   (Request headers: API-Version: v1, Content-Type: application/json)
+3. Client requests POST /api/v1/captcha/verify
+   (Request headers: Content-Type: application/json)
    Request body: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // coordinate array
    - type=slider: clicks = 120                   // X offset
@@ -1688,8 +1681,8 @@ The complete authentication sequence:
     ↓
    Server returns: { valid: true/false }
 
-4. Client requests POST /api/auth/login
-   (Request headers: API-Version: v1, Content-Type: application/json)
+4. Client requests POST /api/v1/auth/login
+   (Request headers: Content-Type: application/json)
    Request body: { username, password(encrypted), captcha_key }
     ↓
    Server:
@@ -1723,7 +1716,7 @@ The complete authentication sequence:
    Response + X-RateLimit-* headers
 
 6. Refresh before the access token expires
-   Client requests POST /api/auth/refresh
+   Client requests POST /api/v1/auth/refresh
    Request body: { refresh_token: "..." }
     ↓
    Server decodes refresh_token → issues new access + refresh
@@ -1765,7 +1758,7 @@ Cors（跨域预处理 + 响应头）
   → Locale（Accept-Language 语言检测 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP方法限制/请求体大小/Content-Type校验/XSS/SQL注入/路径遍历/命令注入/CSRF 攻击拦截）
   → RateLimit（Redis 滑动窗口限流 + 账号锁定：5次登录失败锁定15分钟）
-  → ApiVersion（API 版本校验，/api 路由组）
+  → ClientAuth（客户端 JWT 认证，token_type=client，/api/v1 客户端门户路由组）
   → AdminAuth（JWT 认证 + 黑名单，/admin 路由组）
   → AdminPermission（RBAC 鉴权 / Redis 60s 缓存，/admin 路由组）
   → OperationLog（POST/PUT/DELETE 自动记录，含来源端检测，/admin 路由组）

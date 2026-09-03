@@ -48,7 +48,7 @@ config/
 
 - طلبات OPTIONS المسبقة (preflight) تُرجع 204 مباشرة
 - للطلبات غير المسبوقة، تُضاف `Access-Control-Allow-Origin: *` إلى رؤوس الاستجابة
-- الرؤوس المسموحة: `Authorization, Content-Type, API-Version`
+- الرؤوس المسموحة: `Authorization, Content-Type`
 - أقصى مدة تخزين مؤقت: 86400 ثانية
 
 التركيب: وسيط عام (`config/middleware.php`)
@@ -60,8 +60,8 @@ config/
 - التخزين: نافذة منزلقة عبر Sorted Set في Redis
 - الافتراضي: 60 مرة/دقيقة/IP/مسار
 - الواجهات الحساسة:
-  - `/api/auth/login`: 10 مرات/دقيقة
-  - `/api/auth/register`: 5 مرات/دقيقة
+  - `/api/v1/auth/login`: 10 مرات/دقيقة
+  - `/api/v1/auth/register`: 5 مرات/دقيقة
 - عند تجاوز الحد يُرجع `429 Too Many Requests`
 
 التركيب: وسيط عام (`config/middleware.php`)، بعد Cors وقبل ApiVersion

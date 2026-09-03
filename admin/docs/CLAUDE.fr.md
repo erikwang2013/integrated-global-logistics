@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # CORS (global)
 │   │   ├── SecurityFilter.php  # Interception des attaques (global : XSS/injection SQL/traversée de chemin/injection de commandes/CSRF)
 │   │   ├── RateLimit.php       # Limitation de débit Redis (global, atomique en Lua)
-│   │   ├── ApiVersion.php      # Validation de la version API
 │   │   ├── AdminAuth.php       # Authentification JWT + liste noire
 │   │   ├── AdminPermission.php # Validation des permissions RBAC (cache Redis 60 s)
 │   │   └── OperationLog.php    # Enregistrement automatique des journaux d'opérations (avec détection de la source)
@@ -143,7 +142,7 @@ open-admin/
 ```
 Global :  Cors → Locale(Accept-Language) → SecurityFilter(vérification des méthodes→405) → RateLimit → {middlewares de route}
 /admin : Cors → Locale(Accept-Language) → SecurityFilter(vérification des méthodes→405) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api :   Cors → Locale(Accept-Language) → SecurityFilter(vérification des méthodes→405) → RateLimit → ApiVersion → Controller
+/api :   Cors → Locale(Accept-Language) → SecurityFilter(vérification des méthodes→405) → RateLimit → Controller
 /health : Cors → Locale(Accept-Language) → SecurityFilter(vérification des méthodes→405) → RateLimit → Controller
 ```
 
@@ -161,7 +160,7 @@ Global :  Cors → Locale(Accept-Language) → SecurityFilter(vérification des 
 La version est contrôlée par l'en-tête `API-Version` (v1 par défaut), non visible dans l'URL :
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 Pour ajouter une version, créez simplement le répertoire `app/api/{version}/controller/` et enregistrez-le dans le middleware `ApiVersion`.
@@ -194,7 +193,7 @@ Fenêtre glissante Redis (atomique en Lua), défaut 60 requêtes/minute/IP/route
 
 ### HarmonyOS
 - Utilisation du client HTTP natif `@ohos.net.http`
-- Rafraîchissement transparent du jeton : à la réception d'un 401, appel automatique de `/api/auth/refresh`
+- Rafraîchissement transparent du jeton : à la réception d'un 401, appel automatique de `/api/v1/auth/refresh`
 - En cas d'échec du rafraîchissement, redirection automatique vers la page de connexion
 
 ## Déploiement

@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # CORS (глобально)
 │   │   ├── SecurityFilter.php  # Перехват атак (глобально: XSS/SQL-инъекции/обход путей/инъекции команд/CSRF)
 │   │   ├── RateLimit.php       # Redis-лимит (глобально, атомарный Lua)
-│   │   ├── ApiVersion.php      # Проверка версии API
 │   │   ├── AdminAuth.php       # Аутентификация JWT + чёрный список
 │   │   ├── AdminPermission.php # Проверка прав RBAC (кэш Redis 60s)
 │   │   └── OperationLog.php    # Автоматическая запись журнала операций (с определением источника)
@@ -143,7 +142,7 @@ open-admin/
 ```
 全局:  Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → {路由中间件}
 /admin: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 ```
 
@@ -161,7 +160,7 @@ open-admin/
 Версия задаётся заголовком `API-Version` (по умолчанию `v1`) и не отражается в URL:
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 Для новой версии достаточно создать каталог `app/api/{version}/controller/` и зарегистрировать его в middleware `ApiVersion`.
@@ -194,7 +193,7 @@ curl -H "API-Version: v1" http://localhost:8787/api/auth/login
 
 ### HarmonyOS
 - Использование нативного HTTP-клиента `@ohos.net.http`
-- Бесшовное обновление токена: при 401 автоматически вызывается `/api/auth/refresh`
+- Бесшовное обновление токена: при 401 автоматически вызывается `/api/v1/auth/refresh`
 - При неудачном обновлении — автоматический редирект на страницу входа
 
 ## Развертывание

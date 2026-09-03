@@ -70,7 +70,7 @@
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | 임의 출처의 크로스 도메인 허용 (내부망 관리 백엔드 시나리오) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | 허용 메서드 집합 |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | 허용 커스텀 헤더 |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | 허용 커스텀 헤더 |
 | Access-Control-Max-Age | `86400` | 프리플라이트 요청 캐시 24시간 |
 | X-Content-Type-Options | `nosniff` | 브라우저 MIME 스니핑 금지 |
 | X-Frame-Options | `DENY` | 모든 iframe 삽입 금지, 클릭재킹 방지 |
@@ -122,8 +122,8 @@ Lua 스크립트는 Redis 서버에서 단일 스레드로 실행되어 **본질
 | 라우트 | 제한 | 창 | 시나리오 |
 |------|------|------|------|
 | 기본 (모든 라우트) | 60회/분 | 60s | 일반 API |
-| `/api/auth/login` | 10회/분 | 60s | 로그인 (무차별 대입 방지) |
-| `/api/auth/register` | 5회/분 | 60s | 회원가입 (대량 가입 방지) |
+| `/api/v1/auth/login` | 10회/분 | 60s | 로그인 (무차별 대입 방지) |
+| `/api/v1/auth/register` | 5회/분 | 60s | 회원가입 (대량 가입 방지) |
 
 ### 응답 헤더
 

@@ -78,14 +78,13 @@ open-admin/
 │   │   ├── HealthController.php    # Health check
 │   │   └── DocsController.php      # OpenAPI docs
 │   ├── api/
-│   │   └── v1/controller/          # API v1 (version via API-Version header)
+│   │   └── v1/controller/          # API v1 (version in URL path)
 │   │       ├── CaptchaController.php
 │   │       └── AuthController.php    # Login/Refresh
 │   ├── middleware/             # Middleware
 │   │   ├── Cors.php            # CORS
 │   │   ├── SecurityFilter.php  # Attack detection (HTTP method restriction/XSS/SQLi/path traversal/cmd injection/CSRF)
 │   │   ├── RateLimit.php       # Redis rate limiting
-│   │   ├── ApiVersion.php      # API version validation
 │   │   ├── AdminAuth.php       # JWT auth + blacklist
 │   │   ├── AdminPermission.php # RBAC authorization
 │   │   └── OperationLog.php    # Auto operation logging (with source detection)
@@ -212,7 +211,6 @@ The complete API reference (response format, error codes, all endpoint details, 
 
 - **Response format**: `{ "code": 0, "message": "success", "data": {...} }`, `code=0` means success
 - **Error codes**: `400` bad request / `401` unauthenticated / `403` forbidden / `404` not found / `422` validation failed / `429` rate limited / `500` server error
-- **API versioning**: via the `API-Version: v1` request header (defaults to v1), not in the URL
 - **Authentication**: `Authorization: Bearer <token>`; access_token TTL 2h, refresh_token TTL 14d
 - **ID handling**: IDs in requests/responses are hashid-encrypted strings, real database IDs are never exposed
 

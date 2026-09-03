@@ -70,7 +70,7 @@ Semua header disuntikkan di middleware `Cors`, ditambahkan ke setiap respons mel
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | Mengizinkan lintas domain dari semua origin (skenario panel admin intranet) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | Kumpulan metode yang diizinkan |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | Header khusus yang diizinkan |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | Header khusus yang diizinkan |
 | Access-Control-Max-Age | `86400` | Cache permintaan preflight 24 jam |
 | X-Content-Type-Options | `nosniff` | Melarang MIME sniffing browser |
 | X-Frame-Options | `DENY` | Melarang semua embedding iframe, mencegah clickjacking |
@@ -122,8 +122,8 @@ Skrip Lua dieksekusi single-thread di sisi server Redis, **atomik secara alami**
 | Rute | Batasan | Jendela | Skenario |
 |------|------|------|------|
 | Default (semua rute) | 60 kali/menit | 60s | API umum |
-| `/api/auth/login` | 10 kali/menit | 60s | Login (mencegah brute force) |
-| `/api/auth/register` | 5 kali/menit | 60s | Registrasi (mencegah registrasi massal) |
+| `/api/v1/auth/login` | 10 kali/menit | 60s | Login (mencegah brute force) |
+| `/api/v1/auth/register` | 5 kali/menit | 60s | Registrasi (mencegah registrasi massal) |
 
 ### Header Respons
 

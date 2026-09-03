@@ -39,7 +39,7 @@ class DocsController
             'openapi' => '3.0.3',
             'info' => [
                 'title'       => '开放管理后台 API',
-                'description' => '基于 webman v2 的全栈管理后台系统。API 版本通过请求头 API-Version 控制，不在 URL 中体现。',
+                'description' => '基于 webman v2 的全栈管理后台系统。API 版本号位于 URL 路径中（/api/v1/*），不在 header 中体现。',
                 'version'     => '1.0.0',
                 'contact'     => ['name' => 'erik', 'email' => 'erik@erik.xyz', 'url' => 'https://erik.xyz'],
             ],
@@ -48,7 +48,6 @@ class DocsController
             'components' => [
                 'securitySchemes' => [
                     'bearerAuth' => ['type' => 'http', 'scheme' => 'bearer', 'bearerFormat' => 'JWT'],
-                    'apiVersion' => ['type' => 'apiKey', 'in' => 'header', 'name' => 'API-Version', 'description' => 'API 版本号，默认 v1'],
                 ],
                 'schemas' => [
                     'ApiResponse' => [
@@ -121,10 +120,10 @@ class DocsController
             'paths' => [
                 '/health' => $this->path('健康检查', 'GET', null, 'HealthData'),
 
-                '/api/captcha/generate' => $this->path('生成点击验证码', 'POST', ['API-Version 头必须'], 'object', ['difficulty' => 'string: easy|medium|hard']),
-                '/api/captcha/verify'   => $this->path('校验点击验证码', 'POST', ['API-Version 头必须']),
-                '/api/auth/login'   => $this->path('登录', 'POST', ['API-Version 头必须'], 'object', ['username' => 'string', 'password' => 'string', 'captcha_key' => 'string', 'clicks' => 'array']),
-                '/api/auth/refresh' => $this->path('刷新令牌', 'POST', ['API-Version 头必须'], 'object', ['refresh_token' => 'string']),
+                '/api/v1/captcha/generate' => $this->path('生成点击验证码', 'POST', null, 'object', ['difficulty' => 'string: easy|medium|hard']),
+                '/api/v1/captcha/verify'   => $this->path('校验点击验证码', 'POST'),
+                '/api/v1/auth/login'   => $this->path('登录', 'POST', null, 'object', ['username' => 'string', 'password' => 'string', 'captcha_key' => 'string', 'clicks' => 'array']),
+                '/api/v1/auth/refresh' => $this->path('刷新令牌', 'POST', null, 'object', ['refresh_token' => 'string']),
 
                 '/admin/dashboard' => $this->path('仪表盘数据', 'GET', ['JWT 认证']),
 

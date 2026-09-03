@@ -48,7 +48,7 @@ config/
 
 - OPTIONS 사전 요청은 204를 직접 반환
 - 비사전 요청은 응답 헤더에 `Access-Control-Allow-Origin: *` 추가
-- 허용 헤더: `Authorization, Content-Type, API-Version`
+- 허용 헤더: `Authorization, Content-Type`
 - 최대 캐시: 86400초
 
 마운트: 전역 미들웨어(`config/middleware.php`)
@@ -60,8 +60,8 @@ config/
 - 저장: Redis Sorted Set 슬라이딩 윈도우
 - 기본: 60회/분/IP/라우트
 - 민감 인터페이스:
-  - `/api/auth/login`: 10회/분
-  - `/api/auth/register`: 5회/분
+  - `/api/v1/auth/login`: 10회/분
+  - `/api/v1/auth/register`: 5회/분
 - 초과 시 `429 Too Many Requests` 반환
 
 마운트: 전역 미들웨어(`config/middleware.php`), Cors 이후, ApiVersion 이전

@@ -70,7 +70,7 @@ All headers are injected in the `Cors` middleware and appended to every response
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | Allows any origin to cross-origin request (intranet admin panel scenario) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | Allowed method set |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | Allowed custom headers |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | Allowed custom headers |
 | Access-Control-Max-Age | `86400` | Preflight request cache for 24 hours |
 | X-Content-Type-Options | `nosniff` | Disables browser MIME sniffing |
 | X-Frame-Options | `DENY` | Blocks all iframe embedding, prevents clickjacking |
@@ -122,8 +122,8 @@ Lua scripts execute single-threaded on the Redis server, making them **inherentl
 | Route | Limit | Window | Scenario |
 |------|------|------|------|
 | Default (all routes) | 60/min | 60s | General API |
-| `/api/auth/login` | 10/min | 60s | Login (brute-force protection) |
-| `/api/auth/register` | 5/min | 60s | Register (anti bulk registration) |
+| `/api/v1/auth/login` | 10/min | 60s | Login (brute-force protection) |
+| `/api/v1/auth/register` | 5/min | 60s | Register (anti bulk registration) |
 
 ### Response Headers
 

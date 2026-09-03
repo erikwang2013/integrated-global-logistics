@@ -63,7 +63,7 @@
 | Ebene | Verzeichnis | Verantwortung |
 |---|------|------|
 | Routing | `config/route.php` | URL-zu-Controller-Zuordnung, Middleware-Bindung, versionierte Routen |
-| Middleware | `app/middleware/` | Angriffsblock (SecurityFilter), Rate-Limiting (RateLimit), Authentifizierung (JWT), Autorisierung (RBAC), API-Version (ApiVersion) |
+| Middleware | `app/middleware/` | Angriffsblock (SecurityFilter), Rate-Limiting (RateLimit), Authentifizierung (JWT), Autorisierung (RBAC)  |
 | Controller | 14: Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (Admin) + Captcha/Auth (API v1) | Request-Parametervalidierung, Geschäftslogik-Aufruf, Antwortformatierung |
 | Geschäftsservices | `app/service/` | Wiederverwendbare Geschäftslogik (vorgesehen) |
 | Datenmodelle | `app/model/` | ORM-Zuordnung, Beziehungen, Feldver-/entschlüsselung |
@@ -90,9 +90,6 @@ Middleware-Kette:
   ▼
   RateLimit ───────────► Redis-Gleitfenster-Rate-Limiting
   │ (Fehler → 429 + Retry-After-Header)
-  ▼
-  ApiVersion ─────────► API-Version-Header-Prüfung, injiziert $request->apiVersion
-  │ (Fehler → 400)
   ▼
   AdminAuth ──────────► JWT-Validierung, injiziert $request->adminId
   │ (Fehler → 401)
@@ -175,8 +172,8 @@ logistics_system_config (Systemkonfiguration) — eigenständige Tabelle
 ### 4.1 URL-Konventionen
 
 ```
-Öffentliche Endpunkte:  /api/captcha/{generate|verify}
-                        /api/auth/{login|register|refresh}
+Öffentliche Endpunkte:  /api/v1/captcha/{generate|verify}
+                        /api/v1/auth/{login|register|refresh}
 
 Admin-Endpunkte:       /admin/{resource}[/{hashid}]
                        /admin/export/{excel|pdf}
@@ -203,7 +200,6 @@ Health:               /health
 Die API-Version wird über den Request-Header gesteuert und **erscheint nicht im URL-Pfad**:
 
 ```http
-API-Version: v1
 ```
 
 | Mechanismus | Beschreibung |
@@ -220,13 +216,13 @@ Erweiterungsbeispiel — neue v2-API:
 
 ```bash
 # v1 verwenden
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # v2 verwenden
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # Nicht übergeben, Standard v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 Rate-Limiting-Strategie
@@ -236,8 +232,8 @@ Basiert auf dem Redis-Sorted-Set-Gleitfenster-Algorithmus, ausgeführt als atoma
 | Endpunkt | Limit |
 |------|------|
 | Standard | 60/Minute/IP/Route |
-| POST /api/auth/login | 10/Minute |
-| POST /api/auth/register | 5/Minute |
+| POST /api/v1/auth/login | 10/Minute |
+| POST /api/v1/auth/register | 5/Minute |
 
 Bei Überschreitung wird 429 zurückgegeben; die Response-Header enthalten X-RateLimit-Limit / Remaining / Reset / Retry-After.
 
@@ -266,13 +262,13 @@ Bei Überschreitung wird 429 zurückgegeben; die Response-Header enthalten X-Rat
 ```
 Client                                  Server
   │                                      │
-  │  ① POST /api/captcha/generate       │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate       │ captcha_create('click')
   │◄── {key, image(base64), targets}    │
   │                                      │
   │  ② Benutzer klickt die Textstellen   │
   │     im Bild an                       │
   │                                      │
-  │  ③ POST /api/auth/login             │
+  │  ③ POST /api/v1/auth/login             │
   │     {username, password,             │
   │      captcha_key, clicks}            │
   │──────────────────────────────────►  │

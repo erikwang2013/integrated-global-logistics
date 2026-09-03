@@ -6,10 +6,9 @@
 
 ## 1. 概述
 
-开放管理后台 (open-admin) 基于 webman v2 构建，提供 RESTful JSON API。所有管理端接口需要 JWT 认证与 RBAC 权限校验，公开接口通过 API 版本头路由到版本化控制器。
+开放管理后台 (open-admin) 基于 webman v2 构建，提供 RESTful JSON API。所有管理端接口需要 JWT 认证与 RBAC 权限校验，公开接口版本号直接体现在 URL 路径中（`/api/v1/*`），由路由分组解析到版本化控制器。
 
 - **基础 URL**: `http://localhost:8787`
-- **API 版本**: 通过请求头 `API-Version: v1` 控制（缺失时默认 v1）
 - **语言**: 通过 `Accept-Language` 头或 `?lang=zh_CN|en` 参数切换（默认 zh_CN），Locale 中间件自动检测
 
 > **端点总览**: 认证(5) | 仪表盘(1) | 用户(7) | 角色(4) | 权限(4) | 配置(4) | 日志(1) | 个人中心(3) | 导入导出(3) | 上传(1) | 运维(4: health/metrics/docs/security.txt) | 共 37 端点
@@ -44,7 +43,7 @@
 
 ## 3. 公开端点
 
-所有公开端点挂载在 `/api` 分组下，通过 `ApiVersion` 中间件按 `API-Version` 头分发到对应的版本化控制器（如 `app\api\v1\controller\AuthController`）。
+所有公开端点挂载在 `/api/v1` 路由分组下（`config/route.php` 中 `Route::group('/api/v1', ...)` 直接绑定），版本号 `v1` 作为路径首段，由路由解析到对应的版本化控制器（如 `app\api\v1\controller\AuthController`）。
 
 ### 3.1 健康检查
 
@@ -87,11 +86,10 @@ GET /api/docs
 ### 3.3 生成验证码
 
 ```
-POST /api/captcha/generate
+POST /api/v1/captcha/generate
 ```
 
 - **认证**: 无需
-- **请求头**: `API-Version: v1`（必须）
 - **限流**: 全局默认 (60次/分钟)
 
 **请求体**:
@@ -180,11 +178,10 @@ POST /api/captcha/generate
 ### 3.4 校验验证码
 
 ```
-POST /api/captcha/verify
+POST /api/v1/captcha/verify
 ```
 
 - **认证**: 无需
-- **请求头**: `API-Version: v1`（必须）
 - **限流**: 全局默认 (60次/分钟)
 
 **请求体** — 点击型 (`type: "click"`):
@@ -246,11 +243,10 @@ POST /api/captcha/verify
 ### 3.5 登录
 
 ```
-POST /api/auth/login
+POST /api/v1/auth/login
 ```
 
 - **认证**: 无需
-- **请求头**: `API-Version: v1`（必须）
 - **限流**: 10 次/分钟（按 IP + 路径）
 
 **请求体**:
@@ -266,7 +262,7 @@ POST /api/auth/login
 |------|------|------|---------|------|
 | username | string | 是 | min:3, max:50 | 用户名 |
 | password | string | 是 | min:6, max:32 (明文) | AES-256-CBC-HMAC 加密后 Base64 编码（兼容明文） |
-| captcha_key | string | 是 | | 验证码 key（需先通过 `/api/captcha/verify` 校验） |
+| captcha_key | string | 是 | | 验证码 key（需先通过 `/api/v1/captcha/verify` 校验） |
 
 ### 密码加密协议
 
@@ -315,7 +311,7 @@ POST /api/auth/login
 
 **可能的错误**:
 - 422: 参数验证失败（缺少必填字段、格式不符）
-- 422: 请先完成验证码校验（captcha_key 未通过 `/api/captcha/verify`）
+- 422: 请先完成验证码校验（captcha_key 未通过 `/api/v1/captcha/verify`）
 - 401: 用户名或密码错误
 - 403: 账号已被禁用
 - 429: 账号已被锁定，请15分钟后再试（连续5次登录失败触发）
@@ -323,11 +319,10 @@ POST /api/auth/login
 ### 3.6 注册
 
 ```
-POST /api/auth/register
+POST /api/v1/auth/register
 ```
 
 - **认证**: 无需
-- **请求头**: `API-Version: v1`（必须）
 - **限流**: 5 次/分钟（按 IP + 路径）
 
 **请求体**:
@@ -345,7 +340,7 @@ POST /api/auth/register
 | username | string | 是 | min:3, max:50 | 用户名（唯一） |
 | password | string | 是 | min:6, max:32 (明文) | AES-256-CBC-HMAC 加密后 Base64 编码 |
 | real_name | string | 是 | max:50 | 真实姓名 |
-| captcha_key | string | 是 | | 验证码 key（需先通过 `/api/captcha/verify` 校验） |
+| captcha_key | string | 是 | | 验证码 key（需先通过 `/api/v1/captcha/verify` 校验） |
 
 **响应示例**:
 ```json
@@ -370,11 +365,10 @@ POST /api/auth/register
 ### 3.7 刷新令牌
 
 ```
-POST /api/auth/refresh
+POST /api/v1/auth/refresh
 ```
 
 - **认证**: 无需
-- **请求头**: `API-Version: v1`（必须）
 - **限流**: 全局默认 (60次/分钟)
 
 **请求体**:
@@ -514,7 +508,7 @@ GET /admin/dashboard
         "id": "hashid...",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "user_name": "admin",
         "created_at": "2026-05-21 10:30:00"
@@ -1334,7 +1328,7 @@ GET /admin/log
         "user_name": "admin",
         "action": "用户登录",
         "method": "POST",
-        "path": "/api/auth/login",
+        "path": "/api/v1/auth/login",
         "ip": "192.168.1.1",
         "source": "web",
         "input": "{\"username\":\"admin\"}",
@@ -1656,8 +1650,8 @@ POST /admin/upload
 
 限流详情:
 - 默认全局限制: 60 次/分钟 / IP+路径
-- 登录端点 `/api/auth/login`: 10 次/分钟
-- 注册端点 `/api/auth/register`: 5 次/分钟
+- 登录端点 `/api/v1/auth/login`: 10 次/分钟
+- 注册端点 `/api/v1/auth/register`: 5 次/分钟
 - 使用 Redis 原子化滑动窗口算法（Lua ZSET），避免 TOCTOU 竞态
 - Redis 不可用时 fail open（放行），不阻塞请求
 
@@ -1666,15 +1660,14 @@ POST /admin/upload
 完整的认证时序：
 
 ```
-1. 客户端请求 POST /api/captcha/generate
-   (请求头: API-Version: v1)
+1. 客户端请求 POST /api/v1/captcha/generate
     ↓
    服务端返回: key + type(click|slider|rotate) + base64 图片 + extra(类型相关数据)
    
 2. 用户交互完成验证码操作（点击/拖拽/旋转），客户端收集答案
    
-3. 客户端请求 POST /api/captcha/verify
-   (请求头: API-Version: v1, Content-Type: application/json)
+3. 客户端请求 POST /api/v1/captcha/verify
+   (请求头: Content-Type: application/json)
    请求体: { key, type, clicks }
    - type=click:  clicks = [{x, y}, ...]        // 坐标数组
    - type=slider: clicks = 120                   // X 偏移量
@@ -1688,8 +1681,8 @@ POST /admin/upload
     ↓
    服务端返回: { valid: true/false }
 
-4. 客户端请求 POST /api/auth/login
-   (请求头: API-Version: v1, Content-Type: application/json)
+4. 客户端请求 POST /api/v1/auth/login
+   (请求头: Content-Type: application/json)
    请求体: { username, password(加密), captcha_key }
     ↓
    服务端:
@@ -1723,7 +1716,7 @@ POST /admin/upload
    Response + X-RateLimit-* 头
 
 6. Access Token 过期前刷新
-   客户端请求 POST /api/auth/refresh
+   客户端请求 POST /api/v1/auth/refresh
    请求体: { refresh_token: "..." }
     ↓
    服务端解码 refresh_token → 签发新 access + refresh
@@ -1765,7 +1758,7 @@ Cors（跨域预处理 + 响应头）
   → Locale（Accept-Language 语言检测 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP方法限制/请求体大小/Content-Type校验/XSS/SQL注入/路径遍历/命令注入/CSRF 攻击拦截）
   → RateLimit（Redis 滑动窗口限流 + 账号锁定：5次登录失败锁定15分钟）
-  → ApiVersion（API 版本校验，/api 路由组）
+  → ClientAuth（客户端 JWT 认证，token_type=client，/api/v1 客户端门户路由组）
   → AdminAuth（JWT 认证 + 黑名单，/admin 路由组）
   → AdminPermission（RBAC 鉴权 / Redis 60s 缓存，/admin 路由组）
   → OperationLog（POST/PUT/DELETE 自动记录，含来源端检测，/admin 路由组）
@@ -1964,9 +1957,9 @@ SDK 在信封 `code != 0` 或网络失败时抛异常（`TrackingApiError`），
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| POST | `/api/auth/register` / `/api/auth/login`（`client=1`） | 客户端注册 / 登录 |
-| GET | `/api/plan` | 套餐列表 |
-| GET/POST | `/api/app` | 应用列表 / 创建（自设 X-API-Key ≥16 位） |
-| PUT | `/api/app/{id}`、`/api/app/{id}/key` | 更新应用 / 重置密钥 |
-| POST | `/api/app/{id}/order` | 应用下单 |
-| POST | `/api/order/{id}/pay` | 发起支付（stripe / paypal / crypto） |
+| POST | `/api/v1/auth/register` / `/api/v1/auth/login`（`client=1`） | 客户端注册 / 登录 |
+| GET | `/api/v1/plan` | 套餐列表 |
+| GET/POST | `/api/v1/app` | 应用列表 / 创建（自设 X-API-Key ≥16 位） |
+| PUT | `/api/v1/app/{id}`、`/api/v1/app/{id}/key` | 更新应用 / 重置密钥 |
+| POST | `/api/v1/app/{id}/order` | 应用下单 |
+| POST | `/api/v1/order/{id}/pay` | 发起支付（stripe / paypal / crypto） |

@@ -48,7 +48,7 @@ config/
 
 - Permintaan preflight OPTIONS langsung mengembalikan 204
 - Untuk permintaan non-preflight, tambahkan `Access-Control-Allow-Origin: *` pada header respons
-- Header yang diizinkan: `Authorization, Content-Type, API-Version`
+- Header yang diizinkan: `Authorization, Content-Type`
 - Cache maksimum: 86400 detik
 
 Dipasang: middleware global (`config/middleware.php`)
@@ -60,8 +60,8 @@ Dipasang: middleware global (`config/middleware.php`)
 - Penyimpanan: jendela geser Redis Sorted Set
 - Default: 60 kali/menit/IP/rute
 - Antarmuka sensitif:
-  - `/api/auth/login`: 10 kali/menit
-  - `/api/auth/register`: 5 kali/menit
+  - `/api/v1/auth/login`: 10 kali/menit
+  - `/api/v1/auth/register`: 5 kali/menit
 - Jika terlampaui, kembalikan `429 Too Many Requests`
 
 Dipasang: middleware global (`config/middleware.php`), setelah Cors, sebelum ApiVersion

@@ -48,7 +48,7 @@ config/
 
 - OPTIONS-предзапрос сразу возвращает 204
 - для непредзапросов в заголовки ответа добавляется `Access-Control-Allow-Origin: *`
-- разрешённые заголовки: `Authorization, Content-Type, API-Version`
+- разрешённые заголовки: `Authorization, Content-Type`
 - максимальное время кэширования: 86400 секунд
 
 Подключается: глобальное промежуточное ПО (`config/middleware.php`)
@@ -60,8 +60,8 @@ config/
 - хранение: скользящее окно на Redis Sorted Set
 - по умолчанию: 60 запросов/мин/IP/маршрут
 - чувствительные интерфейсы:
-  - `/api/auth/login`: 10 запросов/мин
-  - `/api/auth/register`: 5 запросов/мин
+  - `/api/v1/auth/login`: 10 запросов/мин
+  - `/api/v1/auth/register`: 5 запросов/мин
 - при превышении возвращается `429 Too Many Requests`
 
 Подключается: глобальное промежуточное ПО (`config/middleware.php`), после Cors, до ApiVersion

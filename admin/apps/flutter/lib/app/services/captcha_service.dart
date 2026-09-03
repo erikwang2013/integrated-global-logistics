@@ -10,7 +10,7 @@ class CaptchaService {
   CaptchaService(this._dio);
 
   Future<CaptchaData> generate({String difficulty = 'medium'}) async {
-    final resp = await _dio.post('/api/captcha/generate', data: {'difficulty': difficulty});
+    final resp = await _dio.post('/api/v1/captcha/generate', data: {'difficulty': difficulty});
     if (resp.data['code'] != 0) throw Exception(resp.data['message']);
     return CaptchaData.fromJson(resp.data['data']);
   }
@@ -26,7 +26,7 @@ class CaptchaService {
     } else {
       body['clicks'] = (answer as num).round();
     }
-    final resp = await _dio.post('/api/captcha/verify', data: body);
+    final resp = await _dio.post('/api/v1/captcha/verify', data: body);
     return resp.data['code'] == 0;
   }
 }

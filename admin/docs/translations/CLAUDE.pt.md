@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # Cross-origin (global)
 │   │   └── (migrado para o pacote erikwang2013/security-php)  # 31 tipos de detecção de ataque
 │   │   ├── RateLimit.php       # Rate limit Redis (global, atômico com Lua)
-│   │   ├── ApiVersion.php      # Validação de versão da API
 │   │   ├── AdminAuth.php       # Autenticação JWT + blacklist
 │   │   ├── AdminPermission.php # Verificação de permissões RBAC (cache Redis 60s)
 │   │   └── OperationLog.php    # Registro automático de logs de operação (inclui detecção de origem)
@@ -143,7 +142,7 @@ open-admin/
 ```
 Global:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → {middlewares de rota}
 /admin: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 ```
 
@@ -165,7 +164,7 @@ Global:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/se
 A versão é controlada pelo cabeçalho `API-Version` (padrão `v1`), não refletida na URL:
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 Para adicionar uma nova versão, basta criar o diretório `app/api/{version}/controller/` e registrá-lo no middleware `ApiVersion`.
@@ -207,7 +206,7 @@ Janela deslizante Redis (atômico com Lua), padrão de 60 requisições/minuto/I
 
 ### HarmonyOS
 - Usa o cliente HTTP nativo `@ohos.net.http`
-- Renovação silenciosa de token: em 401, chama automaticamente `/api/auth/refresh`
+- Renovação silenciosa de token: em 401, chama automaticamente `/api/v1/auth/refresh`
 - Falha na renovação redireciona automaticamente para a página de login
 
 ## Deploy

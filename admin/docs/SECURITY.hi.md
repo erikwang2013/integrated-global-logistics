@@ -70,7 +70,7 @@
 |----|-----|------|
 | Access-Control-Allow-Origin | `*` | किसी भी ओरिजिन को क्रॉस-ओरिजिन की अनुमति (इंट्रानेट एडमिन पैनल परिदृश्य) |
 | Access-Control-Allow-Methods | `GET,POST,PUT,DELETE,OPTIONS` | अनुमत मेथड सेट |
-| Access-Control-Allow-Headers | `Authorization,Content-Type,API-Version` | अनुमत कस्टम हेडर |
+| Access-Control-Allow-Headers | `Authorization,Content-Type` | अनुमत कस्टम हेडर |
 | Access-Control-Max-Age | `86400` | प्रीफ्लाइट रिक्वेस्ट कैश 24 घंटे |
 | X-Content-Type-Options | `nosniff` | ब्राउज़र MIME स्निफिंग प्रतिबंधित |
 | X-Frame-Options | `DENY` | सभी iframe एम्बेडिंग प्रतिबंधित, क्लिकजैकिंग रोकथाम |
@@ -122,8 +122,8 @@ Lua स्क्रिप्ट Redis सर्वर साइड पर सि
 | रूट | सीमा | विंडो | परिदृश्य |
 |------|------|------|------|
 | डिफ़ॉल्ट (सभी रूट) | 60 बार/मिनट | 60s | सामान्य API |
-| `/api/auth/login` | 10 बार/मिनट | 60s | लॉगिन (ब्रूट-फोर्स रोकथाम) |
-| `/api/auth/register` | 5 बार/मिनट | 60s | रजिस्ट्रेशन (बल्क रजिस्ट्रेशन रोकथाम) |
+| `/api/v1/auth/login` | 10 बार/मिनट | 60s | लॉगिन (ब्रूट-फोर्स रोकथाम) |
+| `/api/v1/auth/register` | 5 बार/मिनट | 60s | रजिस्ट्रेशन (बल्क रजिस्ट्रेशन रोकथाम) |
 
 ### रिस्पॉन्स हेडर
 

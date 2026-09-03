@@ -62,7 +62,7 @@
 | Couche | Répertoire | Responsabilités |
 |---|------|------|
 | Routage | `config/route.php` | Mapping URL vers contrôleur, liaison des middlewares, routage versionné |
-| Middleware | `app/middleware/` | Interception des attaques (SecurityFilter), limitation de débit (RateLimit), authentification (JWT), autorisation (RBAC), version API (ApiVersion) |
+| Middleware | `app/middleware/` | Interception des attaques (SecurityFilter), limitation de débit (RateLimit), authentification (JWT), autorisation (RBAC), version API  |
 | Contrôleurs | 14 : Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (panneau d'administration) + Captcha/Auth (API v1) | Validation des paramètres de requête, appel de la logique métier, formatage des réponses |
 | Services métier | `app/service/` | Logique métier réutilisable (réservé) |
 | Modèles de données | `app/model/` | Mapping ORM, relations, chiffrement/déchiffrement des champs |
@@ -89,9 +89,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -174,8 +171,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 Normes URL
 
 ```
-接口公开:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+接口公开:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ logistics_system_config (系统配置) — 独立表
 La version de l'API est contrôlée par l'en-tête de requête, **non visible dans le chemin URL** :
 
 ```http
-API-Version: v1
 ```
 
 | Mécanisme | Description |
@@ -219,13 +215,13 @@ Exemple d'extension — ajout d'une API v2 :
 
 ```bash
 # Utiliser v1
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # Utiliser v2
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # Sans en-tête, v1 par défaut
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 Stratégie de limitation de débit
@@ -235,8 +231,8 @@ Basée sur l'algorithme de fenêtre glissante Redis Sorted Set, exécutée en sc
 | Interface | Limite |
 |------|------|
 | Défaut | 60 requêtes/minute/IP/route |
-| POST /api/auth/login | 10 requêtes/minute |
-| POST /api/auth/register | 5 requêtes/minute |
+| POST /api/v1/auth/login | 10 requêtes/minute |
+| POST /api/v1/auth/register | 5 requêtes/minute |
 
 En cas de dépassement, 429 est renvoyé, avec les en-têtes X-RateLimit-Limit / Remaining / Reset / Retry-After.
 
@@ -265,12 +261,12 @@ En cas de dépassement, 429 est renvoyé, avec les en-têtes X-RateLimit-Limit /
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │

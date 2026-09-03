@@ -79,7 +79,6 @@ open-admin/
 │   │   ├── Cors.php            # CORS (global)
 │   │   └── (migrado al paquete erikwang2013/security-php)  # 31 tipos de detección de ataques
 │   │   ├── RateLimit.php       # Límite de peticiones Redis (global, atómico con Lua)
-│   │   ├── ApiVersion.php      # Validación de versión de API
 │   │   ├── AdminAuth.php       # Autenticación JWT + lista negra
 │   │   ├── AdminPermission.php # Validación de permisos RBAC (caché Redis 60s)
 │   │   └── OperationLog.php    # Registro automático de operaciones (incluye detección de origen)
@@ -142,7 +141,7 @@ open-admin/
 ```
 Global:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → {middleware de ruta}
 /admin: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → ApiVersion → Controller
+/api:   Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 /health: Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/security-php) → RateLimit → Controller
 ```
 
@@ -164,7 +163,7 @@ Global:  Cors → Locale(Accept-Language) → SecurityMiddleware(erikwang2013/se
 La versión se controla mediante la cabecera de petición `API-Version` (por defecto `v1`) y no aparece en la URL:
 
 ```bash
-curl -H "API-Version: v1" http://localhost:8787/api/auth/login
+curl http://localhost:8787/api/v1/auth/login
 ```
 
 Para añadir una versión nueva solo hay que crear el directorio `app/api/{version}/controller/` y registrarlo en el middleware `ApiVersion`.
@@ -206,7 +205,7 @@ Ventana deslizante de Redis (atómica con Lua), por defecto 60 peticiones/minuto
 
 ### HarmonyOS
 - Usar el cliente HTTP nativo `@ohos.net.http`
-- Refresco imperceptible de tokens: al recibir 401, llamar automáticamente a `/api/auth/refresh`
+- Refresco imperceptible de tokens: al recibir 401, llamar automáticamente a `/api/v1/auth/refresh`
 - Si el refresco falla, redirigir automáticamente a la página de inicio de sesión
 
 ## Despliegue

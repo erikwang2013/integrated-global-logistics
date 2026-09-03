@@ -86,7 +86,6 @@ open-admin/
 │   │   ├── Cors.php            # CORS
 │   │   ├── SecurityFilter.php  # Bloqueo por detección de ataques (restricción de métodos HTTP/XSS/inyección SQL/traversal de rutas/inyección de comandos/CSRF)
 │   │   ├── RateLimit.php       # Límite de peticiones Redis (ventana deslizante + cabeceras de respuesta)
-│   │   ├── ApiVersion.php      # Validación de versión de API
 │   │   ├── AdminAuth.php       # Autenticación JWT + lista negra
 │   │   ├── AdminPermission.php # Verificación de permisos RBAC
 │   │   └── OperationLog.php    # Registro automático de operaciones (incluye detección de origen)
@@ -225,7 +224,6 @@ La referencia completa de la API (formato de respuesta unificado, códigos de er
 
 - **Formato de respuesta unificado**: `{ "code": 0, "message": "success", "data": {...} }`, `code=0` significa éxito
 - **Códigos de error**: `400` error de parámetros / `401` no autenticado / `403` sin permiso / `404` no existe / `422` error de validación / `429` límite de peticiones / `500` error del servidor
-- **Versión de la API**: se controla mediante la cabecera `API-Version: v1` (por defecto v1 si no se envía), no aparece en la URL
 - **Autenticación**: `Authorization: Bearer <token>`; el access_token tiene una validez de 2 horas y el refresh_token de 14 días
 - **Tratamiento de IDs**: los IDs de las peticiones/respuestas son cadenas cifradas con hashids; no se exponen los IDs reales de la base de datos
 

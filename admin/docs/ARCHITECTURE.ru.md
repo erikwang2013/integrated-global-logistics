@@ -83,7 +83,6 @@ flowchart TD
     subgraph "Слой промежуточного ПО Middleware Layer"
         M_RL["RateLimit<br/>Redis-лимит со скользящим окном<br/>Заголовки ответа X-RateLimit"]
         M_SF["SecurityFilter<br/>Перехват атак<br/>XSS/SQL-инъекции/обход путей/CSRF"]
-        M0["ApiVersion<br/>Проверка версии API<br/>Инъекция apiVersion"]
         M1["AdminAuth<br/>Проверка JWT Token<br/>Инъекция adminId"]
         M2["AdminPermission<br/>Авторизация RBAC<br/>Сопоставление method.path<br/>Кэш прав в Redis на 60s"]
     end
@@ -119,11 +118,11 @@ flowchart TD
         D3["Redis"]
     end
 
-    R1 --> M_SF --> M_RL --> M0
-    M0 --> M1
+    R1 --> M_SF --> M_RL
+    M_RL --> M1
     M1 --> M2
     M2 --> CT2 & CT3 & CT4 & CT5 & CT6
-    M0 --> CT7 & CT8
+    M_RL --> CT7 & CT8
     CT1 -.->|extends| CT2 & CT3 & CT4 & CT5 & CT6
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> S1 & S2 & S3
     CT2 & CT3 & CT4 & CT5 & CT6 & CT7 & CT8 --> MD1 & MD2 & MD3 & MD4 & MD5
@@ -134,7 +133,6 @@ flowchart TD
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
-    style M0 fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
@@ -151,7 +149,6 @@ sequenceDiagram
     participant MW_LOC as Locale
     participant MW_SF as SecurityFilter
     participant MW_RL as RateLimit
-    participant MW0 as ApiVersion
     participant MW1 as AdminAuth
     participant MW2 as AdminPermission
     participant CTL as Controller
@@ -160,7 +157,7 @@ sequenceDiagram
     participant DB as MySQL
     participant OPLOG as OperationLog
 
-    C->>N: HTTPS-запрос<br/>Header: API-Version: v1, Accept-Language: zh_CN
+    C->>N: HTTPS-запрос<br/>Header: Accept-Language: zh_CN
     N->>MW_LOC: Передача
 
     MW_LOC->>MW_LOC: locale = zh_CN (Accept-Language / ?lang=)
@@ -182,13 +179,7 @@ sequenceDiagram
         MW_RL-->>C: 429 + Retry-After
     end
 
-    MW_RL->>MW0: Пропуск
-
-    alt неподдерживаемая версия
-        MW0-->>C: 400 неподдерживаемая версия API
-    else версия действительна
-        MW0->>MW0: $request->apiVersion = v1
-    end
+    MW_RL->>MW1: Пропуск
 
     alt Token отсутствует или недействителен
         MW1-->>C: 401 Unauthorized
@@ -240,7 +231,7 @@ sequenceDiagram
     participant CAP as Captcha Service
 
     Note over U,CAP: === Шаг 1: получение капчи ===
-    CL->>SV: POST /api/captcha/generate
+    CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
     CAP->>CAP: Генерация фонового изображения 300×200
     CAP->>CAP: Случайное размещение N китайских целей
@@ -255,7 +246,7 @@ sequenceDiagram
     CL->>CL: Сбор clicks: [{x,y}, {x,y}, {x,y}]
 
     Note over U,CAP: === Шаг 3: вход ===
-    CL->>SV: POST /api/auth/login { username, password, captcha_key, clicks }
+    CL->>SV: POST /api/v1/auth/login { username, password, captcha_key, clicks }
     SV->>CAP: captcha_verify(key, 'click', clicks)
     alt ошибка капчи
         CAP-->>SV: false

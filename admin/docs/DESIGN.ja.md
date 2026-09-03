@@ -62,7 +62,7 @@
 | レイヤー | ディレクトリ | 責務 |
 |---|------|------|
 | ルーティング | `config/route.php` | URL からコントローラーへのマッピング、ミドルウェアバインディング、バージョン化ルート |
-| ミドルウェア | `app/middleware/` | 攻撃ブロック(SecurityFilter)、レート制限(RateLimit)、認証(JWT)、認可(RBAC)、APIバージョン(ApiVersion) |
+| ミドルウェア | `app/middleware/` | 攻撃ブロック(SecurityFilter)、レート制限(RateLimit)、認証(JWT)、認可(RBAC)、APIバージョン |
 | コントローラー | 14 個：Dashboard/User/Role/Permission/Config/Log/Profile/Export/Import/Upload/Health/Docs (管理側) + Captcha/Auth (API v1) | リクエストパラメータ検証、ビジネスロジック呼び出し、レスポンス整形 |
 | 業務サービス | `app/service/` | 再利用可能な業務ロジック（予約） |
 | データモデル | `app/model/` | ORM マッピング、関連関係、フィールド暗号化・復号化 |
@@ -89,9 +89,6 @@ Route 匹配
   ▼
   RateLimit ───────────► Redis 滑动窗口限流
   │ (失败返回 429 + Retry-After 头)
-  ▼
-  ApiVersion ─────────► API-Version 头校验，注入 $request->apiVersion
-  │ (失败返回 400)
   ▼
   AdminAuth ──────────► JWT 验证，注入 $request->adminId
   │ (失败返回 401)
@@ -174,8 +171,8 @@ logistics_system_config (系统配置) — 独立表
 ### 4.1 URL 規約
 
 ```
-公开接口:  /api/captcha/{generate|verify}
-           /api/auth/{login|register|refresh}
+公开接口:  /api/v1/captcha/{generate|verify}
+           /api/v1/auth/{login|register|refresh}
 
 管理端:   /admin/{resource}[/{hashid}]
           /admin/export/{excel|pdf}
@@ -202,7 +199,6 @@ logistics_system_config (系统配置) — 独立表
 API バージョンはリクエストヘッダーで制御され、**URL パスには含まれません**：
 
 ```http
-API-Version: v1
 ```
 
 | 仕組み | 説明 |
@@ -219,13 +215,13 @@ API-Version: v1
 
 ```bash
 # v1 を使用
-curl -H "API-Version: v1" /api/auth/login
+curl /api/v1/auth/login
 
 # v2 を使用
-curl -H "API-Version: v2" /api/auth/login
+curl /api/v1/auth/login
 
 # 未指定、デフォルト v1
-curl /api/auth/login
+curl /api/v1/auth/login
 ```
 
 ### 4.3 レート制限戦略
@@ -235,8 +231,8 @@ Redis Sorted Set スライディングウィンドウアルゴリズム、原子
 | インターフェース | 制限 |
 |------|------|
 | デフォルト | 60 回/分/IP/ルート |
-| POST /api/auth/login | 10 回/分 |
-| POST /api/auth/register | 5 回/分 |
+| POST /api/v1/auth/login | 10 回/分 |
+| POST /api/v1/auth/register | 5 回/分 |
 
 超過すると 429 を返し、レスポンスヘッダーに X-RateLimit-Limit / Remaining / Reset / Retry-After を含みます。
 
@@ -265,12 +261,12 @@ Redis Sorted Set スライディングウィンドウアルゴリズム、原子
 ```
 客户端                               服务端
   │                                    │
-  │  ① POST /api/captcha/generate     │ captcha_create('click')
+  │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
   │◄── {key, image(base64), targets}  │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
-  │  ③ POST /api/auth/login           │
+  │  ③ POST /api/v1/auth/login           │
   │     {username, password,          │
   │      captcha_key, clicks}         │
   │────────────────────────────────►  │
