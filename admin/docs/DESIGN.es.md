@@ -337,6 +337,8 @@ El frontend muestra un diálogo de confirmación antes de activar la operación 
 
 Características: barra lateral plegable, Material 3 con doble tema, tablas de datos de alta densidad, diálogos, interacciones de hover con el ratón
 
+Identidad de marca: la página de inicio de sesión y el cargador del primer renderizado web usan la mascota del proyecto E-Cat (`docs/diagrams/mascot.svg`, un SVG animado autocontenido con respaldo `prefers-reduced-motion`)
+
 ### 5.2 Móvil HarmonyOS
 
 Rutas de páginas:

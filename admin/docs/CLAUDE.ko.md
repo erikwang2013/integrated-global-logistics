@@ -27,6 +27,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 파일 | 업로드 + Excel/PDF 내보내기 (민감 데이터 마스킹) |
 | 보안 | 18계층 심층 방어 (XSS/SQL 주입/CSRF/레이트 리밋/CSP...) |
 | 운영 | 헬스 체크/Prometheus 지표/API 문서/security.txt + Docker + CI/CD |
+| 브랜드 | 프로젝트 펫 E-Cat(설치 마법사 / 404·5xx 오류 페이지 / 로그인 페이지 / 최초 렌더링 로더 / API 문서 코너 배지) |
 
 ## 기술 스택
 
@@ -83,6 +84,7 @@ open-admin/
 │   │   ├── AdminPermission.php # RBAC 권한 검증 (Redis 60s 캐시)
 │   │   └── OperationLog.php    # 작업 로그 자동 기록 (출처 단말 감지 포함)
 │   ├── model/                  # 데이터 모델
+│   ├── exception/              # 전역 예외 처리(브라우저 요청 시 펫 오류 페이지 렌더링)
 │   ├── queue/                  # 큐 작업
 │   └── process/                # 프로세스 (Http, Monitor)
 ├── apps/

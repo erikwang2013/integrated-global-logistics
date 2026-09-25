@@ -130,12 +130,17 @@ flowchart TD
     MD1 --> D2
     CT7 --> D3
 
+    subgraph "Gestión de excepciones (Exception Layer)"
+        E1["app/exception/Handler<br/>peticiones de navegador → página de error con la mascota<br/>peticiones de API / modo depuración → comportamiento por defecto del framework"]
+    end
+
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
+    style E1 fill:#52C41A,color:#fff
 ```
 
 ---

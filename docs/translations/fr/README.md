@@ -19,6 +19,8 @@ La plateforme repose sur trois composants qui coopèrent :
 
 **Progression actuelle** : M1–M13 tous terminés — M1 console d'administration (CRUD transporteur / identifiant / enregistrement de requête / abonnement), M2 passerelle de requête (chaîne d'API externe complète), M3 abonnements de rappel, M4 surveillance et statistiques, M5 documentation OpenAPI externe, M6 cinq SDK clients, M7 portail client (inscription / application / forfait / commande), M8 paiements (Stripe / PayPal), M9 crypto-monnaie (USDT TRC20 / BEP20 / ERC20), M10 configuration des moyens de paiement, M11 middleware de sécurité de passerelle, M12 plan CDN (Cloudflare + en-têtes de cache), M13 gestion des fournisseurs CDN. La chaîne de requête de suivi client → e-cat → worker → transporteur est démontrable, et les cinq SDK sans dépendance sont prêts à copier et utiliser.
 
+**Mascotte du projet E-Cat** —— un chat coiffé d'une casquette radar de suivi et tenant un colis. Un SVG vectoriel unique et autonome, avec animations de respiration / clignement / battement de queue / balayage radar et repli `prefers-reduced-motion`. `docs/diagrams/mascot.svg` est l'unique fichier source du personnage ; il est intégré à l'assistant d'installation de l'administration (`/install`), aux pages d'erreur 404 / 5xx, à l'administration Flutter (page de connexion + chargeur de premier rendu web), à la page de connexion du client HarmonyOS, au badge d'angle de la documentation API et au favicon du site.
+
 ## Description du projet
 
 <img src="diagrams/description.svg" alt="Description du projet" width="100%">

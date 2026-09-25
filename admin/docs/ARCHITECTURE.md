@@ -128,12 +128,17 @@ flowchart TD
     MD1 --> D2
     CT7 --> D3
 
+    subgraph "异常处理层 Exception Layer"
+        E1["app/exception/Handler<br/>浏览器请求 → 项目宠物错误页<br/>API 请求 / 调试模式 → 框架原行为"]
+    end
+
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
+    style E1 fill:#52C41A,color:#fff
 ```
 
 ---

@@ -130,12 +130,17 @@ flowchart TD
     MD1 --> D2
     CT7 --> D3
 
+    subgraph "예외 처리 계층 (Exception Layer)"
+        E1["app/exception/Handler<br/>브라우저 요청 → 프로젝트 펫 오류 페이지<br/>API 요청 / 디버그 모드 → 프레임워크 기본 동작"]
+    end
+
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
+    style E1 fill:#52C41A,color:#fff
 ```
 
 ---

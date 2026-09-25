@@ -325,6 +325,8 @@ curl /api/v2/auth/login   # v2（新增分组后）
 
 特性: 侧边栏可折叠、Material 3 双主题、数据表格高密度、弹窗 Dialog、鼠标悬停交互
 
+品牌形象: 登录页与 Web 首屏加载页使用项目宠物 E-Cat（`docs/diagrams/mascot.svg`，单文件动态 SVG，带 `prefers-reduced-motion` 降级）
+
 ### 5.2 HarmonyOS 移动端
 
 页面路由:

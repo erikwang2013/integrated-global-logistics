@@ -337,6 +337,8 @@ O frontend exibe um diálogo de confirmação antes de disparar a operação de 
 
 Recursos: barra lateral recolhível, tema duplo Material 3, tabela de dados de alta densidade, diálogos pop-up, interação por hover do mouse
 
+Identidade visual: a página de login e o carregador da primeira renderização web usam o mascote do projeto E-Cat (`docs/diagrams/mascot.svg`, um SVG animado autossuficiente com fallback `prefers-reduced-motion`)
+
 ### 5.2 Mobile HarmonyOS
 
 Roteamento de páginas:

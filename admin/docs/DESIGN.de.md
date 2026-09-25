@@ -338,6 +338,8 @@ Das Frontend zeigt vor dem Auslösen einer Löschoperation einen Bestätigungsdi
 
 Eigenschaften: einklappbare Sidebar, Material 3 mit zwei Themes, dichte Datentabellen, Dialog-Popups, Hover-Interaktionen
 
+Branding: Login-Seite und Web-First-Paint-Loader verwenden das Projekttier E-Cat (`docs/diagrams/mascot.svg`, ein einzelnes animiertes SVG mit `prefers-reduced-motion`-Fallback)
+
 ### 5.2 HarmonyOS-Mobilclient
 
 Seitenrouting:

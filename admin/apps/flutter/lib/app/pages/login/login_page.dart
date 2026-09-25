@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
       padding: const EdgeInsets.all(32),
       child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 440), child: Column(
         mainAxisSize: MainAxisSize.min, children: [
-          const Icon(Icons.admin_panel_settings, size: 56, color: Color(0xFF1677FF)),
+          Image.asset('assets/images/ecat_mascot.png', width: 104, height: 104),
           const SizedBox(height: 8),
           Text(t('login_title'), style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 28),

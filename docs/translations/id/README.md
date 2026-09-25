@@ -19,6 +19,8 @@ Platform terdiri dari tiga komponen yang bekerja sama:
 
 **Kemajuan saat ini**: M1–M13 semuanya selesai — M1 panel administrasi (CRUD karier / kredensial / catatan kueri / langganan), M2 gateway kueri (rantai API eksternal lengkap), M3 langganan callback, M4 pemantauan dan statistik, M5 dokumentasi OpenAPI eksternal, M6 lima SDK klien, M7 portal klien (registrasi / aplikasi / paket / pesanan), M8 pembayaran (Stripe / PayPal), M9 kripto (USDT TRC20 / BEP20 / ERC20), M10 konfigurasi metode pembayaran, M11 middleware keamanan gateway, M12 rencana CDN (Cloudflare + header cache), M13 manajemen penyedia CDN. Rantai kueri pelacakan klien → e-cat → worker → karier dapat didemonstrasikan, dan lima SDK tanpa dependensi siap salin-pakai.
 
+**Maskot proyek E-Cat** —— kucing berkaus radar pelacak sambil memeluk paket. Satu berkas SVG vektor mandiri dengan animasi bernapas / berkedip / mengibaskan ekor / sapuan radar, serta dukungan `prefers-reduced-motion`. `docs/diagrams/mascot.svg` adalah satu-satunya berkas sumber karakter ini; maskot ini terpasang di wizard instalasi admin (`/install`), halaman galat 404 / 5xx, admin Flutter (halaman login + loader render pertama web), halaman login klien HarmonyOS, lencana sudut dokumentasi API, dan favicon situs.
+
 ## Penjelasan Proyek
 
 <img src="diagrams/description.svg" alt="Penjelasan Proyek" width="100%">

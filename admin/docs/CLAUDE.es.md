@@ -27,6 +27,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Archivos | Carga + exportación Excel/PDF (enmascarado de datos sensibles) |
 | Seguridad | Defensa en profundidad de 18 capas (XSS/inyección SQL/CSRF/límite de peticiones/CSP...) |
 | Operaciones | Comprobación de salud/métricas Prometheus/documentación API/security.txt + Docker + CI/CD |
+| Identidad de marca | Mascota del proyecto E-Cat (asistente de instalación / páginas de error 404·5xx / página de inicio de sesión / cargador del primer renderizado / insignia de esquina de la documentación de la API) |
 
 ## Stack tecnológico
 
@@ -83,6 +84,7 @@ open-admin/
 │   │   ├── AdminPermission.php # Validación de permisos RBAC (caché Redis 60s)
 │   │   └── OperationLog.php    # Registro automático de operaciones (incluye detección de origen)
 │   ├── model/                  # Modelos de datos
+│   ├── exception/              # Gestión global de excepciones (las peticiones de navegador muestran la página de error de la mascota)
 │   ├── queue/                  # Tareas de cola
 │   └── process/                # Procesos (Http, Monitor)
 ├── apps/

@@ -21,6 +21,7 @@ webman v2 + Flutter をベースにしたフルスタック管理バックエン
 | ファイル | アップロード + Excel/PDF エクスポート（機密データのマスキング）|
 | セキュリティ | 18 層の多層防御（XSS/SQL インジェクション/CSRF/レート制限/CSP...）|
 | 運用 | ヘルスチェック/Prometheus メトリクス/API ドキュメント/security.txt + Docker + CI/CD |
+| ブランド | プロジェクトペット E-Cat（インストールウィザード / 404·5xx エラーページ / ログインページ / 初回描画ローダー / API ドキュメントのコーナーバッジ）|
 
 ## 技術スタック
 
@@ -77,6 +78,7 @@ open-admin/
 │   │   ├── AdminPermission.php # RBAC 権限検証（Redis 60 秒キャッシュ）
 │   │   └── OperationLog.php    # 操作ログ自動記録（クライアント検出含む）
 │   ├── model/                  # データモデル
+│   ├── exception/              # グローバル例外処理（ブラウザリクエストでペットのエラーページを描画）
 │   ├── queue/                  # キュータスク
 │   └── process/                # プロセス (Http, Monitor)
 ├── apps/

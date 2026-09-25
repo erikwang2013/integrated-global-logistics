@@ -197,7 +197,8 @@ Route::fallback(function (\support\Request $request) {
             'Access-Control-Max-Age'           => '86400',
         ]);
     }
-    return response('<h1>404 Not Found</h1>', 404);
+    // 项目宠物 E-Cat 404 页（状态码与 Content-Type 与原先一致，仅替换页面内容）
+    return app\exception\Handler::page(404, '页面走丢了', '没有找到你要访问的页面，检查一下地址吧。');
 });
 
 // 关闭默认路由

@@ -23,6 +23,7 @@
 | 🛡 安全防护 | 18 层纵深防御 | XSS/SQL注入/路径遍历/命令注入/CSRF/限流/CSP... |
 | 🏥 运维 | 健康检查/metrics/API 文档/security.txt | Prometheus + OpenAPI 3.0 + hg/apidoc 交互文档 |
 | 🌐 国际化 | 中英文切换 | Accept-Language 头 / ?lang= 参数 |
+| 🎨 品牌 | 项目宠物 E-Cat | 安装向导 / 404·5xx 错误页 / Flutter 登录页与首屏加载 / HarmonyOS 登录页 / API 文档角标 |
 
 ## 技术栈
 
@@ -86,7 +87,8 @@ open-admin/
 │   │   ├── AdminAuth.php       # JWT 认证 + 黑名单
 │   │   ├── AdminPermission.php # RBAC 权限校验
 │   │   └── OperationLog.php    # 操作日志自动记录（含来源端检测）
-│   └── model/                  # 数据模型
+│   ├── model/                  # 数据模型
+│   └── exception/              # 全局异常处理（浏览器请求渲染项目宠物错误页）
 ├── apps/
 │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
 │   │   └── lib/app/

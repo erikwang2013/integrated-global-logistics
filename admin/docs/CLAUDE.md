@@ -23,6 +23,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 文件 | 上传 + Excel/PDF 导出（敏感数据脱敏）|
 | 安全 | 18 层纵深防御（XSS/SQL注入/CSRF/限流/CSP...）|
 | 运维 | 健康检查/Prometheus 指标/API 文档/security.txt + Docker + CI/CD |
+| 品牌 | 项目宠物 E-Cat（安装向导 / 404·5xx 错误页 / 登录页 / 首屏加载 / API 文档角标）|
 
 ## 技术栈
 
@@ -81,6 +82,7 @@ open-admin/
 │   │   ├── AdminPermission.php # RBAC 权限校验（Redis 60s 缓存）
 │   │   └── OperationLog.php    # 操作日志自动记录（含来源端检测）
 │   ├── model/                  # 数据模型
+│   ├── exception/              # 全局异常处理（浏览器请求渲染项目宠物错误页）
 │   ├── queue/                  # 队列任务
 │   └── process/                # 进程 (Http, Monitor)
 ├── apps/

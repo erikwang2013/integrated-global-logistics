@@ -27,6 +27,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | File | Upload + ekspor Excel/PDF (penyamaran data sensitif) |
 | Keamanan | 18 lapis pertahanan berlapis (XSS/Injeksi SQL/CSRF/rate limit/CSP...) |
 | Operasional | Health check/metrik Prometheus/dokumen API/security.txt + Docker + CI/CD |
+| Identitas merek | Maskot proyek E-Cat (wizard instalasi / halaman galat 404·5xx / halaman login / loader render pertama / lencana sudut dokumentasi API) |
 
 ## Tumpukan Teknologi
 
@@ -83,6 +84,7 @@ open-admin/
 │   │   ├── AdminPermission.php # Validasi hak akses RBAC (cache Redis 60s)
 │   │   └── OperationLog.php    # Pencatatan log operasi otomatis (termasuk deteksi sumber)
 │   ├── model/                  # Model data
+│   ├── exception/              # Penanganan eksepsi global (permintaan browser menampilkan halaman galat maskot)
 │   ├── queue/                  # Tugas antrian
 │   └── process/                # Proses (Http, Monitor)
 ├── apps/

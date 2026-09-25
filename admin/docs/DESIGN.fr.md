@@ -336,6 +336,8 @@ Le frontend affiche une boîte de dialogue de confirmation avant de déclencher 
 
 Caractéristiques : barre latérale repliable, double thème Material 3, tableaux de données haute densité, boîtes de dialogue, interactions à survol de souris
 
+Image de marque : la page de connexion et le chargeur de premier rendu web utilisent la mascotte du projet E-Cat (`docs/diagrams/mascot.svg`, un SVG animé autonome avec repli `prefers-reduced-motion`)
+
 ### 5.2 Mobile HarmonyOS
 
 Routage des pages :

@@ -20,6 +20,8 @@
 
 **当前进度**：M1-M13 全部完成 —— M1 管理面（承运商/凭证/查询记录/订阅 CRUD）、M2 查询网关（对外 API 全链路）、M3 回调订阅、M4 监控统计、M5 对外 OpenAPI 文档、M6 五份客户端 SDK、M7 客户端门户（注册/应用/套餐/订单）、M8 支付（Stripe / PayPal）、M9 虚拟币（USDT TRC20 / BEP20 / ERC20）、M10 支付方式配置、M11 网关安全中间件、M12 CDN 接入方案（Cloudflare + 缓存头落地）、M13 CDN 服务商管理。客户端 → e-cat → worker → 承运商的轨迹查询链路可演示，Python / PHP / Node.js / Go / Rust 五份零依赖 SDK 拷贝即用。
 
+**项目宠物 E-Cat** —— 戴追踪雷达帽、手捧包裹的猫，SVG 单文件矢量，自带呼吸 / 眨眼 / 摇尾 / 雷达扫描动画并遵循 `prefers-reduced-motion` 降级。`docs/diagrams/mascot.svg` 是唯一形象源文件，已接入管理端安装向导（`/install`）、404 / 5xx 错误页、Flutter 管理端（登录页 + Web 首屏加载页）、HarmonyOS 客户端登录页、API 文档页角标与站点 favicon。
+
 ## 项目说明
 
 <img src="docs/diagrams/description.svg" alt="项目说明" width="100%">

@@ -336,6 +336,8 @@ Redis Sorted Set スライディングウィンドウアルゴリズム、原子
 
 特徴: サイドバー折りたたみ可能、Material 3 デュアルテーマ、高密度データテーブル、ポップアップ Dialog、マウスホバー操作
 
+ブランド: ログインページと Web 初回描画ローダーにはプロジェクトペット E-Cat を使用（`docs/diagrams/mascot.svg`、単一ファイルのアニメーション SVG、`prefers-reduced-motion` 対応）
+
 ### 5.2 HarmonyOS モバイル
 
 ページルーティング:

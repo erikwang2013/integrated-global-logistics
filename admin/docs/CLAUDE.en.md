@@ -27,6 +27,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Files | Upload + Excel/PDF export (sensitive data masking) |
 | Security | 18-layer defense in depth (XSS/SQL injection/CSRF/rate limiting/CSP...) |
 | Operations | Health check/Prometheus metrics/API docs/security.txt + Docker + CI/CD |
+| Branding | Project pet E-Cat (install wizard / 404·5xx error pages / login page / first-paint loader / API docs corner badge) |
 
 ## Tech Stack
 
@@ -85,6 +86,7 @@ open-admin/
 │   │   ├── AdminPermission.php # RBAC permission check (Redis 60s cache)
 │   │   └── OperationLog.php    # Automatic operation logging (incl. client source detection)
 │   ├── model/                  # Data models
+│   ├── exception/              # Global exception handling (browser requests render the pet error page)
 │   ├── queue/                  # Queue tasks
 │   └── process/                # Processes (Http, Monitor)
 ├── apps/

@@ -19,6 +19,8 @@ The platform is composed of three components working together:
 
 **Current progress**: M1–M13 all complete — M1 admin plane (carrier / credential / query record / subscription CRUD), M2 query gateway (full external API chain), M3 callback subscriptions, M4 monitoring & statistics, M5 external OpenAPI docs, M6 five client SDKs, M7 client portal (register / app / plan / order), M8 payments (Stripe / PayPal), M9 crypto (USDT TRC20 / BEP20 / ERC20), M10 payment method configuration, M11 gateway security middleware, M12 CDN plan (Cloudflare + cache headers), M13 CDN provider management. The client → e-cat → worker → carrier tracking query chain is demonstrable, and the five zero-dependency SDKs are ready to copy and use.
 
+**Project pet E-Cat** — a cat wearing a tracking-radar cap and holding a parcel. A single self-contained SVG vector with breathing / blinking / tail-wagging / radar-sweep animations, with `prefers-reduced-motion` fallback. `docs/diagrams/mascot.svg` is the single source of the character; it is wired into the admin install wizard (`/install`), the 404 / 5xx error pages, the Flutter admin (login page + web first-paint loader), the HarmonyOS client login page, the API docs corner badge, and the site favicon.
+
 ## Project Description
 
 <img src="diagrams/description.svg" alt="Project description" width="100%">

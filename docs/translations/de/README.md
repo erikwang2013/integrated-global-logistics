@@ -19,6 +19,8 @@ Die Plattform besteht aus drei zusammenarbeitenden Komponenten:
 
 **Aktueller Stand**: M1–M13 alle abgeschlossen — M1 Verwaltungsebene (Carrier-/Credential-/Abfrage-/Abonnement-CRUD), M2 Query-Gateway (vollständige externe API-Kette), M3 Callback-Abonnements, M4 Monitoring & Statistiken, M5 externe OpenAPI-Dokumentation, M6 fünf Client-SDKs, M7 Client-Portal (Registrierung / App / Tarif / Bestellung), M8 Zahlungen (Stripe / PayPal), M9 Kryptowährungen (USDT TRC20 / BEP20 / ERC20), M10 Zahlungsarten-Konfiguration, M11 Gateway-Sicherheits-Middleware, M12 CDN-Plan (Cloudflare + Cache-Header), M13 CDN-Anbieterverwaltung. Die Tracking-Abfragekette Client → e-cat → Worker → Carrier ist demonstrierbar, und die fünf SDKs ohne Abhängigkeiten sind kopier- und sofort nutzbar.
 
+**Projekttier E-Cat** —— eine Katze mit Tracking-Radar-Kappe, die ein Paket hält. Eine einzelne, in sich geschlossene SVG-Vektordatei mit Atem-, Blinzel-, Schwanzwedel- und Radar-Sweep-Animationen und `prefers-reduced-motion`-Fallback. `docs/diagrams/mascot.svg` ist die einzige Quelldatei der Figur und ist eingebunden in den Installationsassistenten des Admin-Backends (`/install`), die 404-/5xx-Fehlerseiten, das Flutter-Admin (Login-Seite + Web-First-Paint-Loader), die Login-Seite des HarmonyOS-Clients, das Eck-Badge der API-Dokumentation und das Favicon der Seite.
+
 ## Projektbeschreibung
 
 <img src="diagrams/description.svg" alt="Projektbeschreibung" width="100%">

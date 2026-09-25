@@ -336,6 +336,8 @@ Frontend menampilkan dialog konfirmasi sebelum memicu operasi hapus, mengumpulka
 
 Fitur: sidebar dapat dilipat, Material 3 tema ganda, tabel data kepadatan tinggi, dialog popup, interaksi hover mouse
 
+Identitas merek: halaman login dan loader render pertama web memakai maskot proyek E-Cat (`docs/diagrams/mascot.svg`, SVG animasi tunggal dengan dukungan `prefers-reduced-motion`)
+
 ### 5.2 Seluler HarmonyOS
 
 Routing halaman:

@@ -327,6 +327,8 @@ The frontend shows a confirmation dialog before triggering a delete operation, c
 
 Features: collapsible sidebar, Material 3 dual theme, high-density data tables, dialog popups, hover interactions
 
+Branding: the login page and the web first-paint loader use the project pet E-Cat (`docs/diagrams/mascot.svg`, a single animated SVG with `prefers-reduced-motion` fallback)
+
 ### 5.2 HarmonyOS Mobile Client
 
 Page routing:

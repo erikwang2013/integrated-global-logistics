@@ -19,6 +19,8 @@
 
 **현재 진행 상황**: M1–M13 모두 완료 —— M1 관리면(운송사 / 자격증명 / 쿼리 기록 / 구독 CRUD), M2 쿼리 게이트웨이(외부 API 전체 체인), M3 콜백 구독, M4 모니터링 통계, M5 외부 OpenAPI 문서, M6 5개 클라이언트 SDK, M7 클라이언트 포털(등록 / 앱 / 요금제 / 주문), M8 결제(Stripe / PayPal), M9 가상화폐(USDT TRC20 / BEP20 / ERC20), M10 결제 방식 구성, M11 게이트웨이 보안 미들웨어, M12 CDN 도입 방안(Cloudflare + 캐시 헤더), M13 CDN 사업자 관리. 클라이언트 → e-cat → worker → 운송사 추적 쿼리 체인 시연 가능, 5개 무의존성 SDK 복사 즉시 사용.
 
+**프로젝트 펫 E-Cat** —— 추적 레이더 모자를 쓰고 소포를 안고 있는 고양이. 단일 파일 SVG 벡터로 호흡 / 눈 깜빡임 / 꼬리 흔들기 / 레이더 스캔 애니메이션을 내장하고 `prefers-reduced-motion` 을 지원합니다. `docs/diagrams/mascot.svg` 가 유일한 이미지 소스 파일이며, 관리 화면 설치 마법사(`/install`), 404 / 5xx 오류 페이지, Flutter 관리 화면(로그인 페이지 + 웹 최초 렌더링 로더), HarmonyOS 클라이언트 로그인 페이지, API 문서 코너 배지, 사이트 favicon 에 적용되어 있습니다.
+
 ## 프로젝트 설명
 
 <img src="diagrams/description.svg" alt="프로젝트 설명" width="100%">

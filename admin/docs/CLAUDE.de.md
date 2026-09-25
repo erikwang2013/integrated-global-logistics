@@ -27,6 +27,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Dateien | Upload + Excel/PDF-Export (Maskierung sensibler Daten) |
 | Sicherheit | 18-stufige Tiefenverteidigung (XSS/SQL-Injection/CSRF/Rate-Limiting/CSP...) |
 | Betrieb | Health Check/Prometheus-Metriken/API-Dokumentation/security.txt + Docker + CI/CD |
+| Branding | Projekttier E-Cat (Installationsassistent / 404·5xx-Fehlerseiten / Login-Seite / First-Paint-Loader / Eck-Badge der API-Dokumentation) |
 
 ## Technologie-Stack
 
@@ -83,6 +84,7 @@ open-admin/
 │   │   ├── AdminPermission.php # RBAC-Berechtigungsprüfung (Redis-60s-Cache)
 │   │   └── OperationLog.php    # Automatische Aktionsprotokoll-Aufzeichnung (inkl. Quellenerkennung)
 │   ├── model/                  # Datenmodelle
+│   ├── exception/              # Globale Ausnahmebehandlung (Browser-Anfragen rendern die Pet-Fehlerseite)
 │   ├── queue/                  # Queue-Tasks
 │   └── process/                # Prozesse (Http, Monitor)
 ├── apps/

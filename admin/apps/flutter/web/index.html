@@ -12,7 +12,7 @@
     * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
 
     This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
+    the `--base-href` argument provided by `flutter build`.
   -->
   <base href="$FLUTTER_BASE_HREF">
 
@@ -27,12 +27,152 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg"/>
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>admin_app</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    /* 首屏加载层：Flutter 引擎启动期间展示项目宠物 E-Cat */
+    #ecat-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #f0f2f5;
+      /* 永不吃掉点击事件，即使淡出失败也不会挡住应用 */
+      pointer-events: none;
+      transition: opacity .45s ease;
+    }
+    #ecat-loader.ecat-loader-hide { opacity: 0; }
+    #ecat-loader .ecat-loader-pet { width: 168px; height: 168px; }
+    #ecat-loader .ecat-loader-text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 14px;
+      color: #5a6b8c;
+      letter-spacing: .5px;
+    }
+    #ecat-loader .ecat-loader-bar {
+      width: 168px;
+      height: 4px;
+      border-radius: 2px;
+      background: #dbe4f5;
+      overflow: hidden;
+    }
+    #ecat-loader .ecat-loader-bar span {
+      display: block;
+      width: 40%;
+      height: 100%;
+      border-radius: 2px;
+      background: #2B5CD9;
+      animation: ecat-loader-slide 1.25s ease-in-out infinite;
+    }
+    @keyframes ecat-loader-slide {
+      0%   { transform: translateX(-105%); }
+      100% { transform: translateX(255%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #ecat-loader .ecat-loader-bar span { animation: none; width: 100%; }
+    }
+  </style>
 </head>
 <body>
+  <!-- 首屏加载层：E-Cat 项目宠物（Flutter 首帧渲染后自动淡出） -->
+  <div id="ecat-loader">
+    <svg class="ecat-loader-pet" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="E-Cat 项目宠物">
+      <style>
+        .ecat-pet, .ecat-head, .ecat-tail, .ecat-eyes, .ecat-ear-l, .ecat-ear-r,
+        .radar-sweep, .radar-ring, .ant-wave, .antenna-dot { transform-box: view-box; }
+        .ecat-pet  { transform-origin: 256px 466px; animation: ecat-breath 3.6s ease-in-out infinite; }
+        @keyframes ecat-breath { 0%,100%{transform:scale(1,1)} 50%{transform:scale(1.012,1.022)} }
+        .ecat-head { transform-origin: 256px 282px; animation: ecat-bob 3.6s ease-in-out infinite; }
+        @keyframes ecat-bob { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-3px) rotate(-1.2deg)} }
+        .ecat-tail { transform-origin: 140px 428px; animation: ecat-wag 1.6s ease-in-out infinite; }
+        @keyframes ecat-wag { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(10deg)} }
+        .ecat-eyes { transform-origin: 256px 196px; animation: ecat-blink 5.2s ease-in-out infinite; }
+        @keyframes ecat-blink { 0%,90%,100%{transform:scaleY(1)} 93%,96%{transform:scaleY(.08)} }
+        .ecat-ear-l { transform-origin: 211px 139px; animation: ecat-ear-l 4.2s ease-in-out infinite; }
+        @keyframes ecat-ear-l { 0%,72%,100%{transform:rotate(0deg)} 80%{transform:rotate(-4deg)} 90%{transform:rotate(0deg)} }
+        .ecat-ear-r { transform-origin: 301px 139px; animation: ecat-ear-r 4.2s ease-in-out infinite; }
+        @keyframes ecat-ear-r { 0%,72%,100%{transform:rotate(0deg)} 80%{transform:rotate(4deg)} 90%{transform:rotate(0deg)} }
+        .radar-sweep { transform-origin: 256px 256px; animation: radar-spin 7s linear infinite; }
+        @keyframes radar-spin { to { transform: rotate(360deg); } }
+        .radar-ring { animation: radar-pulse 3.2s ease-in-out infinite; }
+        @keyframes radar-pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+        .ant-wave { animation: ant-signal 2.2s ease-out infinite; }
+        .ant-wave.w2 { animation-delay: .5s; }
+        @keyframes ant-signal { 0%{opacity:.2} 40%{opacity:1} 100%{opacity:.25} }
+        .antenna-dot { animation: antenna-glow 2.2s ease-in-out infinite; }
+        @keyframes antenna-glow { 0%,100%{opacity:1} 50%{opacity:.4} }
+        @media (prefers-reduced-motion: reduce) {
+          .ecat-pet, .ecat-head, .ecat-tail, .ecat-eyes, .ecat-ear-l, .ecat-ear-r,
+          .radar-sweep, .radar-ring, .ant-wave, .antenna-dot { animation: none; }
+        }
+      </style>
+      <circle cx="256" cy="256" r="244" fill="#F0F6FF"/>
+      <circle class="radar-ring" cx="256" cy="256" r="196" fill="none" stroke="#DCE8FB" stroke-width="3" stroke-dasharray="12 10"/>
+      <circle class="radar-ring" cx="256" cy="256" r="150" fill="none" stroke="#E7F0FD" stroke-width="2.5"/>
+      <path class="radar-sweep" d="M256,256 L256,86 A170,170 0 0 1 403,206 Z" fill="#2B5CD9" fill-opacity="0.06"/>
+      <g class="ecat-pet">
+        <g class="ecat-tail">
+          <path d="M142,428 C96,436 78,404 82,372 C85,348 104,338 118,340" stroke="#FF8A3D" stroke-width="20" stroke-linecap="round" fill="none"/>
+        </g>
+        <ellipse cx="206" cy="466" rx="34" ry="15" fill="#FF8A3D"/>
+        <ellipse cx="306" cy="466" rx="34" ry="15" fill="#FF8A3D"/>
+        <path d="M138,296 C140,258 196,240 256,240 C316,240 372,258 374,296 L372,420 C371,452 322,462 256,462 C190,462 141,452 140,420 Z" fill="#2B5CD9"/>
+        <ellipse cx="256" cy="398" rx="88" ry="52" fill="#3F6BE0"/>
+        <path d="M150,322 C134,356 156,386 186,396" stroke="#2B5CD9" stroke-width="26" stroke-linecap="round" fill="none"/>
+        <path d="M362,322 C378,356 356,386 326,396" stroke="#2B5CD9" stroke-width="26" stroke-linecap="round" fill="none"/>
+        <rect x="192" y="336" width="128" height="92" rx="10" fill="#D9A05B"/>
+        <rect x="244" y="336" width="24" height="92" fill="#F7E3C1"/>
+        <rect x="192" y="368" width="128" height="20" fill="#F7E3C1"/>
+        <rect x="206" y="352" width="8" height="26" fill="#8A5A2B"/>
+        <rect x="218" y="352" width="4" height="26" fill="#8A5A2B"/>
+        <rect x="226" y="352" width="8" height="26" fill="#8A5A2B"/>
+        <g class="ecat-head">
+          <g class="ecat-ear-l">
+            <path d="M176,150 L208,74 L246,128 Z" fill="#FF8A3D"/>
+            <path d="M188,142 L212,90 L234,128 Z" fill="#FFD9B8"/>
+          </g>
+          <g class="ecat-ear-r">
+            <path d="M336,150 L304,74 L266,128 Z" fill="#FF8A3D"/>
+            <path d="M324,142 L300,90 L278,128 Z" fill="#FFD9B8"/>
+          </g>
+          <circle cx="256" cy="192" r="90" fill="#FF8A3D"/>
+          <path d="M172,180 Q172,128 256,124 Q340,128 340,180 Z" fill="#2B5CD9"/>
+          <rect x="156" y="172" width="200" height="22" rx="11" fill="#2349B0"/>
+          <circle cx="256" cy="148" r="15" fill="#FFFFFF"/>
+          <text x="256" y="148" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2B5CD9">E</text>
+          <line x1="256" y1="124" x2="256" y2="88" stroke="#26324B" stroke-width="4"/>
+          <circle class="antenna-dot" cx="256" cy="82" r="8" fill="#FF8A3D"/>
+          <path class="ant-wave w1" d="M274,70 A30,30 0 0 1 274,94" stroke="#FF8A3D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <path class="ant-wave w2" d="M284,62 A44,44 0 0 1 284,102" stroke="#FF8A3D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <g class="ecat-eyes">
+            <circle cx="220" cy="196" r="11" fill="#26324B"/>
+            <circle cx="292" cy="196" r="11" fill="#26324B"/>
+            <circle cx="224" cy="192" r="4" fill="#FFFFFF"/>
+            <circle cx="296" cy="192" r="4" fill="#FFFFFF"/>
+          </g>
+          <ellipse cx="198" cy="214" rx="12" ry="7" fill="#FFB4A8" fill-opacity="0.8"/>
+          <ellipse cx="314" cy="214" rx="12" ry="7" fill="#FFB4A8" fill-opacity="0.8"/>
+          <path d="M236,224 Q256,240 276,224" stroke="#26324B" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+          <path d="M172,206 L134,198" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M172,218 L136,224" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M340,206 L378,198" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M340,218 L376,224" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+        </g>
+      </g>
+      <text x="500" y="498" text-anchor="end" font-family="Arial, sans-serif" font-size="20" fill="#1B2A4A" fill-opacity="0.35">erik.xyz</text>
+    </svg>
+    <div class="ecat-loader-text">正在加载管理后台…</div>
+    <div class="ecat-loader-bar"><span></span></div>
+  </div>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -42,5 +182,22 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+
+  <script>
+    // Flutter Web 首帧渲染后移除加载层；20s 兜底，避免加载层常驻
+    (function () {
+      var el = document.getElementById('ecat-loader');
+      if (!el) return;
+      var hidden = false;
+      function hide() {
+        if (hidden) return;
+        hidden = true;
+        el.classList.add('ecat-loader-hide');
+        setTimeout(function () { el.remove(); }, 600);
+      }
+      window.addEventListener('flutter-first-frame', hide);
+      setTimeout(hide, 20000);
+    })();
+  </script>
 </body>
 </html>

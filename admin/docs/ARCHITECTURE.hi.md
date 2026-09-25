@@ -130,12 +130,17 @@ flowchart TD
     MD1 --> D2
     CT7 --> D3
 
+    subgraph "अपवाद प्रबंधन परत (Exception Layer)"
+        E1["app/exception/Handler<br/>ब्राउज़र अनुरोध → प्रोजेक्ट पेट त्रुटि पृष्ठ<br/>API अनुरोध / डीबग मोड → फ़्रेमवर्क का डिफ़ॉल्ट व्यवहार"]
+    end
+
     style R1 fill:#722ED1,color:#fff
     style M_SF fill:#FF4D4F,color:#fff
     style M_RL fill:#EB2F96,color:#fff
     style M1 fill:#FA8C16,color:#fff
     style M2 fill:#FA8C16,color:#fff
     style CT1 fill:#1677FF,color:#fff
+    style E1 fill:#52C41A,color:#fff
 ```
 
 ---

@@ -19,6 +19,8 @@ La plataforma se compone de tres componentes que cooperan:
 
 **Progreso actual**: M1–M13 todos completos — M1 panel de administración (CRUD de transportista / credencial / registro de consulta / suscripción), M2 puerta de enlace de consultas (cadena completa de API externa), M3 suscripciones de devolución de llamada, M4 monitoreo y estadísticas, M5 documentación OpenAPI externa, M6 cinco SDK de cliente, M7 portal de cliente (registro / aplicación / plan / pedido), M8 pagos (Stripe / PayPal), M9 criptomonedas (USDT TRC20 / BEP20 / ERC20), M10 configuración de métodos de pago, M11 middleware de seguridad de pasarela, M12 plan CDN (Cloudflare + cabeceras de caché), M13 gestión de proveedores CDN. La cadena de consulta de seguimiento cliente → e-cat → worker → transportista es demostrable, y los cinco SDK sin dependencias están listos para copiar y usar.
 
+**Mascota del proyecto E-Cat** —— un gato con gorra de radar de seguimiento que sostiene un paquete. Un SVG vectorial único y autocontenido, con animaciones de respiración / parpadeo / movimiento de cola / barrido de radar y respaldo `prefers-reduced-motion`. `docs/diagrams/mascot.svg` es el único archivo fuente del personaje; está integrado en el asistente de instalación del panel (`/install`), las páginas de error 404 / 5xx, el panel de Flutter (página de inicio de sesión + cargador del primer renderizado web), la página de inicio de sesión del cliente HarmonyOS, la insignia de esquina de la documentación de la API y el favicon del sitio.
+
 ## Descripción del proyecto
 
 <img src="diagrams/description.svg" alt="Descripción del proyecto" width="100%">

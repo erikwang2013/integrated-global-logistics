@@ -336,6 +336,8 @@ Redis Sorted Set 슬라이딩 윈도우 알고리즘 기반, 원자적 Lua 스�
 
 특성: 사이드바 접이식, Material 3 이중 테마, 데이터 테이블 고밀도, 팝업 Dialog, 마우스 호버 상호작용
 
+브랜드: 로그인 페이지와 웹 최초 렌더링 로더에 프로젝트 펫 E-Cat 사용(`docs/diagrams/mascot.svg`, 단일 파일 애니메이션 SVG, `prefers-reduced-motion` 지원)
+
 ### 5.2 HarmonyOS 모바일
 
 페이지 라우팅:
