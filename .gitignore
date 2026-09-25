@@ -11,6 +11,7 @@
 /admin/vendor
 /service/.phpunit.cache/
 /admin/.phpunit.cache/
+/admin/.phpunit.result.cache
 /.github.phpunit.cache/
 .claude
 .claude-flow
