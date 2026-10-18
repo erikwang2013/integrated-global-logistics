@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="E-Cat · 撒娇 Coquettish"><title>E-Cat · 撒娇 Coquettish</title><desc>E-Cat 的 撒娇 表情形态 · animated expression form</desc><style>
+.ex-motion { animation: ex-sway 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 50%; }
+.ex-anim-tear { animation: ex-tear 1.8s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-sweat { animation: ex-tear 1.5s ease-in infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-heart { animation: ex-heart 2.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-spark { animation: ex-spark 1.9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-rain { animation: ex-rain 1.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-confetti { animation: ex-confetti 2.4s linear infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-pulse { animation: ex-pulse 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-knock { animation: ex-knock 0.55s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-knockline { animation: ex-knockline 0.55s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-palm { animation: ex-palm 0.9s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-steam { animation: ex-steam 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-shock { animation: ex-shock 0.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-please { animation: ex-please 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.ex-anim-drift { animation: ex-drift 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes ex-sway { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-2.5deg); } }
+@keyframes ex-tear { 0% { transform: translateY(0); opacity: 0; } 18% { opacity: 1; } 100% { transform: translateY(12.1px); opacity: 0; } }
+@keyframes ex-heart { 0% { transform: translateY(0) scale(.65); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-19.8px) scale(1.15); opacity: 0; } }
+@keyframes ex-spark { 0%,100% { transform: scale(.6) rotate(0deg); opacity: .3; } 50% { transform: scale(1.15) rotate(25deg); opacity: 1; } }
+@keyframes ex-rain { 0% { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(13.2px); opacity: 0; } }
+@keyframes ex-confetti { 0% { transform: translateY(-4px) rotate(0deg); opacity: 1; } 100% { transform: translateY(17.6px) rotate(200deg); opacity: 0; } }
+@keyframes ex-pulse { 0%,100% { transform: scale(1); opacity: .35; } 50% { transform: scale(1.18); opacity: .7; } }
+@keyframes ex-knock { 0%,100% { transform: translateX(4.95px); } 35% { transform: translateX(0); } }
+@keyframes ex-knockline { 0%,100% { transform: scaleX(.6); opacity: .35; } 35% { transform: scaleX(1); opacity: 1; } }
+@keyframes ex-palm { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-1.32px) rotate(-4deg); } }
+@keyframes ex-steam { 0% { transform: translateY(0); opacity: .7; } 100% { transform: translateY(-9.9px); opacity: 0; } }
+@keyframes ex-shock { 0%,100% { transform: scaleX(.7); opacity: .4; } 50% { transform: scaleX(1.25); opacity: 1; } }
+@keyframes ex-please { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-1.98px); } }
+@keyframes ex-drift { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2.2px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ex-motion, [class*="ex-anim-"] { animation: none !important; }
+}
+</style><g class="ex-motion ex-coquettish"><g class="ex-base"><style>.ecat-pet, .ecat-head, .ecat-tail, .ecat-eyes, .ecat-ear-l, .ecat-ear-r,
+    .radar-sweep, .radar-ring, .ant-wave, .antenna-dot { transform-box: view-box; }
+
+    /* 呼吸：从脚底向上轻微起伏 */
+    .ecat-pet  { transform-origin: 256px 466px;  }
+    
+
+    /* 头部浮动 */
+    .ecat-head { transform-origin: 256px 282px;  }
+    
+
+    /* 尾巴摇摆 */
+    .ecat-tail { transform-origin: 140px 428px;  }
+    
+
+    /* 眨眼 */
+    .ecat-eyes { transform-origin: 256px 196px;  }
+    
+
+    /* 耳朵轻抖 */
+    .ecat-ear-l { transform-origin: 211px 139px;  }
+    
+    .ecat-ear-r { transform-origin: 301px 139px;  }
+    
+
+    /* 雷达扫描 */
+    .radar-sweep { transform-origin: 256px 256px;  }
+    
+
+    /* 雷达圈脉冲 */
+    .radar-ring {  }
+    
+
+    /* 天线信号波 */
+    .ant-wave {  }
+    .ant-wave.w2 {  }
+    
+    .antenna-dot {  }</style>
+
+  
+  <circle cx="256" cy="256" r="244" fill="#F0F6FF"/>
+  <circle class="radar-ring" cx="256" cy="256" r="196" fill="none" stroke="#DCE8FB" stroke-width="3" stroke-dasharray="12 10"/>
+  <circle class="radar-ring" cx="256" cy="256" r="150" fill="none" stroke="#E7F0FD" stroke-width="2.5"/>
+  <path class="radar-sweep" d="M256,256 L256,86 A170,170 0 0 1 403,206 Z" fill="#2B5CD9" fill-opacity="0.06"/>
+
+  <g class="ecat-pet">
+    
+    <g class="ecat-tail">
+      <path d="M142,428 C96,436 78,404 82,372 C85,348 104,338 118,340"
+            stroke="#FF8A3D" stroke-width="20" stroke-linecap="round" fill="none"/>
+    </g>
+
+    
+    <ellipse cx="206" cy="466" rx="34" ry="15" fill="#FF8A3D"/>
+    <ellipse cx="306" cy="466" rx="34" ry="15" fill="#FF8A3D"/>
+
+    
+    <path d="M138,296 C140,258 196,240 256,240 C316,240 372,258 374,296
+             L372,420 C371,452 322,462 256,462 C190,462 141,452 140,420 Z"
+          fill="#2B5CD9"/>
+    
+    <ellipse cx="256" cy="398" rx="88" ry="52" fill="#3F6BE0"/>
+
+    
+    <path d="M150,322 C134,356 156,386 186,396" stroke="#2B5CD9" stroke-width="26" stroke-linecap="round" fill="none"/>
+    <path d="M362,322 C378,356 356,386 326,396" stroke="#2B5CD9" stroke-width="26" stroke-linecap="round" fill="none"/>
+
+    
+    <rect x="192" y="336" width="128" height="92" rx="10" fill="#D9A05B"/>
+    <rect x="244" y="336" width="24" height="92" fill="#F7E3C1"/>
+    <rect x="192" y="368" width="128" height="20" fill="#F7E3C1"/>
+    
+    <rect x="206" y="352" width="8" height="26" fill="#8A5A2B"/>
+    <rect x="218" y="352" width="4" height="26" fill="#8A5A2B"/>
+    <rect x="226" y="352" width="8" height="26" fill="#8A5A2B"/>
+
+    <g class="ecat-head">
+      
+      <g class="ecat-ear-l">
+        <path d="M176,150 L208,74 L246,128 Z" fill="#FF8A3D"/>
+        <path d="M188,142 L212,90 L234,128 Z" fill="#FFD9B8"/>
+      </g>
+      <g class="ecat-ear-r">
+        <path d="M336,150 L304,74 L266,128 Z" fill="#FF8A3D"/>
+        <path d="M324,142 L300,90 L278,128 Z" fill="#FFD9B8"/>
+      </g>
+
+      
+      <circle cx="256" cy="192" r="90" fill="#FF8A3D"/>
+
+      
+      <path d="M172,180 Q172,128 256,124 Q340,128 340,180 Z" fill="#2B5CD9"/>
+      <rect x="156" y="172" width="200" height="22" rx="11" fill="#2349B0"/>
+      <circle cx="256" cy="148" r="15" fill="#FFFFFF"/>
+      <text x="256" y="148" text-anchor="middle" dominant-baseline="central"
+            font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#2B5CD9">E</text>
+      
+      <line x1="256" y1="124" x2="256" y2="88" stroke="#26324B" stroke-width="4"/>
+      <circle class="antenna-dot" cx="256" cy="82" r="8" fill="#FF8A3D"/>
+      <path class="ant-wave w1" d="M274,70 A30,30 0 0 1 274,94" stroke="#FF8A3D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path class="ant-wave w2" d="M284,62 A44,44 0 0 1 284,102" stroke="#FF8A3D" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+
+      
+      <g class="ecat-eyes">
+        <circle cx="220" cy="196" r="11" fill="#26324B"/>
+        <circle cx="292" cy="196" r="11" fill="#26324B"/>
+        <circle cx="224" cy="192" r="4" fill="#FFFFFF"/>
+        <circle cx="296" cy="192" r="4" fill="#FFFFFF"/>
+      </g>
+      
+      <ellipse cx="198" cy="214" rx="12" ry="7" fill="#FFB4A8" fill-opacity="0.8"/>
+      <ellipse cx="314" cy="214" rx="12" ry="7" fill="#FFB4A8" fill-opacity="0.8"/>
+      
+      <path d="M236,224 Q256,240 276,224" stroke="#26324B" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+      
+      <path d="M172,206 L134,198" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+      <path d="M172,218 L136,224" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+      <path d="M340,206 L378,198" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+      <path d="M340,218 L376,224" stroke="#26324B" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </g>
+
+  
+  <text x="500" y="498" text-anchor="end" font-family="Arial, sans-serif" font-size="20"
+        fill="#1B2A4A" fill-opacity="0.35">erik.xyz</text></g><g class="ex-face"><ellipse cx="256" cy="214" rx="60" ry="48" fill="#FF8A3D"/><path d="M 209.55,199.08 Q 220,183.35 230.45,199.08" fill="none" stroke="#26324B" stroke-width="2.2" stroke-linecap="round"/><path class="ex-anim-pulse" style="animation-delay:0s" d="M 292,200.39 C 280.22,191.38 285.3,183.06 292,190.46 C 298.7,183.06 303.78,191.38 292,200.39 Z" fill="#FF7AA2"/><ellipse cx="256" cy="220.2" rx="5.7" ry="4.36" fill="none" stroke="#26324B" stroke-width="1.76"/><ellipse class="ex-anim-pulse" cx="211.75" cy="210.85" rx="8.58" ry="4.62" fill="#FF8FB3" opacity="0.7"/><ellipse class="ex-anim-pulse" cx="300.25" cy="210.85" rx="8.58" ry="4.62" fill="#FF8FB3" opacity="0.7"/><path class="ex-anim-heart" style="animation-delay:0.0s" d="M 207.71,156.67 C 199.86,150.67 203.25,145.12 207.71,150.05 C 212.18,145.12 215.57,150.67 207.71,156.67 Z" fill="#FF7AA2"/><path class="ex-anim-heart" style="animation-delay:0.7s" d="M 308.31,145.99 C 302.14,141.27 304.8,136.91 308.31,140.78 C 311.82,136.91 314.48,141.27 308.31,145.99 Z" fill="#FF7AA2"/><path class="ex-anim-heart" style="animation-delay:1.3s" d="M 292.22,175.46 C 287.95,172.2 289.79,169.19 292.22,171.86 C 294.64,169.19 296.48,172.2 292.22,175.46 Z" fill="#FF7AA2"/></g></g></svg>
