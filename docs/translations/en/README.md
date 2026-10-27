@@ -3,7 +3,7 @@
 
 One-stop platform for global logistics tracking: the **admin management console** (PHP webman + Layui) hosts the management plane and the query worker pool, the **e-cat high-frequency gateway** (long-running Rust process) carries the query traffic, and the **global-logistics unified facade** (PHP adapters for 209 carriers) lets you query the whole world through a single entry.
 
-> Languages: [English](/docs/translations/en/README.md) · [中文](/README.md)
+> Languages: [English](README.md) · [中文](../../../README.md)
 
 ## Project Introduction
 
@@ -159,8 +159,8 @@ For detailed deployment, see [admin/README.md](../../../admin/README.md) (Docker
 
 ## Translations
 
-- [English](/docs/translations/en/README.md)
-- [中文](/README.md)
+- [English](README.md)
+- [中文](../../../README.md)
 
 ## Open Source Is Not Easy — Support Welcome
 
