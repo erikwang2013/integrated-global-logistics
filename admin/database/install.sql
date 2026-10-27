@@ -65,7 +65,6 @@ INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `ty
 ('21000000000000094', '0', '文件上传', 'post.admin/upload', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000101', '0', '物流服务商', 'carrier', 1, 'truck', '/admin/carrier', 7, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000102', '0', '查询记录', 'tracking-query', 1, 'search', '/admin/tracking/query', 8, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
-('21000000000000103', '0', '回调订阅', 'callback-subscription', 1, 'link', '/admin/callback/subscription', 9, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000104', '0', '统计报表', 'tracking-statistics', 1, 'chart', '/admin/tracking/statistics', 10, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000111', '21000000000000101', '查看承运商', 'get.admin/carrier', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000112', '21000000000000101', '创建承运商', 'post.admin/carrier', 3, '', '', 2, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
@@ -76,11 +75,6 @@ INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `ty
 ('21000000000000123', '21000000000000101', '更新凭证', 'put.admin/carrier/credential', 3, '', '', 7, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000124', '21000000000000101', '删除凭证', 'delete.admin/carrier/credential', 3, '', '', 8, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000131', '21000000000000102', '查看查询记录', 'get.admin/tracking/query', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
-('21000000000000141', '21000000000000103', '查看订阅', 'get.admin/callback/subscription', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
-('21000000000000142', '21000000000000103', '创建订阅', 'post.admin/callback/subscription', 3, '', '', 2, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
-('21000000000000143', '21000000000000103', '更新订阅', 'put.admin/callback/subscription', 3, '', '', 3, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
-('21000000000000144', '21000000000000103', '删除订阅', 'delete.admin/callback/subscription', 3, '', '', 4, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
-('21000000000000145', '21000000000000103', '手动重推', 'post.admin/callback/subscription/retry', 3, '', '', 3, '2026-06-12 09:09:42', '2026-06-12 09:09:42'),
 ('21000000000000151', '21000000000000104', '查看统计', 'get.admin/tracking/statistics', 3, '', '', 1, '2026-06-12 09:09:42', '2026-06-12 09:09:42');
 
 DROP TABLE IF EXISTS `logistics_admin_role`;
@@ -151,7 +145,6 @@ INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUE
 ('10000000000000001', '21000000000000094'),
 ('10000000000000001', '21000000000000101'),
 ('10000000000000001', '21000000000000102'),
-('10000000000000001', '21000000000000103'),
 ('10000000000000001', '21000000000000104'),
 ('10000000000000001', '21000000000000111'),
 ('10000000000000001', '21000000000000112'),
@@ -162,11 +155,6 @@ INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUE
 ('10000000000000001', '21000000000000123'),
 ('10000000000000001', '21000000000000124'),
 ('10000000000000001', '21000000000000131'),
-('10000000000000001', '21000000000000141'),
-('10000000000000001', '21000000000000142'),
-('10000000000000001', '21000000000000143'),
-('10000000000000001', '21000000000000144'),
-('10000000000000001', '21000000000000145'),
 ('10000000000000001', '21000000000000151');
 
 DROP TABLE IF EXISTS `logistics_admin_user`;
@@ -318,24 +306,6 @@ CREATE TABLE `logistics_tracking_query` (
   KEY `idx_tracking_no` (`tracking_no`),
   KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='轨迹查询记录表';
-
-DROP TABLE IF EXISTS `logistics_callback_subscription`;
-
-CREATE TABLE `logistics_callback_subscription` (
-  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
-  `carrier_id` bigint unsigned NOT NULL COMMENT '承运商ID',
-  `callback_url` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '回调URL',
-  `secret` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '回调签名密钥',
-  `event_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'tracking.update' COMMENT '事件类型: tracking.update=轨迹更新',
-  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态: 0=禁用 1=启用',
-  `max_retry` tinyint unsigned NOT NULL DEFAULT '3' COMMENT '最大重试次数',
-  `last_push_at` datetime DEFAULT NULL COMMENT '上次推送时间',
-  `last_success_at` datetime DEFAULT NULL COMMENT '上次成功推送时间',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  KEY `idx_carrier_id` (`carrier_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='回调订阅表';
 
 DROP TABLE IF EXISTS `logistics_client`;
 

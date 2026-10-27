@@ -127,8 +127,6 @@ Route::group('/admin', function () {
     Route::resource('/cdn/provider', app\admin\controller\CdnProviderController::class);
 
     // 物流聚合 — 回调订阅
-    Route::resource('/callback/subscription', app\admin\controller\CallbackSubscriptionController::class);
-    Route::post('/callback/subscription/retry/{event_id}', [app\admin\controller\CallbackSubscriptionController::class, 'retry']);
 
     // 物流聚合 — 客户端管理
     Route::get('/client', [app\admin\controller\ClientController::class, 'index']);

@@ -14,11 +14,11 @@
 
 平台由三个组件协作组成：
 
-- **admin 管理后台**（PHP webman v2 + Flutter）—— 管理面与 PHP worker 池：承运商档案、密钥加密管理、查询记录、统计报表、回调订阅配置，RBAC / JWT / 操作审计体系完备；
+- **admin 管理后台**（PHP webman v2 + Flutter）—— 管理面与 PHP worker 池：承运商档案、密钥加密管理、查询记录、统计报表，RBAC / JWT / 操作审计体系完备；
 - **tracking-gateway 高频网关**（Rust e-cat 框架）—— 对外查询 API 的第一道入口：Redis 缓存、限流、按承运商熔断、worker 负载均衡，只做高频面，不懂承运商协议；
 - **global-logistics 统一门面**（PHP 包）—— 209 家承运商适配器（国内 45 + 国际 164）、187 条单号自动识别规则、`TrackStatus` 7 种统一状态语义。
 
-**当前进度**：M1-M13 全部完成 —— M1 管理面（承运商/凭证/查询记录/订阅 CRUD）、M2 查询网关（对外 API 全链路）、M3 回调订阅、M4 监控统计、M5 对外 OpenAPI 文档、M6 五份客户端 SDK、M7 客户端门户（注册/应用/套餐/订单）、M8 支付（Stripe / PayPal）、M9 虚拟币（USDT TRC20 / BEP20 / ERC20）、M10 支付方式配置、M11 网关安全中间件、M12 CDN 接入方案（Cloudflare + 缓存头落地）、M13 CDN 服务商管理。客户端 → e-cat → worker → 承运商的轨迹查询链路可演示，Python / PHP / Node.js / Go / Rust 五份零依赖 SDK 拷贝即用。
+**当前进度**：M1-M13 全部完成 —— M1 管理面（承运商/凭证/查询记录）、M2 查询网关（对外 API 全链路）、M3 承运商回调接收（仅落库更新轨迹）、M4 监控统计、M5 对外 OpenAPI 文档、M6 五份客户端 SDK、M7 客户端门户（注册/应用/套餐/订单）、M8 支付（Stripe / PayPal）、M9 虚拟币（USDT TRC20 / BEP20 / ERC20）、M10 支付方式配置、M11 网关安全中间件、M12 CDN 接入方案（Cloudflare + 缓存头落地）、M13 CDN 服务商管理。客户端 → e-cat → worker → 承运商的轨迹查询链路可演示，Python / PHP / Node.js / Go / Rust 五份零依赖 SDK 拷贝即用。
 
 **项目宠物 E-Cat** —— 戴追踪雷达帽、手捧包裹的猫，SVG 单文件矢量，自带呼吸 / 眨眼 / 摇尾 / 雷达扫描动画并遵循 `prefers-reduced-motion` 降级。`docs/diagrams/mascot.svg` 是唯一形象源文件，已接入管理端安装向导（`/install`）、404 / 5xx 错误页、Flutter 管理端（登录页 + Web 首屏加载页）、HarmonyOS 客户端登录页、API 文档页角标与站点 favicon。
 
@@ -46,7 +46,7 @@ e-cat 网关（Rust）负责对外 API 的 API-Key 鉴权、Redis 缓存命中�
 
 **e-cat 复用 209 家 PHP 适配器的分工方案**：209 个适配器是 PHP（`src/Carriers/Domestic` 45 家 + `International` 164 家），Rust 重写是数月工程且丧失上游包持续更新收益；e-cat 不需要懂承运商协议，只依赖一个稳定的内部契约（`/internal/tracking/query` + `/internal/carriers` 注册表同步）。凭证永不下发到 e-cat，安全边界清晰。
 
-管理面（浏览器）→ `/admin/*`：JWT + RBAC 权限 + 操作审计，覆盖 carrier / carrier-credential / tracking-query / callback-subscription / statistics / client / client-app / plan / order / cdn-provider。
+管理面（浏览器）→ `/admin/*`：JWT + RBAC 权限 + 操作审计，覆盖 carrier / carrier-credential / tracking-query / statistics / client / client-app / plan / order / cdn-provider。
 
 ## 项目结构
 
@@ -87,9 +87,9 @@ integrated-global-logistics/
 
 **查询链路（同步）**：客户端 → API-Key 鉴权 → Redis 限流 → 缓存查找（命中即返，`X-Cache: HIT`）→ 熔断检查（OPEN 则 503 快速失败）→ RoundRobin 选 worker → PHP worker 的 `Logistics` 门面（包内 RetryingClient 自带 2 次重试）→ 209 家承运商 → 落库 `logistics_tracking_query` + 写缓存 → 返回标准化 JSON。
 
-**回调链路（异步）**：承运商 webhook → `/api/callback/{carrier}` 白名单路由 + 签名校验 → 落库 `logistics_tracking_event` + 更新查询记录 → 写入 webman 队列 → 异步消费者按订阅配置推送到商户回调 URL（HMAC 签名 + 幂等键 + 指数退避重试 + 手动重推入口）。
+**回调链路（异步）**：承运商 webhook → `/api/callback/{carrier}` 白名单路由 + 签名校验 → 落库 `logistics_tracking_event` + 更新查询记录。
 
-> 回调推送首版留在 PHP 队列 —— 事件解析与数据都在 PHP 侧，跨语言传事件无收益；若推送吞吐成为瓶颈（万级/分钟以上），再把消费者迁到 e-cat（ecat-mq + retry 中间件），外部契约不变。
+> 商户侧订阅回推已移除；如需事件通知，请从 `logistics_tracking_event` 表自行消费。
 
 ## 安全防护
 

@@ -7,7 +7,6 @@ declare(strict_types=1);
 
 namespace app\admin\controller;
 
-use app\model\CallbackSubscription;
 use app\model\Carrier;
 use app\model\CarrierCredential;
 use app\model\TrackingEvent;
@@ -16,7 +15,6 @@ use support\Redis;
 use support\Request;
 use support\Response;
 use Throwable;
-use Webman\RedisQueue\Client as QueueClient;
 
 /**
  * 承运商 webhook 回调接收（POST /api/callback/{carrier}）
@@ -59,9 +57,6 @@ class CallbackController extends BaseController
             return json(['code' => 400, 'message' => 'tracking_no and non-empty events required'], 400);
         }
 
-        $subscriptions = CallbackSubscription::where('carrier_id', $carrierModel->id)
-            ->where('status', 1)->get();
-
         $normalized = [];
         $deduped = 0;
         foreach ($events as $ev) {
@@ -75,7 +70,7 @@ class CallbackController extends BaseController
                 'event_time' => (string) ($ev['event_time'] ?? '') ?: date('Y-m-d H:i:s'),
             ];
             $eventId = $this->generateId();
-            // 唯一键(tracking_no,event_code,event_time)去重：承运商重发同事件时跳过落库与推送
+            // 唯一键(tracking_no,event_code,event_time)去重：承运商重发同事件时跳过落库
             $inserted = TrackingEvent::query()->insertOrIgnore([[
                 'id'           => $eventId,
                 'tracking_no'  => $trackingNo,
@@ -91,19 +86,6 @@ class CallbackController extends BaseController
                 continue;
             }
 
-            // 推入队列，由消费者按订阅推送（含重试）
-            foreach ($subscriptions as $sub) {
-                QueueClient::send('tracking_event_push', [
-                    'event_id'       => $eventId,
-                    'subscription_id'=> $sub->id,
-                    'carrier_code'   => $carrier,
-                    'tracking_no'    => $trackingNo,
-                    'event_code'     => $event['event_code'],
-                    'event_desc'     => $event['event_desc'],
-                    'location'       => $event['location'],
-                    'event_time'     => $event['event_time'],
-                ]);
-            }
             $normalized[] = $event;
         }
 
