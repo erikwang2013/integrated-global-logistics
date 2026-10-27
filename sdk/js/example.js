@@ -19,7 +19,6 @@ async function main() {
   await run("carriers", () => client.listCarriers());
   await run("query_tracking", () => client.queryTracking("LX123456789CN"));
   await run("get_tracking", () => client.getTracking("demo-query"));
-  await run("subscribe", () => client.subscribe("china-post", "https://example.com/cb"));
 }
 
 main().catch((e) => {

@@ -18,7 +18,6 @@ func main() {
 	run("carriers", func() (json.RawMessage, error) { return client.ListCarriers() })
 	run("query_tracking", func() (json.RawMessage, error) { return client.QueryTracking("LX123456789CN", "") })
 	run("get_tracking", func() (json.RawMessage, error) { return client.GetTracking("demo-query") })
-	run("subscribe", func() (json.RawMessage, error) { return client.Subscribe("china-post", "https://example.com/cb", "") })
 }
 
 func run(name string, fn func() (json.RawMessage, error)) {

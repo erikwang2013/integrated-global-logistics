@@ -62,13 +62,6 @@ class TrackingClient:
     def list_carriers(self):
         return self._request("GET", "/v1/carriers")
 
-    def subscribe(self, carrier_code, callback_url, event_type="tracking.update"):
-        return self._request("POST", "/v1/subscriptions", {
-            "carrier_code": carrier_code,
-            "callback_url": callback_url,
-            "event_type": event_type,
-        })
-
 
 def _quote(path_seg):
     from urllib.parse import quote

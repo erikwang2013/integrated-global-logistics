@@ -21,4 +21,3 @@ def run(name, fn):
 run("carriers", client.list_carriers)
 run("query_tracking", lambda: client.query_tracking("LX123456789CN"))
 run("get_tracking", lambda: client.get_tracking("demo-query"))
-run("subscribe", lambda: client.subscribe("china-post", "https://example.com/cb"))

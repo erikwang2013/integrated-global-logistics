@@ -72,14 +72,6 @@ class TrackingClient {
   listCarriers() {
     return this.request("GET", "/v1/carriers");
   }
-
-  subscribe(carrierCode, callbackUrl, eventType = "tracking.update") {
-    return this.request("POST", "/v1/subscriptions", {
-      carrier_code: carrierCode,
-      callback_url: callbackUrl,
-      event_type: eventType,
-    });
-  }
 }
 
 module.exports = { TrackingClient, TrackingApiError };

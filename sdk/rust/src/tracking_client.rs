@@ -80,23 +80,6 @@ impl TrackingClient {
         self.request("GET", "/v1/carriers", None)
     }
 
-    /// 注册回调订阅，返回 {subscription_id, secret}。
-    pub fn subscribe(
-        &self,
-        carrier_code: &str,
-        callback_url: &str,
-        event_type: &str,
-    ) -> Result<Value, TrackingApiError> {
-        let et = if event_type.is_empty() { "tracking.update" } else { event_type };
-        let payload = format!(
-            "{{\"carrier_code\":\"{}\",\"callback_url\":\"{}\",\"event_type\":\"{}\"}}",
-            json_escape(carrier_code),
-            json_escape(callback_url),
-            json_escape(et)
-        );
-        self.request("POST", "/v1/subscriptions", Some(&payload))
-    }
-
     fn request(&self, method: &str, path: &str, payload: Option<&str>) -> Result<Value, TrackingApiError> {
         let body = payload.unwrap_or("");
         let mut head = format!(

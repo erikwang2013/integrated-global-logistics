@@ -27,7 +27,6 @@
 
 - **轨迹查询**：`query_tracking()` 按单号查询，自动识别承运商，返回统一标准化轨迹；`get_tracking()` 按查询号取上次结果；
 - **多承运商**：`list_carriers()` 获取承运商清单，查询时可按 `carrier_code` 指定承运商；
-- **回调订阅**：`subscribe()` 注册订阅，承运商轨迹更新时网关回调推送商户 URL；
 - **统一错误码**：信封 `code != 0` 即错误，限流 429 / 熔断 503 / 承运商错误 `carrier_error`，异常统一携带 `code` / `message` / `error_code` / `http_status`；
 - **零依赖**：五份 SDK 全部只用标准库，跨语言行为一致，密钥由调用方传入、SDK 不落任何密钥。
 
@@ -69,7 +68,6 @@ Go/Rust 方法返回 data 的原始 JSON：Go 为 `json.RawMessage`（用 `encod
 | `query_tracking(tracking_no, carrier_code=None)` | `POST /v1/tracking/query` | 轨迹查询，`carrier_code` 可选 |
 | `get_tracking(query_no)` | `GET /v1/tracking/{query_no}` | 按查询号取上次结果 |
 | `list_carriers()` | `GET /v1/carriers` | 承运商清单 |
-| `subscribe(carrier_code, callback_url, event_type="tracking.update")` | `POST /v1/subscriptions` | 注册回调订阅，返回 `{subscription_id, secret}` |
 
 成功时返回信封的 `data` 字段（dict / array / null）。所有请求带 `X-API-Key` 请求头。
 
@@ -82,7 +80,6 @@ print(result["status"], result["events"][0]["description"])
 
 ```php
 $carriers = $client->list_carriers();
-$sub = $client->subscribe("china-post", "https://example.com/cb");
 ```
 
 ```js

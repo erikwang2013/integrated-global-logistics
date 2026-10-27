@@ -1850,7 +1850,6 @@ Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`
 | `GET /v1/carriers` | 承运商清单（转发 PHP gRPC `InternalService.Carriers`） |
 | `POST /v1/tracking/query` | 轨迹查询（`{"carrier_code": "...", "tracking_no": "..."}`），`carrier_code` 缺省时网关自动识别（detect 在 query 内部完成） |
 | `GET /v1/tracking/{query_no}` | 按查询号取上次轨迹结果 |
-| `POST /v1/subscriptions` | 注册回调订阅（`{"carrier_code", "callback_url", "event_type"?}`，`event_type` 缺省 `tracking.update`） |
 
 网关侧附加语义：超出 `rate_limit`（默认 100 次/60s）返回 `429`；承运商连续失败触发熔断（默认 5 次 5xx/传输错误后 OPEN 60s）返回 `503`；worker 不可达返回 `502`。网关与 worker 之间为内网 gRPC（h2c，`0.0.0.0:8792`），`x-internal-token` 共享密钥鉴权，见第 16 节。
 
@@ -1888,11 +1887,6 @@ curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
 
 # 按查询号取上次结果
 curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
-
-# 注册回调订阅（回调地址须为公网 http/https，网关拒绝回环/私网）
-curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
-  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
-  http://127.0.0.1:8080/v1/subscriptions
 ```
 
 ### 17.3 调用示例（SDK）
@@ -1910,7 +1904,6 @@ print(result["status"], result["events"][0]["description"])
 require "TrackingClient.php";
 $client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
 $carriers = $client->list_carriers();
-$sub = $client->subscribe("china-post", "https://example.com/cb");
 ```
 
 ```js

@@ -16,7 +16,6 @@ fn main() {
     run("carriers", || client.list_carriers());
     run("query_tracking", || client.query_tracking("LX123456789CN", None));
     run("get_tracking", || client.get_tracking("demo-query"));
-    run("subscribe", || client.subscribe("china-post", "https://example.com/cb", ""));
 }
 
 fn run(name: &str, f: impl Fn() -> Result<trackingclient::json::Value, TrackingApiError>) {

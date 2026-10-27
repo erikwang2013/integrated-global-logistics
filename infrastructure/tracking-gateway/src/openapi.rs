@@ -87,25 +87,6 @@ fn paths() -> HashMap<String, PathItem> {
         ),
     );
     m.insert(
-        "/v1/subscriptions".into(),
-        path_item(
-            None,
-            Some(op(
-                "Register a callback subscription for tracking updates (requires X-API-Key header)",
-                &["subscriptions"],
-                vec![],
-                Some(schema_ref("SubscribeRequest")),
-                Some(schema_ref("SubscribeOk")),
-                &[
-                    ("400", "invalid carrier_code or callback_url"),
-                    ("401", "invalid or missing api key"),
-                    ("502", "upstream worker failure"),
-                    ("503", "carrier temporarily unavailable"),
-                ],
-            )),
-        ),
-    );
-    m.insert(
         "/v1/health".into(),
         path_item(Some(op("Health check (public)", &["ops"], vec![], None, None, &[])), None),
     );
@@ -217,21 +198,6 @@ fn schemas() -> HashMap<String, Schema> {
         ]),
     );
     s.insert(
-        "SubscribeRequest".into(),
-        object_schema(&[
-            ("carrier_code", string_schema()),
-            ("callback_url", string_schema()),
-            ("event_type", string_schema()),
-        ]),
-    );
-    s.insert(
-        "SubscriptionResult".into(),
-        object_schema(&[
-            ("subscription_id", string_schema()),
-            ("secret", string_schema()),
-        ]),
-    );
-    s.insert(
         "ApiError".into(),
         object_schema(&[
             ("code", integer_schema()),
@@ -254,14 +220,6 @@ fn schemas() -> HashMap<String, Schema> {
             ("code", integer_schema()),
             ("message", string_schema()),
             ("data", array_schema(schema_ref("Carrier"))),
-        ]),
-    );
-    s.insert(
-        "SubscribeOk".into(),
-        object_schema(&[
-            ("code", integer_schema()),
-            ("message", string_schema()),
-            ("data", schema_ref("SubscriptionResult")),
         ]),
     );
     s
@@ -291,7 +249,6 @@ mod tests {
             "/v1/tracking/query",
             "/v1/tracking/{query_no}",
             "/v1/carriers",
-            "/v1/subscriptions",
             "/v1/health",
         ] {
             let path = format!("/paths/{}", p.replace('/', "~1"));

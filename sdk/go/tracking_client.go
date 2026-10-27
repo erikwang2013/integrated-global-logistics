@@ -102,15 +102,3 @@ func (c *Client) GetTracking(queryNo string) (json.RawMessage, error) {
 func (c *Client) ListCarriers() (json.RawMessage, error) {
 	return c.do("GET", "/v1/carriers", nil)
 }
-
-// Subscribe 注册回调订阅，返回 {subscription_id, secret}。
-func (c *Client) Subscribe(carrierCode, callbackURL, eventType string) (json.RawMessage, error) {
-	if eventType == "" {
-		eventType = "tracking.update"
-	}
-	return c.do("POST", "/v1/subscriptions", map[string]string{
-		"carrier_code": carrierCode,
-		"callback_url": callbackURL,
-		"event_type":   eventType,
-	})
-}

@@ -21,4 +21,3 @@ function run($name, $fn) {
 run("carriers", function () use ($client) { return $client->list_carriers(); });
 run("query_tracking", function () use ($client) { return $client->query_tracking("LX123456789CN"); });
 run("get_tracking", function () use ($client) { return $client->get_tracking("demo-query"); });
-run("subscribe", function () use ($client) { return $client->subscribe("china-post", "https://example.com/cb"); });

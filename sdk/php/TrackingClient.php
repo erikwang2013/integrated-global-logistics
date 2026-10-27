@@ -83,12 +83,4 @@ class TrackingClient {
     public function list_carriers() {
         return $this->request("GET", "/v1/carriers");
     }
-
-    public function subscribe($carrier_code, $callback_url, $event_type = "tracking.update") {
-        return $this->request("POST", "/v1/subscriptions", array(
-            "carrier_code" => $carrier_code,
-            "callback_url" => $callback_url,
-            "event_type" => $event_type,
-        ));
-    }
 }
