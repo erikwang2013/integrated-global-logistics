@@ -28,7 +28,6 @@ class HealthController
      * @Apidoc\Returned("php", type="string", desc="PHP版本")
      * @Apidoc\Returned("database", type="string", desc="数据库状态")
      * @Apidoc\Returned("redis", type="string", desc="Redis状态")
-     * @Apidoc\Returned("elasticsearch", type="string", desc="ES状态")
      * @Apidoc\Returned("timestamp", type="int", desc="服务器时间戳")
      */
     public function index(Request $request): Response
@@ -42,7 +41,6 @@ class HealthController
                 'php'           => PHP_VERSION,
                 'database'      => $this->checkDb(),
                 'redis'         => $this->checkRedis(),
-                'elasticsearch' => $this->checkES(),
                 'timestamp'     => time(),
             ],
         ]);
@@ -68,16 +66,4 @@ class HealthController
         }
     }
 
-    private function checkES(): string
-    {
-        try {
-            $hosts = config('plugin.erikwang2013.webman-scout.scout.hosts', ['http://localhost:9200']);
-            $client = new \GuzzleHttp\Client(['timeout' => 2]);
-            $resp = $client->get(rtrim($hosts[0], '/') . '/_cluster/health');
-            $body = json_decode((string) $resp->getBody(), true);
-            return $body['status'] ?? 'unknown';
-        } catch (Throwable) {
-            return 'unavailable';
-        }
-    }
 }

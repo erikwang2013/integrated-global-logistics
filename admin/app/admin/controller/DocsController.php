@@ -111,7 +111,6 @@ class DocsController
                             'php'           => ['type' => 'string', 'example' => '8.3.0'],
                             'database'      => ['type' => 'string', 'enum' => ['ok', 'unavailable']],
                             'redis'         => ['type' => 'string', 'enum' => ['ok', 'unavailable']],
-                            'elasticsearch' => ['type' => 'string', 'enum' => ['ok', 'unavailable']],
                             'timestamp'     => ['type' => 'integer'],
                         ],
                     ],

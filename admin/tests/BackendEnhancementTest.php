@@ -46,7 +46,6 @@ class BackendEnhancementTest extends TestCase
         $this->assertEquals(PHP_VERSION, $body['data']['php']);
         $this->assertArrayHasKey('database', $body['data']);
         $this->assertArrayHasKey('redis', $body['data']);
-        $this->assertArrayHasKey('elasticsearch', $body['data']);
         $this->assertArrayHasKey('timestamp', $body['data']);
         $this->assertIsInt($body['data']['timestamp']);
     }
@@ -60,7 +59,6 @@ class BackendEnhancementTest extends TestCase
 
         $this->assertIsString($body['data']['database']);
         $this->assertIsString($body['data']['redis']);
-        $this->assertIsString($body['data']['elasticsearch']);
     }
 
     public function test_health_controller_database_field_is_ok_or_unavailable(): void
@@ -133,21 +131,6 @@ class BackendEnhancementTest extends TestCase
         $source = file_get_contents(__DIR__ . '/../app/model/AdminUser.php');
         $this->assertStringContainsString('SoftDeletes', $source);
         $this->assertStringContainsString('use SoftDeletes;', $source);
-    }
-
-    public function test_admin_user_source_contains_searchable(): void
-    {
-        $source = file_get_contents(__DIR__ . '/../app/model/AdminUser.php');
-        $this->assertStringContainsString('Searchable', $source);
-        $this->assertStringContainsString('use Searchable;', $source);
-    }
-
-    public function test_admin_user_source_contains_to_searchable_array(): void
-    {
-        $source = file_get_contents(__DIR__ . '/../app/model/AdminUser.php');
-        $this->assertStringContainsString('toSearchableArray', $source);
-        $this->assertStringContainsString("'username'", $source);
-        $this->assertStringContainsString("'real_name'", $source);
     }
 
     public function test_operation_log_source_has_timestamps_disabled(): void

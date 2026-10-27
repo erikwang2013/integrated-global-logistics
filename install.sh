@@ -36,7 +36,7 @@ if [ ! -f .env.docker ]; then
     fi
 fi
 
-echo "==> 启动 Docker Compose 服务（Nginx / PHP / MySQL / Redis / Elasticsearch）..."
+echo "==> 启动 Docker Compose 服务（Nginx / PHP / MySQL / Redis）..."
 docker compose up -d
 
 echo "==> 轮询健康检查：http://localhost:${NGINX_PORT}/ （最多 120 秒）"
