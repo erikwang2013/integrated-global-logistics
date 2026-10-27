@@ -1,5 +1,5 @@
 # Logistics Aggregation Platform (Integrated Global Logistics)
-<img src="../../diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
+![E-Cat 项目吉祥物](../../diagrams/mascot.svg)
 
 One-stop platform for global logistics tracking: the **admin management console** (PHP webman + Layui) hosts the management plane and the query worker pool, the **e-cat high-frequency gateway** (long-running Rust process) carries the query traffic, and the **global-logistics unified facade** (PHP adapters for 209 carriers) lets you query the whole world through a single entry.
 
@@ -7,7 +7,7 @@ One-stop platform for global logistics tracking: the **admin management console*
 
 ## Project Introduction
 
-<img src="diagrams/intro.svg" alt="Project introduction" width="100%">
+![Project introduction](diagrams/intro.svg)
 
 The logistics aggregation platform unifies tracking queries from **209** courier / postal carriers worldwide into one platform: merchants and C-side clients pass in only a tracking number, and the platform automatically identifies the domestic / international channel and the carrier — no need to care about each carrier's protocol differences (signature, OAuth2, XML/JSON, status mapping).
 
@@ -23,7 +23,7 @@ The platform is composed of three components working together:
 
 ## Project Description
 
-<img src="diagrams/description.svg" alt="Project description" width="100%">
+![Project description](diagrams/description.svg)
 
 - **One entry**: `Logistics::track($trackingNo)` automatically identifies the domestic / international channel and carrier; the business layer only deals with one shape;
 - **Auto detection**: 187 tracking-number regex rules are order-sensitive and prioritize domestic channels; for unrecognized scenarios, `domestic()` / `international()` can be called explicitly;
@@ -36,7 +36,7 @@ The platform is composed of three components working together:
 
 ## Project Architecture
 
-<img src="diagrams/architecture.svg" alt="Project architecture" width="100%">
+![Project architecture](diagrams/architecture.svg)
 
 Query chain: **client → e-cat query gateway → PHP worker pool → 209 carriers**.
 
@@ -48,7 +48,7 @@ Management plane (browser) → `/admin/*`: JWT + RBAC permissions + operation au
 
 ## Project Structure
 
-<img src="diagrams/structure.svg" alt="Project structure" width="100%">
+![Project structure](diagrams/structure.svg)
 
 ```
 integrated-global-logistics/
@@ -76,7 +76,7 @@ integrated-global-logistics/
 
 ## Lifecycle
 
-<img src="diagrams/lifecycle.svg" alt="Lifecycle" width="100%">
+![Lifecycle](diagrams/lifecycle.svg)
 
 **Query chain (synchronous)**: client → API-Key auth → Redis rate limiting → cache lookup (return on hit, `X-Cache: HIT`) → circuit-breaker check (503 fast-fail on OPEN) → RoundRobin worker selection → the `Logistics` facade in the PHP worker (the in-package RetryingClient has 2 built-in retries) → 209 carriers → persist to `logistics_tracking_query` + write cache → return standardized JSON.
 
@@ -85,7 +85,7 @@ integrated-global-logistics/
 
 ## Security
 
-<img src="diagrams/security.svg" alt="Security" width="100%">
+![Security](diagrams/security.svg)
 
 Layered defense in depth, key points:
 
@@ -101,7 +101,7 @@ Layered defense in depth, key points:
 
 ## Features
 
-<img src="diagrams/description.svg" alt="Platform features" width="100%">
+![Platform features](diagrams/description.svg)
 
 - **Aggregated tracking queries: one tracking number across the globe — 187 number-pattern rules auto-detect the domestic/international channel and carrier, 209 carrier adapters unify output into 7 standard `TrackStatus` states;**
 - **Multi-carrier integration: 45 domestic + 164 international adapters, full coverage of DHL / FedEx / UPS / USPS and national posts S10, credentials encrypted at rest, zero hardcoded keys;**
@@ -166,11 +166,11 @@ For detailed deployment, see [admin/README.md](../../../admin/README.md) (Docker
 
 | WeChat | Alipay |
 |:---:|:---:|
-| <img src="../../weixinpay.png" width="130" height="130" alt="WeChat"> | <img src="../../alipay.png" width="130" height="130" alt="Alipay"> |
+| ![WeChat](../../weixinpay.png) | ![Alipay](../../alipay.png) |
 
 ## 项目授权 / Project License
 
-Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+Copyright (c) 2026 erik erik@erik.xyz — https://erik.xyz
 
 - 本项目仅供个人学习、研究使用。
 - 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。

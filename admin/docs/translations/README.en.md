@@ -6,7 +6,7 @@ A full-stack admin dashboard built with webman v2 + Layui.
 
 ## Features
 
-<img src="../../../docs/diagrams/description.svg" alt="Features" width="100%">
+![Features](../../../docs/diagrams/description.svg)
 
 
 | Domain | Feature | Notes |
@@ -28,7 +28,7 @@ A full-stack admin dashboard built with webman v2 + Layui.
 ## Copyright
 
 ```
-Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+Copyright (c) 2026 erik erik@erik.xyz — https://erik.xyz
 ```
 
 This copyright notice is permanent, must not be modified, removed, or reversed. All project files are protected under this copyright.
@@ -253,7 +253,7 @@ See `docs/nginx-security.conf` for production reverse-proxy security hardening.
 
 ## 项目授权 / Project License
 
-Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+Copyright (c) 2026 erik erik@erik.xyz — https://erik.xyz
 
 - 本项目仅供个人学习、研究使用。
 - 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。
