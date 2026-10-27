@@ -76,6 +76,11 @@
   
   
 
+  <circle cx="256" cy="256" r="244" fill="#F0F6FF"/>
+  <circle class="radar-ring" cx="256" cy="256" r="196" fill="none" stroke="#DCE8FB" stroke-width="3" stroke-dasharray="12 10"/>
+  <circle class="radar-ring" cx="256" cy="256" r="150" fill="none" stroke="#E7F0FD" stroke-width="2.5"/>
+  <path class="radar-sweep" d="M256,256 L256,86 A170,170 0 0 1 403,206 Z" fill="#2B5CD9" fill-opacity="0.06"/>
+
   <g class="ecat-pet">
     
     <g class="ecat-tail">
