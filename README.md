@@ -175,7 +175,7 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 
 ## 开源版 vs 商业版
 
-本仓库是**开源版**：保留 209 家承运商轨迹查询的核心链路，适合个人学习、研究与二次开发。`open-project/integrated-global-logistics` 是**商业版**，在同一核心之上补齐管理面、检索、多端客户端与对外集成能力；商业授权与交付条款请联系 **erik@erik.xyz**。
+本仓库是**开源版**：保留 209 家承运商轨迹查询的核心链路，适合个人学习、研究与二次开发。**商业版**由作者单独提供，在同一核心之上补齐管理面、检索、多端客户端与对外集成能力；商业授权与交付条款请联系 **erik@erik.xyz**。
 
 ### 规模对比
 
