@@ -2,13 +2,13 @@
 
 全球物流轨迹查询的一站式平台：**admin 管理后台**（PHP webman + Layui）承载管理面与查询 worker 池，**e-cat 高频网关**（Rust 常驻进程）扛住查询流量，**global-logistics 统一门面**（209 家承运商 PHP 适配器）一条入口查遍全球。
 
-<img src="docs/diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
+![E-Cat 项目吉祥物](docs/diagrams/mascot.svg)
 
 > 支持语言：[English / 英语](docs/translations/en/README.md)
 
 ## 项目介绍
 
-<img src="docs/diagrams/intro.svg" alt="项目介绍" width="100%">
+![项目介绍](docs/diagrams/intro.svg)
 
 物流聚合平台把全球 **209 家**快递 / 邮政承运商的轨迹查询统一收敛为一个平台：商户与 C 端只传入一个单号，平台自动识别国内 / 国际通道与承运商，无需关心各家协议差异（签名、OAuth2、XML/JSON、状态映射）。
 
@@ -24,7 +24,7 @@
 
 ## 项目说明
 
-<img src="docs/diagrams/description.svg" alt="项目说明" width="100%">
+![项目说明](docs/diagrams/description.svg)
 
 - **一条入口**：`Logistics::track($trackingNo)` 自动识别国内 / 国际通道与承运商，业务层只对接一种形状；
 - **自动识别**：187 条单号正则规则顺序敏感、优先命中国内通道；识别不了的场景可显式调用 `domestic()` / `international()`；
@@ -38,7 +38,7 @@
 
 ## 项目架构
 
-<img src="docs/diagrams/architecture.svg" alt="项目架构" width="100%">
+![项目架构](docs/diagrams/architecture.svg)
 
 查询链路：**客户端 → e-cat 查询网关 → PHP worker 池 → 209 家承运商**。
 
@@ -50,7 +50,7 @@ e-cat 网关（Rust）负责对外 API 的 API-Key 鉴权、Redis 缓存命中�
 
 ## 项目结构
 
-<img src="docs/diagrams/structure.svg" alt="项目结构" width="100%">
+![项目结构](docs/diagrams/structure.svg)
 
 ```
 integrated-global-logistics/
@@ -78,7 +78,7 @@ integrated-global-logistics/
 
 ## 生命周期
 
-<img src="docs/diagrams/lifecycle.svg" alt="生命周期" width="100%">
+![生命周期](docs/diagrams/lifecycle.svg)
 
 **查询链路（同步）**：客户端 → API-Key 鉴权 → Redis 限流 → 缓存查找（命中即返，`X-Cache: HIT`）→ 熔断检查（OPEN 则 503 快速失败）→ RoundRobin 选 worker → PHP worker 的 `Logistics` 门面（包内 RetryingClient 自带 2 次重试）→ 209 家承运商 → 落库 `logistics_tracking_query` + 写缓存 → 返回标准化 JSON。
 
@@ -88,7 +88,7 @@ integrated-global-logistics/
 
 ## 安全防护
 
-<img src="docs/diagrams/security.svg" alt="安全防护" width="100%">
+![安全防护](docs/diagrams/security.svg)
 
 分层纵深防御，要点如下：
 
@@ -104,7 +104,7 @@ integrated-global-logistics/
 
 ## 功能清单
 
-<img src="docs/diagrams/description.svg" alt="平台功能" width="100%">
+![平台功能](docs/diagrams/description.svg)
 
 - **轨迹聚合查询**：一个单号查遍全球 —— 187 条单号规则自动识别国内 / 国际通道与承运商，209 家承运商适配器统一输出 `TrackStatus` 7 种标准状态；
 - **多承运商接入**：国内 45 + 国际 164 家适配器，DHL / FedEx / UPS / USPS 与各国邮政 S10 全覆盖，凭证加密落库、密钥零硬编码；
@@ -171,7 +171,7 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 
 | 微信 | 支付宝 |
 |:---:|:---:|
-| <img src="docs/weixinpay.png" width="130" height="130" alt="微信"> | <img src="docs/alipay.png" width="130" height="130" alt="支付宝"> |
+| ![微信](docs/weixinpay.png) | ![支付宝](docs/alipay.png) |
 
 ## 开源版 vs 商业版
 
@@ -217,7 +217,7 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 
 ## 项目授权 / Project License
 
-Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+Copyright (c) 2026 erik — erik@erik.xyz — https://erik.xyz
 
 - 本项目仅供个人学习、研究使用。
 - 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。
@@ -229,15 +229,23 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ## 项目宠物表情形态 · E-Cat
 
-<table align="center">
-<tr><td align="center"><img src="docs/pet-expressions/smile.svg" width="88" alt="笑"><br><b>笑</b><br><code>:emoji-smile:</code></td><td align="center"><img src="docs/pet-expressions/joy.svg" width="88" alt="欢乐"><br><b>欢乐</b><br><code>:emoji-joy:</code></td><td align="center"><img src="docs/pet-expressions/cry.svg" width="88" alt="哭"><br><b>哭</b><br><code>:emoji-cry:</code></td><td align="center"><img src="docs/pet-expressions/depressed.svg" width="88" alt="沮丧"><br><b>沮丧</b><br><code>:emoji-depressed:</code></td><td align="center"><img src="docs/pet-expressions/terrified.svg" width="88" alt="惊恐"><br><b>惊恐</b><br><code>:emoji-terrified:</code></td><td align="center"><img src="docs/pet-expressions/angry.svg" width="88" alt="愤怒"><br><b>愤怒</b><br><code>:emoji-angry:</code></td></tr>
-<tr><td align="center"><img src="docs/pet-expressions/coquettish.svg" width="88" alt="撒娇"><br><b>撒娇</b><br><code>:emoji-coquettish:</code></td><td align="center"><img src="docs/pet-expressions/cute.svg" width="88" alt="卖萌"><br><b>卖萌</b><br><code>:emoji-cute:</code></td><td align="center"><img src="docs/pet-expressions/pleasing.svg" width="88" alt="讨好"><br><b>讨好</b><br><code>:emoji-pleasing:</code></td><td align="center"><img src="docs/pet-expressions/knocking.svg" width="88" alt="敲打"><br><b>敲打</b><br><code>:emoji-knocking:</code></td><td align="center"><img src="docs/pet-expressions/facepalm.svg" width="88" alt="捂脸"><br><b>捂脸</b><br><code>:emoji-facepalm:</code></td><td align="center"><img src="docs/pet-expressions/tongue.svg" width="88" alt="吐舌头"><br><b>吐舌头</b><br><code>:emoji-tongue:</code></td></tr>
-</table>
+| 表情 | 图片 | 代码 |
+|---|---|---|
+| 笑 | ![笑](docs/pet-expressions/smile.svg) | `:emoji-smile:` |
+| 欢乐 | ![欢乐](docs/pet-expressions/joy.svg) | `:emoji-joy:` |
+| 哭 | ![哭](docs/pet-expressions/cry.svg) | `:emoji-cry:` |
+| 沮丧 | ![沮丧](docs/pet-expressions/depressed.svg) | `:emoji-depressed:` |
+| 惊恐 | ![惊恐](docs/pet-expressions/terrified.svg) | `:emoji-terrified:` |
+| 愤怒 | ![愤怒](docs/pet-expressions/angry.svg) | `:emoji-angry:` |
+| 撒娇 | ![撒娇](docs/pet-expressions/coquettish.svg) | `:emoji-coquettish:` |
+| 卖萌 | ![卖萌](docs/pet-expressions/cute.svg) | `:emoji-cute:` |
+| 讨好 | ![讨好](docs/pet-expressions/pleasing.svg) | `:emoji-pleasing:` |
+| 敲打 | ![敲打](docs/pet-expressions/knocking.svg) | `:emoji-knocking:` |
+| 捂脸 | ![捂脸](docs/pet-expressions/facepalm.svg) | `:emoji-facepalm:` |
+| 吐舌头 | ![吐舌头](docs/pet-expressions/tongue.svg) | `:emoji-tongue:` |
 
 > 12 种彩色动态形态：笑 / 欢乐 / 哭 / 沮丧 / 惊恐 / 愤怒 / 撒娇 / 卖萌 / 讨好 / 敲打 / 捂脸 / 吐舌头。每个 SVG 自带表情、情绪特效与整体动效，并遵循 `prefers-reduced-motion`。
-<!-- pet-expressions:end -->
 
-<!-- assets-license:start -->
 ## 视觉资产授权 / Visual Assets License
 
 本项目的项目宠物、图片、图标、表情（包括 `docs/pet-expressions/` 等目录下的
@@ -246,4 +254,3 @@ SVG / PNG）**不是开源资产**，版权归作者所有。未经书面许可�
 [ASSETS-LICENSE.md](ASSETS-LICENSE.md)。
 
 > 代码部分仍遵循仓库原有 `LICENSE`；第三方素材（如明确标注的 Go Gopher 等）仍遵循其原许可证。
-<!-- assets-license:end -->
