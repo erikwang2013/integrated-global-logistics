@@ -85,26 +85,15 @@
   <text x="840" y="254" text-anchor="middle" font-size="11" fill="#6C757D">SVG 架构图（本目录）</text>
   <rect x="846" y="218" width="128" height="44" rx="8" fill="#FFFFFF" stroke="#6C757D"/>
   <text x="910" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">translations/</text>
-  <text x="910" y="254" text-anchor="middle" font-size="11" fill="#6C757D">12 语言 README</text>
+  <text x="910" y="254" text-anchor="middle" font-size="11" fill="#6C757D">English README</text>
 
-  <!-- sdk -->
-  <rect x="1040" y="140" width="210" height="54" rx="8" fill="#28A745"/>
-  <text x="1095" y="165" font-size="15" font-weight="bold" fill="#FFFFFF">sdk/</text>
-  <text x="1095" y="184" font-size="12" fill="#E9F2FB">五份零依赖客户端 SDK</text>
-  <line x1="1145" y1="194" x2="1145" y2="210" stroke="#28A745" stroke-width="1.5"/>
-  <line x1="1060" y1="210" x2="1230" y2="210" stroke="#28A745" stroke-width="1.5"/>
-  <line x1="1145" y1="210" x2="1145" y2="218" stroke="#28A745" stroke-width="1.5"/>
-  <rect x="1050" y="218" width="190" height="44" rx="8" fill="#FFFFFF" stroke="#28A745"/>
-  <text x="1145" y="238" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1F4E79">Python / PHP / Node.js / Go / Rust</text>
-  <text x="1145" y="254" text-anchor="middle" font-size="11" fill="#6C757D">拷贝即用，用法见 sdk/README.md</text>
 
   <!-- 底部注释 -->
   <rect x="80" y="300" width="1080" height="168" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
   <text x="110" y="334" font-size="15" font-weight="bold" fill="#1F4E79">组件定位</text>
-  <text x="110" y="364" font-size="13.5" fill="#212529">admin —— 管理面与 PHP worker 池：承运商档案、密钥加密、查询记录、回调订阅、RBAC 权限</text>
+  <text x="110" y="364" font-size="13.5" fill="#212529">admin —— 管理面与 PHP worker 池：查询记录、统计报表、客户端门户、RBAC 权限</text>
   <text x="110" y="392" font-size="13.5" fill="#212529">infrastructure —— 高性能面：e-cat 网关复用 209 家 PHP 适配器，Redis 缓存/限流/熔断/负载均衡</text>
-  <text x="110" y="420" font-size="13.5" fill="#212529">sdk —— 对外 API 客户端：Python / PHP / Node.js / Go / Rust 五份零依赖 SDK，拷贝即用</text>
-  <text x="110" y="448" font-size="13.5" fill="#212529">docs —— 规划文档与可视化：架构、数据流、安全设计，供 12 语言翻译对照</text>
+  <text x="110" y="448" font-size="13.5" fill="#212529">docs —— 规划文档与可视化：架构、数据流、安全设计，供中英文对照</text>
 
   <!-- 底部数据条 -->
   <rect x="80" y="480" width="940" height="110" rx="8" fill="#1F4E79"/>
@@ -117,7 +106,7 @@
     <rect x="560" y="536" width="200" height="36" rx="8" fill="#2E86DE"/>
     <text x="660" y="559" font-size="13.5" font-weight="bold">1663 测试用例全绿</text>
     <rect x="780" y="536" width="200" height="36" rx="8" fill="#17A2B8"/>
-    <text x="880" y="559" font-size="13.5" font-weight="bold">55+ crates 全栈框架</text>
+    <text x="880" y="559" font-size="13.5" font-weight="bold">e-cat + 查询网关框架</text>
   </g>
 <text x="1088" y="750" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

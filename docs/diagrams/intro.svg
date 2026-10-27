@@ -14,12 +14,12 @@
     <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
     <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
     <text x="220" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">admin 管理后台</text>
-    <text x="220" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">PHP webman v2 常驻进程 + Flutter 管理端</text>
+    <text x="220" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">PHP webman v2 常驻进程 + Layui 管理端</text>
     <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC 权限 · JWT 鉴权 · 操作审计</text>
     <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">承运商档案 / 密钥加密管理</text>
-    <text x="220" y="296" text-anchor="middle" font-size="13.5" fill="#212529">查询记录 / 统计报表 / 回调订阅</text>
+    <text x="220" y="296" text-anchor="middle" font-size="13.5" fill="#212529">查询记录 / 统计报表 / 客户端门户</text>
     <text x="220" y="338" text-anchor="middle" font-size="13" fill="#6C757D">18 层纵深防御 · Excel/PDF 导出</text>
-    <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis 缓存 · Elasticsearch 检索</text>
+    <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis 缓存 · 承运商注册表</text>
     <text x="220" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">承载管理面与 PHP worker 池</text>
   </g>
 

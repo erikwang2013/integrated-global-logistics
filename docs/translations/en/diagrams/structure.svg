@@ -84,14 +84,14 @@
   <text x="840" y="254" text-anchor="middle" font-size="11" fill="#6C757D">Architecture diagrams</text>
   <rect x="846" y="218" width="128" height="44" rx="8" fill="#FFFFFF" stroke="#6C757D"/>
   <text x="910" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">translations/</text>
-  <text x="910" y="254" text-anchor="middle" font-size="11" fill="#6C757D">12-language READMEs</text>
+  <text x="910" y="254" text-anchor="middle" font-size="11" fill="#6C757D">English README</text>
 
   <!-- 底部注释 -->
   <rect x="80" y="300" width="940" height="150" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
   <text x="110" y="334" font-size="15" font-weight="bold" fill="#1F4E79">Component roles</text>
-  <text x="110" y="364" font-size="12.5" fill="#212529">admin — admin plane &amp;PHP worker pool: carrier profiles, key encryption, query records, callback subscriptions, RBAC</text>
+  <text x="110" y="364" font-size="12.5" fill="#212529">admin — admin plane &amp; PHP worker pool: query records, statistics, client portal, RBAC</text>
   <text x="110" y="392" font-size="12.5" fill="#212529">infrastructure — high-performance plane: e-cat reuses 209 PHP adapters, Redis cache/limit/breaker/load balancing</text>
-  <text x="110" y="420" font-size="12.5" fill="#212529">docs — planning docs &amp;diagrams: architecture, data flow, security design, reference for 12-language translations</text>
+  <text x="110" y="420" font-size="12.5" fill="#212529">docs — Chinese/English docs &amp; diagrams: architecture, data flow, security design</text>
 
   <!-- 底部数据条 -->
   <rect x="80" y="480" width="940" height="110" rx="8" fill="#1F4E79"/>
@@ -104,7 +104,7 @@
     <rect x="560" y="536" width="200" height="36" rx="8" fill="#2E86DE"/>
     <text x="660" y="559" font-size="13.5" font-weight="bold">1663 tests green</text>
     <rect x="780" y="536" width="200" height="36" rx="8" fill="#17A2B8"/>
-    <text x="880" y="559" font-size="12.5" font-weight="bold">55+ crates full stack</text>
+    <text x="880" y="559" font-size="12.5" font-weight="bold">e-cat + tracking gateway</text>
   </g>
 <text x="1088" y="750" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

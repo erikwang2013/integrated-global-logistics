@@ -1,8 +1,8 @@
 # Open Admin (open-admin)
 
-A full-stack admin dashboard built with webman v2 + Flutter.
+A full-stack admin dashboard built with webman v2 + Layui.
 
-> [中文](../README.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Deutsch](README.de.md) | [Français](README.fr.md) | [Español](README.es.md) | [Português](README.pt.md) | [हिन्दी](README.hi.md) | [العربية](README.ar.md) | [বাংলা](README.bn.md) | [Bahasa Indonesia](README.id.md) | [日本語](README.ja.md) | [Architecture Diagrams](docs/ARCHITECTURE.en.md) | [Design Doc](docs/DESIGN.en.md) | [Security](docs/SECURITY.en.md) | [API Reference](docs/API.en.md)
+> [中文](../../README.md) | [English](README.en.md)
 
 ## Features
 
@@ -40,9 +40,7 @@ This copyright notice is permanent, must not be modified, removed, or reversed. 
 | Backend | webman v2 (workerman) | High-performance PHP daemon framework |
 | PHP | 8.3+ | |
 | Database | MySQL 8.0+ | Table prefix `logistics_`, BIGINT non-auto-increment PKs |
-| Search | Elasticsearch | Synced via `webman-scout` |
-| Admin Frontend | Flutter 3.x | Web renders as desktop admin panel (`apps/flutter/`) |
-| Mobile | HarmonyOS ArkTS | Native HarmonyOS client (`apps/harmonyos/`), supports phone/tablet/2in1 |
+| Admin UI | Layui | Static assets under `public/`, rendered by PHP controllers |
 
 ## Core Packages
 
@@ -53,7 +51,6 @@ This copyright notice is permanent, must not be modified, removed, or reversed. 
 | `erikwang2013/jwt-webman` | JWT token issuance and verification |
 | `erikwang2013/encryption` | Transport-layer sensitive data encryption |
 | `erikwang2013/encryptable` | Database-layer sensitive field auto encryption |
-| `erikwang2013/webman-scout` | Elasticsearch sync and full-text search |
 | `erikwang2013/season` | Country flag data |
 | `erikwang2013/poster-php` | Click captcha generation/verification + poster generation |
 | `phpoffice/phpspreadsheet` | Excel export |
@@ -89,9 +86,6 @@ open-admin/
 │   │   ├── AdminPermission.php # RBAC authorization
 │   │   └── OperationLog.php    # Auto operation logging (with source detection)
 │   └── model/                  # Eloquent models
-├── apps/
-│   ├── flutter/                # Flutter Web admin panel
-│   └── harmonyos/              # HarmonyOS client (auto token refresh)
 ├── config/                     # Config files
 ├── database/install.sql        # SQL install script (incl. permission seeds)
 └── vendor/                     # Composer dependencies
@@ -102,8 +96,6 @@ open-admin/
 - PHP >= 8.3
 - Composer 2.x
 - MySQL >= 8.0
-- Flutter >= 3.41 (frontend development only)
-- Elasticsearch >= 7.x (optional, for search)
 
 ## Quick Start
 
@@ -128,7 +120,6 @@ Key environment variables:
 | `ENCRYPTION_KEY` | API encryption key | 32-byte default |
 | `SNOWFLAKE_DATACENTER_ID` | Datacenter ID (0-31) | `1` |
 | `SNOWFLAKE_WORKER_ID` | Worker ID (0-31) | `1` |
-| `SCOUT_HOSTS` | ES hosts | `http://localhost:9200` |
 
 **Always change all keys to random strings in production.**
 
@@ -157,23 +148,9 @@ Click "Start Install" — tables are created, permissions seeded, admin account 
 
 Visit `http://localhost:8787` and log in with the admin credentials set during installation.
 
-### 5. Start Frontend (Optional)
-
-**Flutter admin panel (Web):**
-
-```bash
-cd apps/flutter
-flutter pub get
-flutter run -d chrome    # Web (desktop admin panel style)
-```
-
-**HarmonyOS client (Mobile):**
-
-Open `apps/harmonyos/` in DevEco Studio and run on a device or emulator.
-
 ### 6. Docker Compose (Recommended for Production)
 
-Full Docker orchestration with 5 services: Nginx, PHP (webman app), MySQL, Redis, Elasticsearch.
+Full Docker orchestration with 4 services: Nginx, PHP (webman app), MySQL, Redis.
 
 ```bash
 # 1. Configure Docker environment variables
@@ -193,7 +170,7 @@ docker-compose up -d
 ```
 
 - `Dockerfile`: PHP 8.3 + OPcache + Composer, based on `php:8.3-cli`
-- `docker-compose.yml`: 5 services, isolated network, persistent volumes
+- `docker-compose.yml`: 4 services, isolated network, persistent volumes
 - `.env.docker`: Docker-specific environment variables
 
 ## Database Conventions
@@ -207,7 +184,7 @@ docker-compose up -d
 
 ## API Documentation
 
-The complete API reference (response format, error codes, all endpoint details, auth flow, rate limiting, middleware chain) lives in **[docs/API.en.md](docs/API.en.md)**. Highlights:
+The complete API reference (response format, error codes, all endpoint details, auth flow, rate limiting, middleware chain) lives in **[docs/API.en.md](../API.en.md)**. Highlights:
 
 - **Response format**: `{ "code": 0, "message": "success", "data": {...} }`, `code=0` means success
 - **Error codes**: `400` bad request / `401` unauthenticated / `403` forbidden / `404` not found / `422` validation failed / `429` rate limited / `500` server error
@@ -216,21 +193,10 @@ The complete API reference (response format, error codes, all endpoint details, 
 
 ## Frontend Notes
 
-### Flutter Admin Panel (Desktop Style)
+### Admin UI (Layui)
 
-- **Layout**: Collapsible sidebar (64px/240px) + header + content area, responsive breakpoints (phone/tablet/desktop)
-- **Pages**: Login, Dashboard, User Management, Roles & Permissions, System Config, Operation Logs, Profile
-- **State**: GetX (`ApiService` singleton + `AuthService` token persistence)
-- **Dashboard**: Stats cards, trend line chart (fl_chart), pie chart, recent activity log
-- **Export**: Excel/PDF with non-removable copyright info
-- **Batch Ops**: Multi-select batch delete, batch enable/disable
-- **Theme**: Material 3 light/dark dual theme
-
-### HarmonyOS Mobile Client
-
-- **Pages**: Login, Dashboard, User List/Detail, Profile
-- **Auth**: JWT Bearer + silent token refresh on 401, auto-redirect to login on refresh failure
-- **Storage**: Token managed via AppStorage
+- Admin pages and static assets live under `public/`, using bundled Layui components.
+- Login, dashboard, users, roles, config, logs, and profile pages are rendered directly by PHP controllers.
 
 ## Development Rules
 
@@ -245,7 +211,7 @@ The complete API reference (response format, error codes, all endpoint details, 
 
 ### Docker Compose (Recommended)
 
-`docker-compose.yml` in the project root orchestrates 5 services:
+`docker-compose.yml` in the project root orchestrates 4 services:
 
 | Service | Image | Port |
 |------|------|------|
@@ -253,7 +219,6 @@ The complete API reference (response format, error codes, all endpoint details, 
 | `app` | Local `Dockerfile` build | 8787 |
 | `mysql` | mysql:8.0 | 3306 |
 | `redis` | redis:7-alpine | 6379 |
-| `elasticsearch` | elasticsearch:8.x | 9200 |
 
 The PHP image is built from `Dockerfile`, based on `php:8.3-cli` with OPcache enabled.
 
@@ -268,7 +233,6 @@ GitHub Actions CI pipeline: `.github/workflows/ci.yml`
 
 - PHP syntax check (`php -l`)
 - PHPUnit tests
-- Flutter static analysis (`flutter analyze`)
 
 ### Database Backup
 
@@ -285,42 +249,16 @@ See `docs/nginx-security.conf` for production reverse-proxy security hardening.
 
 | WeChat | Alipay |
 |:---:|:---:|
-| ![WeChat](./docs/weixinpay.png "WeChat") | ![Alipay](./docs/alipay.png "Alipay") |
+| ![WeChat](../weixinpay.png "WeChat") | ![Alipay](../alipay.png "Alipay") |
 
-### Global Bank Transfer (Cross-Border Remittance)
-
-**Payee Information**
-
-- Payee Name: WANG KEXUN
-- Account Number: 881015918251
-
-**Receiving Bank**
-
-- ZA Bank SWIFT Code: AABLHKHHXXX
-- Bank Name: ZA Bank Limited
-- Bank Code: 387
-- Bank Address: Core F, Cyberport 3, 100 Cyberport Road, Hong Kong
-
-**Correspondent Bank (If Required)**
-
-> This is correspondent (intermediary) bank information, not the receiving bank. Please check with your remitting bank whether correspondent bank details are required.
-
-- **For HKD, CNY and USD remittances**, the correspondent bank is Citibank:
-  - Bank Name: Citibank N.A. Hong Kong
-  - SWIFT Code: CITIHKHXXXX
-  - Bank Code: 006
-  - Branch Name: Hong Kong Branch
-  - Branch Code: 391
-  - Bank Address: Citibank Tower, Citibank Plaza, 3 Garden Road, Central, Hong Kong
-- **For remittances in other currencies**, the correspondent bank is BNY Mellon:
-  - Bank Name: THE BANK OF NEW YORK MELLON
-  - SWIFT Code: IRVTUS3NXXX
-  - Bank Address: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
-
----
-
-## License
-
-MIT
+## 项目授权 / Project License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+
+- 本项目仅供个人学习、研究使用。
+- 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。
+- 商业授权请联系 **erik@erik.xyz**。
+- 未经授权的商业使用，作者将在全球范围内依法追究法律责任，并保留终身追责的权利。
+- 第三方组件仍遵循其各自原有的许可证；视觉资产适用仓库内的 ASSETS-LICENSE.md（如适用）。
+
+**English:** This project is provided for personal study and research only. Commercial use of any kind requires prior written authorization from the author (erik@erik.xyz). Unauthorized commercial use will be pursued for legal liability worldwide, and the author reserves the right to pursue such liability for life. Third-party components remain under their original licenses; visual assets are governed by ASSETS-LICENSE.md where applicable.

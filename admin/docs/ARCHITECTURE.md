@@ -11,8 +11,8 @@
 ```mermaid
 flowchart TB
     subgraph "客户端层"
-        A1["Flutter Web<br/>PC 管理后台<br/>(Port 3000)"]
-        A2["HarmonyOS ArkTS<br/>手机/平板客户端"]
+        A1["Layui 管理端<br/>浏览器"]
+        A2["第三方客户端 / API"]
     end
 
     subgraph "网关/边缘层 (Nginx Edge)"
@@ -30,13 +30,13 @@ flowchart TB
 
     subgraph "存储层"
         D1[("MySQL 8.0<br/>主存储<br/>表前缀 logistics_")]
-        D2[("Elasticsearch<br/>全文检索<br/>索引前缀 logistics_")]
+        D2[("MySQL LIKE 检索<br/>logistics_ 前缀")]
         D3[("Redis<br/>Session / 缓存<br/>Captcha 存储")]
     end
 
     subgraph "外部"
-        E1["DevEco Studio<br/>HarmonyOS 构建"]
-        E2["Flutter SDK<br/>Web 构建"]
+        E1["PHP 8.3 + Composer"]
+        E2["Docker / Nginx"]
     end
 
     A1 -->|"HTTPS / JSON<br/>JWT Bearer"| B1
@@ -112,7 +112,7 @@ flowchart TD
 
     subgraph "驱动层 Driver Layer"
         D1["MySQL PDO"]
-        D2["Elasticsearch HTTP"]
+        D2["MySQL 查询"]
         D3["Redis"]
     end
 
@@ -543,60 +543,13 @@ sequenceDiagram
 
 ---
 
-## 10. Flutter Web 组件树
+## 10. 管理端 UI（Layui）
 
-```mermaid
-flowchart TD
-    APP["AdminApp (GetMaterialApp)"]
-    APP --> LP["/login<br/>LoginPage"]
-    APP --> DB["/dashboard<br/>AdminLayout"]
-
-    LP --> LF["登录表单<br/>用户名/密码/验证码"]
-    LF --> CAPTCHA["点击验证码组件<br/>GestureDetector + Stack<br/>Image.memory(base64)<br/>点击标记 Circle"]
-
-    DB --> SIDEBAR["侧边栏 NavigationDrawer<br/>可折叠 64px / 240px<br/>仪表盘/用户/角色/配置/日志"]
-    DB --> HEADER["顶栏 56px<br/>折叠按钮 + 用户菜单<br/>退出登录 AlertDialog"]
-    DB --> CONTENT["内容区"]
-    CONTENT --> DASH["DashboardPage<br/>统计卡片 GridView<br/>趋势折线图 LineChart<br/>分布饼图 PieChart<br/>最近操作 ListTile"]
-
-    style APP fill:#1677FF,color:#fff
-    style CAPTCHA fill:#FA8C16,color:#fff
-    style SIDEBAR fill:#722ED1,color:#fff
-    style DASH fill:#52C41A,color:#fff
-```
+管理页面与静态资源位于 `public/`，由 PHP 控制器直接渲染，使用内置 Layui 组件；Layui 是唯一管理端 UI。
 
 ---
 
-## 11. HarmonyOS 页面路由
-
-```mermaid
-flowchart LR
-    EA["EntryAbility<br/>启动"]
-    EA -->|"无 Token"| LP["LoginPage<br/>登录页"]
-    EA -->|"有 Token"| DP["DashboardPage<br/>仪表盘"]
-
-    LP -->|"登录成功<br/>replaceUrl"| DP
-
-    DP -->|"pushUrl"| ULP["UserListPage<br/>用户列表"]
-    DP -->|"pushUrl"| PP["ProfilePage<br/>个人中心"]
-
-    ULP -->|"pushUrl"| UDP["UserDetailPage<br/>用户详情/新增/编辑"]
-    ULP -->|"router.back"| DP
-    UDP -->|"router.back"| ULP
-
-    PP -->|"退出登录<br/>replaceUrl"| LP
-    PP -->|"router.back"| DP
-
-    style LP fill:#1677FF,color:#fff
-    style DP fill:#52C41A,color:#fff
-    style ULP fill:#FA8C16,color:#fff
-    style UDP fill:#FA8C16,color:#fff
-    style PP fill:#722ED1,color:#fff
-```
-
----
-
-## 12. 安全纵深防御全景
+## 11. 安全纵深防御全景
 
 ```mermaid
 flowchart TB
@@ -641,7 +594,7 @@ flowchart TB
 
 ---
 
-## 13. 部署拓扑
+## 12. 部署拓扑
 
 ```mermaid
 flowchart TB
@@ -651,7 +604,7 @@ flowchart TB
 
     subgraph "Web 服务器"
         NGX["Nginx<br/>:443 HTTPS<br/>:80 → 443 redirect<br/>gzip on"]
-        STA["静态文件<br/>Flutter Web build/"]
+        STA["静态文件<br/>public/"]
     end
 
     subgraph "应用服务器 (可横向扩展)"
@@ -662,7 +615,7 @@ flowchart TB
 
     subgraph "数据层"
         MYSQL["MySQL 8.0<br/>主从复制<br/>logistics_ 前缀"]
-        ES["Elasticsearch 8.x<br/>3 节点集群<br/>logistics_ 前缀"]
+        ES["MySQL 8.0<br/>全文检索（LIKE）<br/>logistics_ 前缀"]
         REDIS["Redis 7.x<br/>哨兵模式<br/>poster:captcha:*"]
     end
 

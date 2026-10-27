@@ -38,7 +38,7 @@ flowchart TD
 
     subgraph driver["驱动层"]
         d1["MySQL PDO"]
-        d2["Elasticsearch HTTP"]
+        d2["MySQL 查询"]
         d3["Redis"]
     end
 

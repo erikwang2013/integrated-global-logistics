@@ -1,6 +1,6 @@
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
-> [中文](02-backend-layers.md) | [English](02-backend-layers.en.md) | [한국어](02-backend-layers.ko.md) | [Русский](02-backend-layers.ru.md) | [Deutsch](02-backend-layers.de.md) | [Français](02-backend-layers.fr.md) | [Español](02-backend-layers.es.md) | [Português](02-backend-layers.pt.md) | [हिन्दी](02-backend-layers.hi.md) | [العربية](02-backend-layers.ar.md) | [বাংলা](02-backend-layers.bn.md) | [Bahasa Indonesia](02-backend-layers.id.md) | [日本語](02-backend-layers.ja.md)
+> [中文](02-backend-layers.md) | [English](02-backend-layers.en.md)
 
 # Backend Layered Architecture
 
@@ -42,7 +42,7 @@ flowchart TD
 
     subgraph driver["Driver Layer"]
         d1["MySQL PDO"]
-        d2["Elasticsearch HTTP"]
+        d2["MySQL Query"]
         d3["Redis"]
     end
 

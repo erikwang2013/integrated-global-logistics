@@ -1,6 +1,6 @@
 # 开放管理后台 (open-admin)
 
-基于 webman v2 + Flutter 的全栈管理后台系统。
+基于 webman v2 + Layui 的全栈管理后台系统。
 
 ## 版权声明
 
@@ -35,14 +35,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 - JWT 认证: `erikwang2013/jwt-webman`
 - API 敏感数据加解密: `erikwang2013/encryption`
 - 数据库敏感字段加解密: `erikwang2013/encryptable`
-- ES 同步与查询: `erikwang2013/webman-scout`
 - 国家旗帜: `erikwang2013/season`
 
-### 前端
-- Flutter 3.x，源码目录 `apps/flutter/`
-- Web 端按 PC 管理后台风格设计（非移动端 App 风格）
-- 支持客户端和管理员端
-- HarmonyOS ArkTS，源码目录 `apps/harmonyos/`
+### 管理端 UI
+- Layui，页面与静态资源位于 `public/`，由 PHP 控制器直接渲染
+- Layui 是唯一管理端 UI
 
 ## 项目结构
 
@@ -85,21 +82,6 @@ open-admin/
 │   ├── exception/              # 全局异常处理（浏览器请求渲染项目宠物错误页）
 │   ├── queue/                  # 队列任务
 │   └── process/                # 进程 (Http, Monitor)
-├── apps/
-│   ├── flutter/                # Flutter Web 管理后台
-│   │   └── lib/app/
-│   │       ├── pages/          # 6 个完整页面
-│   │       │   ├── dashboard/  # 仪表盘
-│   │       │   ├── login/      # 登录
-│   │       │   ├── user/       # 用户管理
-│   │       │   ├── role/       # 角色权限
-│   │       │   ├── config/     # 系统配置
-│   │       │   ├── log/        # 操作日志
-│   │       │   └── profile/    # 个人中心
-│   │       ├── services/       # ApiService + AuthService
-│   │       ├── layouts/        # 响应式布局
-│   │       └── theme/          # Material 3 主题
-│   └── harmonyos/              # HarmonyOS 客户端
 ├── config/                     # 配置文件
 │   ├── route.php               # 路由 + API 版本策略
 │   └── middleware.php           # 全局中间件注册
@@ -135,7 +117,7 @@ open-admin/
 ├── docker-compose.yml          # Docker 编排
 └── .github/
     └── workflows/
-        └── ci.yml              # CI/CD 流水线（PHP语法+PHPUnit+Flutter analyze）
+        └── ci.yml              # CI/CD 流水线（PHP语法+PHPUnit）
 ```
 
 ## 中间件执行链
@@ -187,22 +169,15 @@ Redis 滑动窗口（Lua 原子化），默认 60 次/分钟/IP/路由：
 - 敏感字段使用 `erikwang2013/encryptable` trait 自动加解密
 - 迁移文件使用 SQL 格式
 
-### Flutter
-- Web 端布局使用 PC 管理后台风格（侧边栏 + 顶栏 + 内容区）
-- 使用 GetX 状态管理，`ApiService` 单例（Dio + JWT 拦截器）
-- Token 持久化使用 `shared_preferences`
-- 响应式断点: 移动端 (< 768px) 与桌面端 (>= 768px)
-
-### HarmonyOS
-- 使用 `@ohos.net.http` 原生 HTTP 客户端
-- Token 无感刷新：401 时自动调用 `/api/v1/auth/refresh`
-- 刷新失败自动重定向登录页
+### 管理端 UI（Layui）
+- 页面与静态资源位于 `public/`，使用内置 Layui 组件
+- 管理端由 PHP 控制器直接渲染
 
 ## 部署
 
 ### Docker Compose（推荐生产环境）
 
-项目根目录 `docker-compose.yml` 编排 5 个服务：
+项目根目录 `docker-compose.yml` 编排 4 个服务：
 
 | 服务 | 说明 |
 |------|------|
@@ -210,7 +185,6 @@ Redis 滑动窗口（Lua 原子化），默认 60 次/分钟/IP/路由：
 | `app` | webman PHP 8.3 应用，`Dockerfile` 构建（含 OPcache） |
 | `mysql` | MySQL 8.0，数据卷持久化 |
 | `redis` | Redis 7 Alpine，缓存/限流/Session |
-| `elasticsearch` | Elasticsearch 8.x，全文检索 |
 
 ```bash
 cp .env.docker .env
@@ -223,7 +197,6 @@ docker-compose up -d
 
 - PHP 语法检查 (`php -l`)
 - PHPUnit 单元测试
-- Flutter 静态分析 (`flutter analyze`)
 
 ### 数据库备份
 

@@ -14,12 +14,12 @@
     <rect x="40" y="112" width="360" height="56" rx="8" fill="#1F4E79"/>
     <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
     <text x="220" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">admin Admin Console</text>
-    <text x="220" y="196" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#2E86DE">PHP webman v2 resident process + Flutter admin</text>
+    <text x="220" y="196" text-anchor="middle" font-size="13.5" font-weight="bold" fill="#2E86DE">PHP webman v2 resident process + Layui admin</text>
     <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC permissions · JWT auth · audit trail</text>
     <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">Carrier profiles / encrypted key management</text>
-    <text x="220" y="296" text-anchor="middle" font-size="13" fill="#212529">Query records / statistics / callback subscriptions</text>
+    <text x="220" y="296" text-anchor="middle" font-size="13" fill="#212529">Query records / statistics / client portal</text>
     <text x="220" y="338" text-anchor="middle" font-size="13" fill="#6C757D">18-layer defense in depth · Excel/PDF export</text>
-    <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis cache · Elasticsearch search</text>
+    <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis cache · carrier registry</text>
     <text x="220" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">Hosts the admin plane and PHP worker pool</text>
   </g>
 

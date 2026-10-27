@@ -1,6 +1,6 @@
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
-> [中文](SECURITY.md) | [English](SECURITY.en.md) | [한국어](SECURITY.ko.md) | [Русский](SECURITY.ru.md) | [Deutsch](SECURITY.de.md) | [Français](SECURITY.fr.md) | [Español](SECURITY.es.md) | [Português](SECURITY.pt.md) | [हिन्दी](SECURITY.hi.md) | [العربية](SECURITY.ar.md) | [বাংলা](SECURITY.bn.md) | [Bahasa Indonesia](SECURITY.id.md) | [日本語](SECURITY.ja.md)
+> [中文](SECURITY.md) | [English](SECURITY.en.md)
 
 # Security Architecture Design
 
@@ -24,7 +24,7 @@ The full middleware chain executes in the following order (see `config/middlewar
 | 6 | OperationLog | Operation audit + client source tracking |
 | 7 | Data encryption | Hashids ID obfuscation + Encryptable DB encryption + EncryptionService transport encryption |
 
-The frontend (Flutter) performs its own independent input validation; the backend never trusts it, and every layer defends independently.
+The admin UI (Layui) performs its own independent input validation; the backend never trusts it, and every layer defends independently.
 
 ---
 
@@ -91,7 +91,7 @@ Injected in the Cors middleware together with the other security headers, provid
 
 CSP policy highlights:
 - `default-src 'self'`: defaults to same-origin resources only
-- `script-src 'self' 'unsafe-inline' 'unsafe-eval'`: allows same-origin scripts + inline scripts (required by Flutter Web) + eval (required for Flutter Web debugging)
+- `script-src 'self' 'unsafe-inline' 'unsafe-eval'`: allows same-origin scripts + inline scripts (required by Layui admin)
 - `frame-ancestors 'none'`: blocks iframe embedding by any page; double protection with X-Frame-Options: DENY
 - `base-uri 'self'`: restricts the `<base>` tag to same-origin only
 - `form-action 'self'`: restricts form submissions to same-origin only
@@ -314,7 +314,6 @@ The OperationLog middleware automatically records operation logs for POST / PUT 
 | Linux | `Linux` |
 | iOS | `iPhone`, `iOS`, `CFNetwork` |
 | Android | `Android` |
-| HarmonyOS | `HarmonyOS`, `OpenHarmony` |
 | Web | Fallback default |
 
 **Fault tolerance**: logging errors do not block business requests (swallowed silently via `catch (\Throwable)`).
@@ -496,4 +495,4 @@ The project provides `docs/nginx-security.conf` as a security hardening referenc
 | No special rate limit for admin endpoints | Admin endpoints share the 60/min default limit with normal endpoints | Admin operation frequency is naturally low; no distinction needed for now |
 | PCRE backtracking limit | The package has a built-in 1,000,000 backtracking cap with finally-based recovery; extremely complex inputs still pose a performance risk | Request body size limit (10MB) as a fallback |
 ## 13. Client Portal & Payment Security (M7–M10)
-Stripe / PayPal webhook signature verification (HMAC-SHA256 / verify-webhook-signature); payment keys encrypted via `Encryptable` in `logistics_system_config`; USDT TRC20 auto-verified via Tronscan, BEP20 / ERC20 manual; X-API-Key client-set (≥16 chars) stored as sha256. Gateway attack detection (M11): `ecat-security` SecurityBodyLayer integrated into the gateway, attack payloads blocked at the gateway layer. **13.5 CDN security (M12)**: Cloudflare free plan full-site HTTPS + dual-layer WAF (edge managed rules + gateway application-layer detection); Tunnel origin keeps the source zero-exposed; callbacks go via DNS-only subdomain direct connection to avoid order loss on CDN outage; rate limiting counts by X-API-Key, unaffected by CDN edge IPs; authenticated endpoints always no-store to prevent cross-user cache mixing. **13.6 CDN provider credential management (M13)**: CDN provider profiles (access_key / access_secret / domain list) stored in the `logistics_cdn_provider` table; secret fields encrypted via `Encryptable`; maintained via `/admin/cdn/provider` CRUD.
+Stripe / PayPal webhook signature verification (HMAC-SHA256 / verify-webhook-signature); payment keys encrypted via `Encryptable` in `logistics_system_config`; USDT TRC20 auto-verified via Tronscan, BEP20 / ERC20 manual; X-API-Key client-set (≥16 chars) stored as sha256. Gateway attack detection (M11): `ecat-security` SecurityBodyLayer integrated into the gateway, attack payloads blocked at the gateway layer. **13.5 CDN security (M12)**: Cloudflare free plan full-site HTTPS + dual-layer WAF (edge managed rules + gateway application-layer detection); Tunnel origin keeps the source zero-exposed; callbacks go via DNS-only subdomain direct connection to avoid order loss on CDN outage; rate limiting counts by X-API-Key, unaffected by CDN edge IPs; authenticated endpoints always no-store to prevent cross-user cache mixing.

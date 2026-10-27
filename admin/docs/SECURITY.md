@@ -22,7 +22,7 @@
 | 6 | OperationLog | 操作审计 + 来源端追踪 |
 | 7 | 数据加密 | Hashids ID 混淆 + Encryptable DB 加密 + EncryptionService 传输加密 |
 
-前端三层（Flutter）另有独立的输入校验，后端不做信任，每一层独立防御。
+管理端 UI（Layui）另有独立的输入校验，后端不做信任，每一层独立防御。
 
 ---
 
@@ -85,7 +85,7 @@ OPTIONS 预检请求直接返回 204 空响应，不进入后续中间件链。
 
 CSP 策略要点：
 - `default-src 'self'`：默认仅允许同源资源
-- `script-src 'self' 'unsafe-inline' 'unsafe-eval'`：允许同源脚本 + 内联脚本（Flutter Web 必需）+ eval（Flutter Web 调试必需）
+- `script-src 'self' 'unsafe-inline' 'unsafe-eval'`：允许同源脚本 + 内联脚本（Layui 管理端必需）
 - `frame-ancestors 'none'`：禁止被任何页面 iframe 嵌入，与 X-Frame-Options: DENY 双保险
 - `base-uri 'self'`：限制 `<base>` 标签只能指向同源
 - `form-action 'self'`：限制表单只能提交到同源
@@ -308,7 +308,6 @@ OperationLog 中间件对 POST / PUT / DELETE 请求自动记录操作日志。G
 | Linux | `Linux` |
 | iOS | `iPhone`, `iOS`, `CFNetwork` |
 | Android | `Android` |
-| HarmonyOS | `HarmonyOS`, `OpenHarmony` |
 | Web | 兜底默认值 |
 
 **容错**：日志写入异常不阻塞业务请求（`catch (\Throwable)` 静默吞掉）。

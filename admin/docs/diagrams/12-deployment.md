@@ -8,7 +8,7 @@ flowchart TB
 
     subgraph web["Web服务器"]
         nginx["Nginx :443 HTTPS<br/>:80→443 redirect<br/>gzip on"]
-        static["静态文件<br/>Flutter Web build/"]
+        static["静态文件<br/>public/"]
     end
 
     subgraph app["应用服务器(可横向扩展)"]
@@ -19,7 +19,7 @@ flowchart TB
 
     subgraph data["数据层"]
         mysql[("MySQL 8.0<br/>主从复制<br/>logistics_前缀")]
-        es[("Elasticsearch 8.x<br/>3节点集群<br/>logistics_前缀")]
+        es[("MySQL 8.0<br/>LIKE 检索<br/>logistics_ 前缀")]
         redis[("Redis 7.x<br/>哨兵模式<br/>poster:captcha:*")]
     end
 

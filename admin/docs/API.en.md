@@ -1,6 +1,6 @@
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
-> [中文](API.md) | [English](API.en.md) | [한국어](API.ko.md) | [Русский](API.ru.md) | [Deutsch](API.de.md) | [Français](API.fr.md) | [Español](API.es.md) | [Português](API.pt.md) | [हिन्दी](API.hi.md) | [العربية](API.ar.md) | [বাংলা](API.bn.md) | [Bahasa Indonesia](API.id.md) | [日本語](API.ja.md)
+> [中文](API.md) | [English](API.en.md)
 
 # API Reference
 
@@ -65,13 +65,12 @@ GET /health
     "php": "8.3.0",
     "database": "ok",
     "redis": "ok",
-    "elasticsearch": "ok",
     "timestamp": 1716249600
   }
 }
 ```
 
-`database`, `redis`, and `elasticsearch` take the values `"ok"` | `"unavailable"`. `elasticsearch` returns `"unavailable"` when ES is unreachable; when the cluster health status is neither green nor yellow, the actual status value is returned (e.g. `"red"`).
+`database` and `redis` take the values `"ok"` | `"unavailable"`.
 
 ### 3.2 API Docs
 
@@ -1784,7 +1783,6 @@ The OperationLog middleware auto-detects the client platform and writes it to th
 | `linux` | UA contains Linux (not Android) |
 | `ios` | UA contains iPhone / iOS / CFNetwork |
 | `android` | UA contains Android |
-| `harmonyos` | UA contains HarmonyOS / OpenHarmony, or explicitly declared via the `X-Client-Platform` header |
 | `web` | Default (none of the above matched) |
 
 > Two-level detection: `X-Client-Platform` request header (declared by native apps) → User-Agent auto-inference (fallback). The `source` field in the operation log query `GET /admin/log` is the client platform.
@@ -1793,7 +1791,7 @@ The OperationLog middleware auto-detects the client platform and writes it to th
 
 ### Docker Compose
 
-The project root provides `docker-compose.yml` orchestrating 5 services (Nginx, webman app, MySQL, Redis, Elasticsearch). PHP is built via `Dockerfile` (based on `php:8.3-cli` with OPcache enabled).
+The project root provides `docker-compose.yml` orchestrating 4 services (Nginx, webman app, MySQL, Redis). PHP is built via `Dockerfile` (based on `php:8.3-cli` with OPcache enabled).
 
 ```bash
 cp .env.docker .env
@@ -1805,7 +1803,6 @@ docker-compose up -d
 `.github/workflows/ci.yml` defines the GitHub Actions CI pipeline:
 - `php -l` syntax check
 - PHPUnit unit tests
-- `flutter analyze` static analysis
 
 ### Database Backup
 
@@ -1826,14 +1823,14 @@ For use by the e-cat query gateway only. On the PHP side it is a workerman h2c s
 | RPC | Request | Response | Description |
 |---|---|---|---|
 | `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | Carrier detection; returns `404 CARRIER_NOT_DETECTED` when unrecognized |
-| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | Tracking query; `credential_id` optional (specified for multi-credential scenarios, must match `carrier_code`, otherwise `400 INVALID_PARAMS`). Every query is persisted to `logistics_tracking_query` |
+| `Query` | `{carrier_code, tracking_no}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | Tracking query; `carrier_code` is auto-detected when omitted. Every query is persisted to `logistics_tracking_query` |
 | `Carriers` | `{}` | `{code, carriers[]}` | All carriers in the registry `{carrier_code, channel}` |
 
 ### 16.2 Error Contract (response `code` field, gRPC status always 0)
 
 | `code` | `error_code` | Scenario |
 |---|---|---|
-| 400 | `INVALID_PARAMS` | Missing parameters / credential_id mismatch |
+| 400 | `INVALID_PARAMS` | Missing parameters |
 | 401 | `UNAUTHORIZED` | Invalid internal token |
 | 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | Carrier not registered / tracking not found / cannot detect |
 | 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | Upstream credential error / network error / carrier business error (includes structured upstream payload, e.g. `[SF-INTERNATIONAL A1001] required parameters must not be empty`) |
@@ -1851,7 +1848,6 @@ Rust high-frequency gateway (`infrastructure/tracking-gateway`), listens on `0.0
 | `GET /v1/carriers` | Carrier list (forwards PHP gRPC `InternalService.Carriers`) |
 | `POST /v1/tracking/query` | Tracking query (`{"carrier_code": "...", "tracking_no": "..."}`); when `carrier_code` is omitted the gateway auto-detects (detect is done inside query) |
 | `GET /v1/tracking/{query_no}` | Fetch the last tracking result by query number |
-| `POST /v1/subscriptions` | Register a callback subscription (`{"carrier_code", "callback_url", "event_type"?}`, `event_type` defaults to `tracking.update`) |
 
 
 Gateway-side additional semantics: exceeding `rate_limit` (default 100 per 60s) returns `429`; consecutive carrier failures trigger the circuit breaker (default OPEN 60s after 5x 5xx/transport errors) returning `503`; worker unreachable returns `502`. Gateway-to-worker traffic is internal gRPC (h2c, `0.0.0.0:8792`) authenticated with the shared secret `x-internal-token`, see Section 16.
@@ -1862,7 +1858,7 @@ All endpoints return the unified envelope `{"code": 0, "message": "ok", "data": 
 
 | HTTP | Meaning |
 |---|---|
-| 400 | Parameter error (`tracking_no` missing / invalid subscription parameters) |
+| 400 | Parameter error (`tracking_no` missing) |
 | 401 | Missing or invalid key |
 | 404 | Query number not found |
 | 429 | Rate limited (default 100 per 60s per key), back off and retry |
@@ -1891,50 +1887,5 @@ curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
 # Last result by query number
 curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
 
-# Register callback subscription (callback URL must be public http/https; gateway rejects loopback/private networks)
-curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
-  -d '{"carrier_code": "china-post", "callback_url": "https://example.com/cb", "event_type": "tracking.update"}' \
-  http://127.0.0.1:8080/v1/subscriptions
 ```
 
-### 17.3 Call Examples (SDK)
-
-Five zero-dependency SDKs are in the repo `sdk/` directory (Python / PHP / Node.js / Go / Rust, copy-and-run):
-
-```python
-from tracking_client import TrackingClient
-client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
-result = client.query_tracking("LX123456789CN")
-print(result["status"], result["events"][0]["description"])
-```
-
-```php
-require "TrackingClient.php";
-$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
-$carriers = $client->list_carriers();
-$sub = $client->subscribe("china-post", "https://example.com/cb");
-```
-
-```js
-const { TrackingClient } = require("./tracking-client.js");
-const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
-const detail = await client.getTracking("query_no");
-console.log(detail.status);
-```
-
-```go
-import "trackingclient"
-client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
-raw, err := client.QueryTracking("LX123456789CN", "china-post")
-if err != nil { panic(err) }
-fmt.Println(string(raw))
-```
-
-```rust
-use trackingclient::tracking_client::TrackingClient;
-let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
-let detail = client.get_tracking("query_no")?;
-println!("{}", detail);
-```
-
-The SDKs throw exceptions (`TrackingApiError`) when the envelope has `code != 0` or on network failure, carrying `code` / `message` / `error_code` / `error_message` / `http_status`; back off and retry on rate-limit and circuit-breaker errors, do not retry carrier-side errors. Full usage in `sdk/README.md`.

@@ -1,6 +1,6 @@
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
-> [中文](DESIGN.md) | [English](DESIGN.en.md) | [한국어](DESIGN.ko.md) | [Русский](DESIGN.ru.md) | [Deutsch](DESIGN.de.md) | [Français](DESIGN.fr.md) | [Español](DESIGN.es.md) | [Português](DESIGN.pt.md) | [हिन्दी](DESIGN.hi.md) | [العربية](DESIGN.ar.md) | [বাংলা](DESIGN.bn.md) | [Bahasa Indonesia](DESIGN.id.md) | [日本語](DESIGN.ja.md)
+> [中文](DESIGN.md) | [English](DESIGN.en.md)
 
 # Open Admin — Design Document
 
@@ -14,7 +14,7 @@
 ┌──────────────────────────────────────────────────────────────┐
 │                        客户端层                               │
 │  ┌──────────────────────┐  ┌──────────────────────────────┐  │
-│  │  Flutter Web (PC)    │  │  HarmonyOS ArkTS (Mobile)    │  │
+│  │  Layui Admin (Browser)│  │  API Clients (HTTP/JSON)     │  │
 │  │  管理后台 (桌面风格)   │  │  客户端 (手机/平板/2in1)      │  │
 │  └──────────┬───────────┘  └──────────────┬───────────────┘  │
 └─────────────┼──────────────────────────────┼─────────────────┘
@@ -47,7 +47,7 @@
 │  ┌──────────────────────────┼───────────────────────────┐    │
 │  │              数据存储层                                │    │
 │  │  ┌──────────┐  ┌──────────────┐  ┌──────────┐        │    │
-│  │  │  MySQL   │  │ Elasticsearch│  │  Redis   │        │    │
+│  │  │  MySQL   │  │  File Store  │  │  Redis   │        │    │
 │  │  │ (主存储)  │  │ (全文检索)    │  │ (缓存)   │        │    │
 │  │  └──────────┘  └──────────────┘  └──────────┘        │    │
 │  └──────────────────────────────────────────────────────┘    │
@@ -307,41 +307,10 @@ The frontend shows a confirmation dialog before triggering a delete operation, c
 
 ## 5. Frontend Design
 
-### 5.1 Flutter Web Admin Panel
+### 5.1 Admin UI (Layui)
 
-```
-┌────────────────────────────────────────────────┐
-│  Header (56px)                                 │
-│  ☰ 菜单按钮           🔔 消息  👤 管理员  ▼    │
-├──────────┬─────────────────────────────────────┤
-│ Sidebar  │  Content Area                       │
-│ (64/240) │                                     │
-│          │  ┌──────────────┐ ┌──────────┐     │
-│ 📊 仪表盘│  │ 统计卡片×4    │ │ 趋势图   │     │
-│ 👥 用户  │  └──────────────┘ └──────────┘     │
-│ 🔒 角色  │  ┌──────┐ ┌────────────────┐       │
-│ ⚙ 配置  │  │饼图  │ │ 最近操作日志    │       │
-│ 📋 日志  │  └──────┘ └────────────────┘       │
-└──────────┴─────────────────────────────────────┘
-```
-
-Features: collapsible sidebar, Material 3 dual theme, high-density data tables, dialog popups, hover interactions
-
-Branding: the login page and the web first-paint loader use the project pet E-Cat (`docs/diagrams/mascot.svg`, a single animated SVG with `prefers-reduced-motion` fallback)
-
-### 5.2 HarmonyOS Mobile Client
-
-Page routing:
-
-| Page | Route | Description |
-|------|------|------|
-| LoginPage | `pages/LoginPage` | Username/password + click captcha login |
-| DashboardPage | `pages/DashboardPage` | Stats cards + recent operations |
-| UserListPage | `pages/UserListPage` | User list with search + pull-to-refresh + scroll-to-load-more |
-| UserDetailPage | `pages/UserDetailPage` | Add/Edit/View/Delete (AlertDialog confirmation) |
-| ProfilePage | `pages/ProfilePage` | Profile, logout (AlertDialog confirmation) |
-
-Data flow: Page ← DataService ← ApiService (JWT Bearer) ← HTTP ← webman
+- Admin pages and static assets live under `public/`, rendered directly by PHP controllers using bundled Layui components.
+- Login, dashboard, users, roles, config, logs, and profile are Layui pages; Layui is the only admin UI.
 
 ## 6. Security Design
 
@@ -413,8 +382,8 @@ SCOUT_HOSTS         → ES 地址，内网部署
 ### 8.1 Recommended Topology
 
 ```
-Nginx (:443 HTTPS) → webman worker × N (:8787) → MySQL + ES + Redis
-                    静态文件: Flutter Web build/
+Nginx (:443 HTTPS) → webman worker × N (:8787) → MySQL + Redis
+                    Static files: public/
 ```
 
 ### 8.2 Docker Compose (Recommended for Production)
@@ -427,7 +396,6 @@ The `docker-compose.yml` at the project root orchestrates all services of the to
 | `app` | Local `Dockerfile` build | 8787 | PHP 8.3 + OPcache + webman |
 | `mysql` | mysql:8.0 | 3306 | Primary database, persistent volume |
 | `redis` | redis:7-alpine | 6379 | Cache / rate limiting / captcha |
-| `elasticsearch` | elasticsearch:8.x | 9200 | Full-text search |
 
 Before startup, replace the keys in `docker-compose.yml` (`JWT_SECRET`, `HASHIDS_SALT`, `ENCRYPTION_KEY`, etc.) with random strings.
 
@@ -441,7 +409,6 @@ docker-compose up -d
 GitHub Actions CI is defined in `.github/workflows/ci.yml`:
 - PHP syntax check (`php -l`)
 - PHPUnit unit tests
-- Flutter static analysis (`flutter analyze`)
 
 ### 8.4 Database Backup
 
@@ -458,8 +425,5 @@ The `GET /metrics` endpoint (`MetricsController`) exposes 5 gauge metrics in Pro
 |------|---------|---------|
 | PHP | 8.3+ | 8.3+ OPcache enabled |
 | MySQL | 8.0+ | 8.0+ master-slave replication |
-| Elasticsearch | 7.x | 8.x 3-node cluster |
 | Redis | 6.x | 7.x sentinel mode |
 | Nginx | 1.20+ | Reverse proxy + gzip + SSL |
-| Flutter SDK | 3.41+ | Latest stable |
-| HarmonyOS | API 12 | DevEco Studio 5.x |

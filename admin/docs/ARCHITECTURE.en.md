@@ -1,6 +1,6 @@
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
-> [中文](ARCHITECTURE.md) | [English](ARCHITECTURE.en.md) | [한국어](ARCHITECTURE.ko.md) | [Русский](ARCHITECTURE.ru.md) | [Deutsch](ARCHITECTURE.de.md) | [Français](ARCHITECTURE.fr.md) | [Español](ARCHITECTURE.es.md) | [Português](ARCHITECTURE.pt.md) | [हिन्दी](ARCHITECTURE.hi.md) | [العربية](ARCHITECTURE.ar.md) | [বাংলা](ARCHITECTURE.bn.md) | [Bahasa Indonesia](ARCHITECTURE.id.md) | [日本語](ARCHITECTURE.ja.md)
+> [中文](ARCHITECTURE.md) | [English](ARCHITECTURE.en.md)
 
 # Architecture and Business Logic Diagrams
 
@@ -13,8 +13,8 @@
 ```mermaid
 flowchart TB
     subgraph "Client Layer"
-        A1["Flutter Web<br/>PC Admin Panel<br/>(Port 3000)"]
-        A2["HarmonyOS ArkTS<br/>Phone/Tablet Client"]
+        A1["Layui Admin<br/>Browser"]
+        A2["Third-party Client / API"]
     end
 
     subgraph "Gateway/Edge Layer (Nginx Edge)"
@@ -32,13 +32,13 @@ flowchart TB
 
     subgraph "Storage Layer"
         D1[("MySQL 8.0<br/>Primary Storage<br/>Table Prefix logistics_")]
-        D2[("Elasticsearch<br/>Full-Text Search<br/>Index Prefix logistics_")]
+        D2[("MySQL LIKE Search<br/>logistics_ Prefix")]
         D3[("Redis<br/>Session / Cache<br/>Captcha Storage")]
     end
 
     subgraph "External"
-        E1["DevEco Studio<br/>HarmonyOS Build"]
-        E2["Flutter SDK<br/>Web Build"]
+        E1["PHP 8.3 + Composer"]
+        E2["Docker / Nginx"]
     end
 
     A1 -->|"HTTPS / JSON<br/>JWT Bearer"| B1
@@ -114,7 +114,7 @@ flowchart TD
 
     subgraph "Driver Layer"
         D1["MySQL PDO"]
-        D2["Elasticsearch HTTP"]
+        D2["MySQL Query"]
         D3["Redis"]
     end
 
@@ -545,60 +545,13 @@ sequenceDiagram
 
 ---
 
-## 10. Flutter Web Widget Tree
+## 10. Admin UI (Layui)
 
-```mermaid
-flowchart TD
-    APP["AdminApp (GetMaterialApp)"]
-    APP --> LP["/login<br/>LoginPage"]
-    APP --> DB["/dashboard<br/>AdminLayout"]
-
-    LP --> LF["Login Form<br/>Username/Password/Captcha"]
-    LF --> CAPTCHA["Click Captcha Widget<br/>GestureDetector + Stack<br/>Image.memory(base64)<br/>Click Marker Circle"]
-
-    DB --> SIDEBAR["Sidebar NavigationDrawer<br/>Collapsible 64px / 240px<br/>Dashboard/Users/Roles/Config/Logs"]
-    DB --> HEADER["Header 56px<br/>Collapse Button + User Menu<br/>Logout AlertDialog"]
-    DB --> CONTENT["Content Area"]
-    CONTENT --> DASH["DashboardPage<br/>Stats Cards GridView<br/>Trend LineChart<br/>Distribution PieChart<br/>Recent Activity ListTile"]
-
-    style APP fill:#1677FF,color:#fff
-    style CAPTCHA fill:#FA8C16,color:#fff
-    style SIDEBAR fill:#722ED1,color:#fff
-    style DASH fill:#52C41A,color:#fff
-```
+Admin pages and static assets live under `public/`, rendered directly by PHP controllers using bundled Layui components; Layui is the only admin UI.
 
 ---
 
-## 11. HarmonyOS Page Routing
-
-```mermaid
-flowchart LR
-    EA["EntryAbility<br/>Launch"]
-    EA -->|"No Token"| LP["LoginPage<br/>Login Page"]
-    EA -->|"Has Token"| DP["DashboardPage<br/>Dashboard"]
-
-    LP -->|"Login Success<br/>replaceUrl"| DP
-
-    DP -->|"pushUrl"| ULP["UserListPage<br/>User List"]
-    DP -->|"pushUrl"| PP["ProfilePage<br/>Profile"]
-
-    ULP -->|"pushUrl"| UDP["UserDetailPage<br/>User Detail/Add/Edit"]
-    ULP -->|"router.back"| DP
-    UDP -->|"router.back"| ULP
-
-    PP -->|"Logout<br/>replaceUrl"| LP
-    PP -->|"router.back"| DP
-
-    style LP fill:#1677FF,color:#fff
-    style DP fill:#52C41A,color:#fff
-    style ULP fill:#FA8C16,color:#fff
-    style UDP fill:#FA8C16,color:#fff
-    style PP fill:#722ED1,color:#fff
-```
-
----
-
-## 12. Defense-in-Depth Overview
+## 11. Defense-in-Depth Overview
 
 ```mermaid
 flowchart TB
@@ -643,7 +596,7 @@ flowchart TB
 
 ---
 
-## 13. Deployment Topology
+## 12. Deployment Topology
 
 ```mermaid
 flowchart TB
@@ -653,7 +606,7 @@ flowchart TB
 
     subgraph "Web Server"
         NGX["Nginx<br/>:443 HTTPS<br/>:80 → 443 redirect<br/>gzip on"]
-        STA["Static Files<br/>Flutter Web build/"]
+        STA["Static Files<br/>public/"]
     end
 
     subgraph "Application Servers (Horizontally Scalable)"
@@ -664,7 +617,7 @@ flowchart TB
 
     subgraph "Data Layer"
         MYSQL["MySQL 8.0<br/>Master-Slave Replication<br/>logistics_ Prefix"]
-        ES["Elasticsearch 8.x<br/>3-Node Cluster<br/>logistics_ Prefix"]
+        ES["MySQL 8.0<br/>Full-Text Search (LIKE)<br/>logistics_ Prefix"]
         REDIS["Redis 7.x<br/>Sentinel Mode<br/>poster:captcha:*"]
     end
 

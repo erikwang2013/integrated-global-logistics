@@ -3,8 +3,8 @@
 ```mermaid
 flowchart TB
     subgraph clients["客户端层"]
-        flutter["Flutter Web<br/>PC管理后台"]
-        harmony["HarmonyOS ArkTS<br/>手机/平板客户端"]
+        adminui["Layui 管理端<br/>浏览器"]
+        apiclient["第三方客户端 / API"]
     end
 
     subgraph gateway["网关层"]
@@ -21,12 +21,12 @@ flowchart TB
 
     subgraph storage["存储层"]
         mysql[("MySQL 8.0<br/>主存储 - logistics_前缀")]
-        es[("Elasticsearch<br/>全文检索 - logistics_前缀")]
+        es[("MySQL LIKE 检索<br/>logistics_ 前缀")]
         redis[("Redis<br/>Session/缓存/Captcha")]
     end
 
-    flutter --> nginx
-    harmony --> nginx
+    adminui --> nginx
+    apiclient --> nginx
     nginx --> auth
     auth --> perm
     perm --> admin
@@ -40,8 +40,8 @@ flowchart TB
     auth --> redis
     public --> redis
 
-    style flutter fill:#1677FF,color:#fff
-    style harmony fill:#1677FF,color:#fff
+    style adminui fill:#1677FF,color:#fff
+    style apiclient fill:#1677FF,color:#fff
     style nginx fill:#722ED1,color:#fff
     style auth fill:#FA8C16,color:#fff
     style perm fill:#FA8C16,color:#fff

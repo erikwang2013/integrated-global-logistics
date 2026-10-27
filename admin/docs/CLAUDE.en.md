@@ -1,10 +1,10 @@
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
-> [中文](CLAUDE.md) | [English](CLAUDE.en.md) | [한국어](CLAUDE.ko.md) | [Русский](CLAUDE.ru.md) | [Deutsch](CLAUDE.de.md) | [Français](CLAUDE.fr.md) | [Español](CLAUDE.es.md) | [Português](CLAUDE.pt.md) | [हिन्दी](CLAUDE.hi.md) | [العربية](CLAUDE.ar.md) | [বাংলা](CLAUDE.bn.md) | [Bahasa Indonesia](CLAUDE.id.md) | [日本語](CLAUDE.ja.md)
+> [中文](CLAUDE.md) | [English](CLAUDE.en.md)
 
 # Open Admin (open-admin)
 
-Full-stack admin dashboard based on webman v2 + Flutter.
+Full-stack admin dashboard based on webman v2 + Layui.
 
 ## Copyright Notice
 
@@ -39,14 +39,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 - JWT authentication: `erikwang2013/jwt-webman`
 - API sensitive data encryption/decryption: `erikwang2013/encryption`
 - DB sensitive field encryption/decryption: `erikwang2013/encryptable`
-- ES sync and query: `erikwang2013/webman-scout`
 - Country flags: `erikwang2013/season`
 
-### Frontend
-- Flutter 3.x, source directory `apps/flutter/`
-- Web end designed in PC admin-panel style (not mobile App style)
-- Supports client and admin ends
-- HarmonyOS ArkTS, source directory `apps/harmonyos/`
+### Admin UI
+- Layui; pages and static assets live under `public/`, rendered directly by PHP controllers
+- Layui is the only admin UI
 
 ## Project Structure
 
@@ -89,21 +86,6 @@ open-admin/
 │   ├── exception/              # Global exception handling (browser requests render the pet error page)
 │   ├── queue/                  # Queue tasks
 │   └── process/                # Processes (Http, Monitor)
-├── apps/
-│   ├── flutter/                # Flutter Web admin
-│   │   └── lib/app/
-│   │       ├── pages/          # 6 complete pages
-│   │       │   ├── dashboard/  # Dashboard
-│   │       │   ├── login/      # Login
-│   │       │   ├── user/       # User management
-│   │       │   ├── role/       # Roles & permissions
-│   │       │   ├── config/     # System config
-│   │       │   ├── log/        # Operation logs
-│   │       │   └── profile/    # Profile
-│   │       ├── services/       # ApiService + AuthService
-│   │       ├── layouts/        # Responsive layouts
-│   │       └── theme/          # Material 3 theme
-│   └── harmonyos/              # HarmonyOS client
 ├── config/                     # Config files
 │   ├── route.php               # Routes + API version policy
 │   └── middleware.php           # Global middleware registration
@@ -138,7 +120,7 @@ open-admin/
 ├── docker-compose.yml          # Docker orchestration
 └── .github/
     └── workflows/
-        └── ci.yml              # CI/CD pipeline (PHP syntax + PHPUnit + Flutter analyze)
+        └── ci.yml              # CI/CD pipeline (PHP syntax + PHPUnit)
 ```
 
 ## Middleware Execution Chain
@@ -195,26 +177,15 @@ Redis sliding window (Lua atomic), default 60 req/min/IP/route:
 - Sensitive fields use the `erikwang2013/encryptable` trait for automatic encryption/decryption
 - Migration files use SQL format
 
-### Flutter
-- Web layout uses PC admin-panel style (sidebar + top bar + content area)
-- GetX state management; **all API requests must go through the `ApiService` singleton** (Dio + JWT interceptor); creating standalone Dio instances or hardcoding baseUrl is forbidden
-- Token persistence uses `shared_preferences`
-- Responsive breakpoints: mobile (< 768px) and desktop (>= 768px)
-- **Page header Rows must use `Wrap`** to prevent overflow when the sidebar expands; filter ChoiceChips must be wrapped in `Obx` for reactive updates
-- **DataTables must be wrapped in `SingleChildScrollView(scrollDirection: Axis.horizontal)`** to prevent column overflow
-- Standalone pages (e.g. ProfilePage) must include a `Scaffold`, otherwise Material widgets like `TextField` throw "No Material widget found"
-- When the sidebar expands/collapses, use `_showCollapsedContent` to delay content switching, avoiding RenderFlex overflow during animation
-
-### HarmonyOS
-- Uses the `@ohos.net.http` native HTTP client
-- Seamless token refresh: auto-calls `/api/v1/auth/refresh` on 401
-- Auto-redirects to the login page when refresh fails
+### Admin UI (Layui)
+- Pages and static assets live under `public/`, using bundled Layui components
+- Admin pages are rendered directly by PHP controllers
 
 ## Deployment
 
 ### Docker Compose (recommended for production)
 
-The `docker-compose.yml` at the project root orchestrates 5 services:
+The `docker-compose.yml` at the project root orchestrates 4 services:
 
 | Service | Description |
 |------|------|
@@ -222,7 +193,6 @@ The `docker-compose.yml` at the project root orchestrates 5 services:
 | `app` | webman PHP 8.3 application, built via `Dockerfile` (with OPcache) |
 | `mysql` | MySQL 8.0, persistent data volume |
 | `redis` | Redis 7 Alpine, cache/rate limiting/Session |
-| `elasticsearch` | Elasticsearch 8.x, full-text search |
 
 ```bash
 cp .env.docker .env
@@ -235,7 +205,6 @@ docker-compose up -d
 
 - PHP syntax check (`php -l`)
 - PHPUnit unit tests
-- Flutter static analysis (`flutter analyze`)
 
 ### Database Backup
 

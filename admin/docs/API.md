@@ -65,13 +65,12 @@ GET /health
     "php": "8.3.0",
     "database": "ok",
     "redis": "ok",
-    "elasticsearch": "ok",
     "timestamp": 1716249600
   }
 }
 ```
 
-`database`、`redis`、`elasticsearch` 取值: `"ok"` | `"unavailable"`。`elasticsearch` 在 ES 不可达时返回 `"unavailable"`，集群健康状态为非 green/yellow 则返回实际的 status 值（如 `"red"`）。
+`database`、`redis` 取值: `"ok"` | `"unavailable"`。
 
 ### 3.2 API 文档
 
@@ -1784,7 +1783,6 @@ OperationLog 中间件自动识别客户端平台，写入操作日志 `source` 
 | `linux` | UA 含 Linux（非 Android） |
 | `ios` | UA 含 iPhone / iOS / CFNetwork |
 | `android` | UA 含 Android |
-| `harmonyos` | UA 含 HarmonyOS / OpenHarmony 或 `X-Client-Platform` 头显式声明 |
 | `web` | 默认（未命中以上所有平台） |
 
 > 两级检测：`X-Client-Platform` 请求头（原生 App 声明）→ User-Agent 自动推断（兜底）。操作日志查询 `GET /admin/log` 的 `source` 字段即来源端。
@@ -1793,7 +1791,7 @@ OperationLog 中间件自动识别客户端平台，写入操作日志 `source` 
 
 ### Docker Compose
 
-项目根目录提供 `docker-compose.yml`，编排 5 个服务（Nginx、webman app、MySQL、Redis、Elasticsearch）。PHP 通过 `Dockerfile` 构建（基于 `php:8.3-cli`，启用 OPcache）。
+项目根目录提供 `docker-compose.yml`，编排 4 个服务（Nginx、webman app、MySQL、Redis）。PHP 通过 `Dockerfile` 构建（基于 `php:8.3-cli`，启用 OPcache）。
 
 ```bash
 cp .env.docker .env
@@ -1805,7 +1803,6 @@ docker-compose up -d
 `.github/workflows/ci.yml` 定义了 GitHub Actions 持续集成流水线：
 - `php -l` 语法检查
 - PHPUnit 单元测试
-- `flutter analyze` 静态分析
 
 ### 数据库备份
 
@@ -1826,14 +1823,14 @@ docker-compose up -d
 | RPC | 请求 | 响应 | 说明 |
 |---|---|---|---|
 | `Detect` | `{tracking_no}` | `{code, carrier_code, channel, confidence}` | 承运商识别；无法识别 `404 CARRIER_NOT_DETECTED` |
-| `Query` | `{carrier_code, tracking_no, credential_id?}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | 轨迹查询；`credential_id` 可选（多凭证场景指定，须与 `carrier_code` 匹配，否则 `400 INVALID_PARAMS`）。每次查询落库 `logistics_tracking_query` |
+| `Query` | `{carrier_code, tracking_no}` | `{code, query_no, carrier_code, tracking_no, status, delivered_at, estimated_delivery_at, latest_description, raw_status, events[]}` | 轨迹查询；`carrier_code` 缺省时自动识别。每次查询落库 `logistics_tracking_query` |
 | `Carriers` | `{}` | `{code, carriers[]}` | 注册表内全部承运商 `{carrier_code, channel}` |
 
 ### 16.2 错误契约（响应 `code` 字段，gRPC status 恒为 0）
 
 | `code` | `error_code` | 场景 |
 |---|---|---|
-| 400 | `INVALID_PARAMS` | 缺参数 / credential_id 不匹配 |
+| 400 | `INVALID_PARAMS` | 缺参数 |
 | 401 | `UNAUTHORIZED` | 内部令牌错误 |
 | 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | 承运商未注册 / 轨迹不存在 / 无法识别 |
 | 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | 上游凭证错误 / 网络异常 / 承运商业务错误（含结构化上游报文，如 `[SF-INTERNATIONAL A1001] 必传参数不可为空`） |
@@ -1859,7 +1856,7 @@ Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`
 
 | HTTP | 含义 |
 |---|---|
-| 400 | 参数错误（`tracking_no` 缺失 / 订阅参数非法） |
+| 400 | 参数错误（`tracking_no` 缺失） |
 | 401 | 密钥缺失或无效 |
 | 404 | 查询号不存在 |
 | 429 | 限流（默认 100 次/60s/密钥），建议退避重试 |

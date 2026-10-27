@@ -12,8 +12,8 @@
 ┌──────────────────────────────────────────────────────────────┐
 │                        客户端层                               │
 │  ┌──────────────────────┐  ┌──────────────────────────────┐  │
-│  │  Flutter Web (PC)    │  │  HarmonyOS ArkTS (Mobile)    │  │
-│  │  管理后台 (桌面风格)   │  │  客户端 (手机/平板/2in1)      │  │
+│  │  Layui Admin (Browser)│  │  API Clients (HTTP/JSON)     │  │
+│  │  管理后台 (浏览器)     │  │  第三方客户端 / API           │  │
 │  └──────────┬───────────┘  └──────────────┬───────────────┘  │
 └─────────────┼──────────────────────────────┼─────────────────┘
               │        HTTPS / JSON          │
@@ -45,7 +45,7 @@
 │  ┌──────────────────────────┼───────────────────────────┐    │
 │  │              数据存储层                                │    │
 │  │  ┌──────────┐  ┌──────────────┐  ┌──────────┐        │    │
-│  │  │  MySQL   │  │ Elasticsearch│  │  Redis   │        │    │
+│  │  │  MySQL   │  │  文件存储    │  │  Redis   │        │    │
 │  │  │ (主存储)  │  │ (全文检索)    │  │ (缓存)   │        │    │
 │  │  └──────────┘  └──────────────┘  └──────────┘        │    │
 │  └──────────────────────────────────────────────────────┘    │
@@ -305,41 +305,10 @@ curl /api/v2/auth/login   # v2（新增分组后）
 
 ## 5. 前端设计
 
-### 5.1 Flutter Web 管理后台
+### 5.1 管理端 UI（Layui）
 
-```
-┌────────────────────────────────────────────────┐
-│  Header (56px)                                 │
-│  ☰ 菜单按钮           🔔 消息  👤 管理员  ▼    │
-├──────────┬─────────────────────────────────────┤
-│ Sidebar  │  Content Area                       │
-│ (64/240) │                                     │
-│          │  ┌──────────────┐ ┌──────────┐     │
-│ 📊 仪表盘│  │ 统计卡片×4    │ │ 趋势图   │     │
-│ 👥 用户  │  └──────────────┘ └──────────┘     │
-│ 🔒 角色  │  ┌──────┐ ┌────────────────┐       │
-│ ⚙ 配置  │  │饼图  │ │ 最近操作日志    │       │
-│ 📋 日志  │  └──────┘ └────────────────┘       │
-└──────────┴─────────────────────────────────────┘
-```
-
-特性: 侧边栏可折叠、Material 3 双主题、数据表格高密度、弹窗 Dialog、鼠标悬停交互
-
-品牌形象: 登录页与 Web 首屏加载页使用项目宠物 E-Cat（`docs/diagrams/mascot.svg`，单文件动态 SVG，带 `prefers-reduced-motion` 降级）
-
-### 5.2 HarmonyOS 移动端
-
-页面路由:
-
-| 页面 | 路由 | 说明 |
-|------|------|------|
-| LoginPage | `pages/LoginPage` | 用户名密码 + 点击验证码登录 |
-| DashboardPage | `pages/DashboardPage` | 统计卡片 + 最近操作 |
-| UserListPage | `pages/UserListPage` | 用户列表，搜索 + 下拉刷新 + 上滑加载 |
-| UserDetailPage | `pages/UserDetailPage` | 新增/编辑/查看/删除（AlertDialog 确认） |
-| ProfilePage | `pages/ProfilePage` | 个人中心，退出登录（AlertDialog 确认） |
-
-数据流: Page ← DataService ← ApiService (JWT Bearer) ← HTTP ← webman
+- 管理页面与静态资源位于 `public/`，由 PHP 控制器直接渲染，使用内置 Layui 组件。
+- 登录、仪表盘、用户、角色、配置、日志、个人中心均为 Layui 页面；Layui 是唯一管理端 UI。
 
 ## 6. 安全设计
 
@@ -411,8 +380,8 @@ SCOUT_HOSTS         → ES 地址，内网部署
 ### 8.1 推荐拓扑
 
 ```
-Nginx (:443 HTTPS) → webman worker × N (:8787) → MySQL + ES + Redis
-                    静态文件: Flutter Web build/
+Nginx (:443 HTTPS) → webman worker × N (:8787) → MySQL + Redis
+                    静态文件: public/
 ```
 
 ### 8.2 Docker Compose（推荐生产环境）
@@ -425,7 +394,6 @@ Nginx (:443 HTTPS) → webman worker × N (:8787) → MySQL + ES + Redis
 | `app` | 本地 `Dockerfile` 构建 | 8787 | PHP 8.3 + OPcache + webman |
 | `mysql` | mysql:8.0 | 3306 | 主数据库，数据卷持久化 |
 | `redis` | redis:7-alpine | 6379 | 缓存 / 限流 / 验证码 |
-| `elasticsearch` | elasticsearch:8.x | 9200 | 全文检索 |
 
 启动前将 `docker-compose.yml` 中的 `JWT_SECRET`、`HASHIDS_SALT`、`ENCRYPTION_KEY` 等密钥替换为随机字符串。
 
@@ -439,7 +407,6 @@ docker-compose up -d
 GitHub Actions 持续集成定义在 `.github/workflows/ci.yml`：
 - PHP 语法检查 (`php -l`)
 - PHPUnit 单元测试
-- Flutter 静态分析 (`flutter analyze`)
 
 ### 8.4 数据库备份
 
@@ -456,8 +423,5 @@ GitHub Actions 持续集成定义在 `.github/workflows/ci.yml`：
 |------|---------|---------|
 | PHP | 8.3+ | 8.3+ OPcache enabled |
 | MySQL | 8.0+ | 8.0+ 主从复制 |
-| Elasticsearch | 7.x | 8.x 3节点集群 |
 | Redis | 6.x | 7.x 哨兵模式 |
 | Nginx | 1.20+ | 反向代理 + gzip + SSL |
-| Flutter SDK | 3.41+ | 最新稳定版 |
-| HarmonyOS | API 12 | DevEco Studio 5.x |

@@ -1,8 +1,8 @@
 # 开放管理后台 (open-admin)
 
-基于 webman v2 + Flutter 的全栈管理后台系统。
+基于 webman v2 + Layui 的全栈管理后台系统。
 
-> [English](docs/translations/README.en.md) | [한국어](docs/translations/README.ko.md) | [Русский](docs/translations/README.ru.md) | [Deutsch](docs/translations/README.de.md) | [Français](docs/translations/README.fr.md) | [Español](docs/translations/README.es.md) | [Português](docs/translations/README.pt.md) | [हिन्दी](docs/translations/README.hi.md) | [العربية](docs/translations/README.ar.md) | [বাংলা](docs/translations/README.bn.md) | [Bahasa Indonesia](docs/translations/README.id.md) | [日本語](docs/translations/README.ja.md) | [架构设计图](docs/ARCHITECTURE.md) | [设计文档](docs/DESIGN.md) | [安全架构](docs/SECURITY.md) | [API 参考](docs/API.md)
+> [English](docs/translations/README.en.md) | [架构设计图](docs/ARCHITECTURE.md) | [设计文档](docs/DESIGN.md) | [安全架构](docs/SECURITY.md) | [API 参考](docs/API.md)
 
 ## 功能清单
 
@@ -23,7 +23,7 @@
 | 🛡 安全防护 | 18 层纵深防御 | XSS/SQL注入/路径遍历/命令注入/CSRF/限流/CSP... |
 | 🏥 运维 | 健康检查/metrics/API 文档/security.txt | Prometheus + OpenAPI 3.0 + hg/apidoc 交互文档 |
 | 🌐 国际化 | 中英文切换 | Accept-Language 头 / ?lang= 参数 |
-| 🎨 品牌 | 项目宠物 E-Cat | 安装向导 / 404·5xx 错误页 / Flutter 登录页与首屏加载 / HarmonyOS 登录页 / API 文档角标 |
+| 🎨 品牌 | 项目宠物 E-Cat | 安装向导 / 404·5xx 错误页 / API 文档角标 / 站点 favicon |
 
 ## 技术栈
 
@@ -32,9 +32,7 @@
 | 后端框架 | webman v2 (workerman) | 超高性能 PHP 常驻进程框架 |
 | PHP 版本 | 8.3+ | |
 | 数据库 | MySQL 8.0+ | 库名 `logistics`，表前缀 `logistics_`，BIGINT 非自增主键 |
-| 搜索引擎 | Elasticsearch | 通过 `webman-scout` 同步与查询 |
-| 管理端前端 | Flutter 3.x | Web 端为 PC 管理后台风格（`apps/flutter/`） |
-| 移动端 | HarmonyOS ArkTS | 鸿蒙原生客户端（`apps/harmonyos/`），支持手机/平板/2in1 |
+| 管理端 UI | Layui | 静态资源位于 `public/`，PHP 控制器直接渲染 |
 
 ## 核心依赖
 
@@ -45,7 +43,6 @@
 | `erikwang2013/jwt-webman` | JWT 认证令牌签发与校验 |
 | `erikwang2013/encryption` | 接口传输层敏感数据加解密 |
 | `erikwang2013/encryptable` | 数据库存储层敏感字段自动加解密 |
-| `erikwang2013/webman-scout` | Elasticsearch 数据同步与全文检索 |
 | `erikwang2013/season` | 国家旗帜数据 |
 | `erikwang2013/poster-php` | 点击验证码生成与校验 + 海报生成 |
 | `phpoffice/phpspreadsheet` | Excel 导出 |
@@ -89,13 +86,6 @@ open-admin/
 │   │   └── OperationLog.php    # 操作日志自动记录（含来源端检测）
 │   ├── model/                  # 数据模型
 │   └── exception/              # 全局异常处理（浏览器请求渲染项目宠物错误页）
-├── apps/
-│   ├── flutter/                # Flutter Web 管理后台（PC 风格）
-│   │   └── lib/app/
-│   │       ├── pages/          # 5 个完整页面（仪表盘/用户/角色/配置/日志/个人中心）
-│   │       ├── services/       # ApiService（JWT 拦截器）+ AuthService（Token 持久化）
-│   │       └── layouts/        # 响应式管理后台布局（侧边栏+顶栏+内容区）
-│   └── harmonyos/              # HarmonyOS 原生客户端（Token 无感刷新）
 ├── config/                     # 配置文件（含中文注释）
 │   ├── route.php               # 路由 + API 版本策略
 │   ├── middleware.php           # 全局中间件注册
@@ -111,8 +101,6 @@ open-admin/
 - PHP >= 8.3
 - Composer 2.x
 - MySQL >= 8.0
-- Flutter >= 3.41（仅前端开发需要）
-- Elasticsearch >= 7.x（可选，搜索功能需要）
 
 ## 快速开始
 
@@ -139,7 +127,6 @@ cp .env.example .env
 | `ENCRYPTION_KEY` | API 加密密钥 | 32 字节默认值 |
 | `SNOWFLAKE_DATACENTER_ID` | 数据中心 ID (0-31) | `1` |
 | `SNOWFLAKE_WORKER_ID` | 工作节点 ID (0-31) | `1` |
-| `SCOUT_HOSTS` | ES 地址 | `http://localhost:9200` |
 
 **生产环境务必修改所有密钥为随机字符串。**
 
@@ -168,23 +155,9 @@ php start.php start
 
 访问 `http://localhost:8787`，使用安装时设置的管理员账号密码登录。
 
-### 5. 启动前端（可选）
-
-**Flutter 管理后台（Web 端）:**
-
-```bash
-cd apps/flutter
-flutter pub get
-flutter run -d chrome    # Web 端（PC 管理后台风格）
-```
-
-**HarmonyOS 客户端（手机端）:**
-
-使用 DevEco Studio 打开 `apps/harmonyos/` 目录，连接真机或模拟器运行。
-
 ### 6. Docker Compose 一键部署（推荐生产环境）
 
-项目提供完整的 Docker 编排方案，包含 5 个服务：Nginx、PHP (webman app)、MySQL、Redis、Elasticsearch。
+项目提供完整的 Docker 编排方案，包含 4 个服务：Nginx、PHP (webman app)、MySQL、Redis。
 
 ```bash
 # 1. 配置 Docker 环境变量
@@ -204,7 +177,7 @@ docker-compose up -d
 ```
 
 - `Dockerfile`: PHP 8.3 + OPcache + Composer，基于 `php:8.3-cli`
-- `docker-compose.yml`: 5 个服务编排，网络隔离，数据卷持久化
+- `docker-compose.yml`: 4 个服务编排，网络隔离，数据卷持久化
 - `.env.docker`: Docker 环境专用环境变量
 
 
@@ -228,21 +201,10 @@ docker-compose up -d
 
 ## 前端说明
 
-### Flutter 管理后台（PC 风格）
+### 管理端 UI（Layui）
 
-- **布局**: 侧边栏（可折叠 64px/240px）+ 顶栏 + 内容区，响应式三断点（手机/平板/桌面）
-- **页面**: 登录、仪表盘、用户管理、角色权限、系统配置、操作日志、个人中心
-- **状态管理**: GetX（`ApiService` 单例 + `AuthService` Token 持久化）
-- **仪表盘**: 统计卡片、趋势折线图（fl_chart）、饼图、最近操作日志
-- **导出**: Excel/PDF 导出，PDF 含不可移除版权信息
-- **批量操作**: 多选批量删除、批量启用/禁用
-- **主题**: Material 3 浅色/深色双主题
-
-### HarmonyOS 移动端
-
-- **页面**: 登录、仪表盘、用户列表/详情、个人中心
-- **认证**: JWT Bearer + 401 自动无感刷新 Token，刷新失败自动重定向登录页
-- **存储**: Token 通过 AppStorage 管理
+- 管理页面与静态资源位于 `public/`，使用内置 Layui 组件。
+- 登录、仪表盘、用户、角色、配置、日志、个人中心由 PHP 控制器直接渲染。
 
 ## 开发规范
 
@@ -257,7 +219,7 @@ docker-compose up -d
 
 ### Docker Compose（推荐）
 
-项目根目录提供 `docker-compose.yml`，编排 5 个服务：
+项目根目录提供 `docker-compose.yml`，编排 4 个服务：
 
 | 服务 | 镜像 | 端口 |
 |------|------|------|
@@ -265,7 +227,6 @@ docker-compose up -d
 | `app` | 本地 `Dockerfile` 构建 | 8787 |
 | `mysql` | mysql:8.0 | 3306 |
 | `redis` | redis:7-alpine | 6379 |
-| `elasticsearch` | elasticsearch:8.x | 9200 |
 
 PHP 镜像通过 `Dockerfile` 构建，基础镜像 `php:8.3-cli`，启用 OPcache。
 
@@ -280,7 +241,6 @@ GitHub Actions 持续集成流水线：`.github/workflows/ci.yml`
 
 - PHP 语法检查 (`php -l`)
 - PHPUnit 单元测试
-- Flutter 静态分析 (`flutter analyze`)
 
 ### 数据库备份
 
@@ -299,40 +259,14 @@ GitHub Actions 持续集成流水线：`.github/workflows/ci.yml`
 |:---:|:---:|
 | ![微信](./docs/weixinpay.png "微信") | ![支付宝](./docs/alipay.png "支付宝") |
 
-### 全球转账打赏（跨境汇款）
-
-**收款人信息**
-
-- 收款人姓名：WANG KEXUN
-- 收款账户号码：881015918251
-
-**收款银行**
-
-- ZA Bank SWIFT Code：AABLHKHHXXX
-- 银行名称：ZA Bank Limited
-- 银行编号：387
-- 银行地址：Core F, Cyberport 3, 100 Cyberport Road, Hong Kong
-
-**跨境汇款代理银行（如需）**
-
-> 此为跨境汇款代理银行（中转银行）信息，非收款银行信息。请向汇款银行查询是否需要提供跨境汇款代理银行信息。
-
-- **汇入港元、人民币及美元**，代理银行为 Citibank：
-  - 银行名称：Citibank N.A. Hong Kong
-  - SWIFT Code：CITIHKHXXXX
-  - 银行编号：006
-  - 分行名称：Hong Kong Branch
-  - 分行编号：391
-  - 银行地址：Citibank Tower, Citibank Plaza, 3 Garden Road, Central, Hong Kong
-- **汇入其他币种**，代理银行为 BNY Mellon：
-  - 银行名称：THE BANK OF NEW YORK MELLON
-  - SWIFT Code：IRVTUS3NXXX
-  - 银行地址：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
-
----
-
-## License
-
-MIT
+## 项目授权 / Project License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+
+- 本项目仅供个人学习、研究使用。
+- 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。
+- 商业授权请联系 **erik@erik.xyz**。
+- 未经授权的商业使用，作者将在全球范围内依法追究法律责任，并保留终身追责的权利。
+- 第三方组件仍遵循其各自原有的许可证；视觉资产适用仓库内的 ASSETS-LICENSE.md（如适用）。
+
+**English:** This project is provided for personal study and research only. Commercial use of any kind requires prior written authorization from the author (erik@erik.xyz). Unauthorized commercial use will be pursued for legal liability worldwide, and the author reserves the right to pursue such liability for life. Third-party components remain under their original licenses; visual assets are governed by ASSETS-LICENSE.md where applicable.

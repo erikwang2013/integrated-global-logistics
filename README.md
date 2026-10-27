@@ -1,10 +1,10 @@
 # 物流聚合平台（Integrated Global Logistics）
 
-全球物流轨迹查询的一站式平台：**admin 管理后台**（PHP webman + Flutter）承载管理面与查询 worker 池，**e-cat 高频网关**（Rust 常驻进程）扛住查询流量，**global-logistics 统一门面**（209 家承运商 PHP 适配器）一条入口查遍全球。
+全球物流轨迹查询的一站式平台：**admin 管理后台**（PHP webman + Layui）承载管理面与查询 worker 池，**e-cat 高频网关**（Rust 常驻进程）扛住查询流量，**global-logistics 统一门面**（209 家承运商 PHP 适配器）一条入口查遍全球。
 
 <img src="docs/diagrams/mascot.svg" alt="E-Cat 项目吉祥物" width="220" align="right">
 
-> 支持语言：[[English / 英语]](docs/translations/en/README.md) · [[한국어 / 韩语]](docs/translations/ko/README.md) · [[Русский / 俄语]](docs/translations/ru/README.md) · [[Deutsch / 德语]](docs/translations/de/README.md) · [[Français / 法语]](docs/translations/fr/README.md) · [[Español / 西班牙语]](docs/translations/es/README.md) · [[Português / 葡萄牙语]](docs/translations/pt/README.md) · [[हिन्दी / 印地语]](docs/translations/hi/README.md) · [[العربية / 阿拉伯语]](docs/translations/ar/README.md) · [[বাংলা / 孟加拉语]](docs/translations/bn/README.md) · [[Bahasa Indonesia / 印尼语]](docs/translations/id/README.md) · [[日本語 / 日语]](docs/translations/ja/README.md)（[跳到翻译](#翻译)）
+> 支持语言：[English / 英语](docs/translations/en/README.md)
 
 ## 项目介绍
 
@@ -14,13 +14,13 @@
 
 平台由三个组件协作组成：
 
-- **admin 管理后台**（PHP webman v2 + Flutter）—— 管理面与 PHP worker 池：承运商档案、密钥加密管理、查询记录、统计报表，RBAC / JWT / 操作审计体系完备；
+- **admin 管理后台**（PHP webman v2 + Layui）—— 管理面与 PHP worker 池：查询记录、统计报表、客户端门户，RBAC / JWT / 操作审计体系完备；
 - **tracking-gateway 高频网关**（Rust e-cat 框架）—— 对外查询 API 的第一道入口：Redis 缓存、限流、按承运商熔断、worker 负载均衡，只做高频面，不懂承运商协议；
 - **global-logistics 统一门面**（PHP 包）—— 209 家承运商适配器（国内 45 + 国际 164）、187 条单号自动识别规则、`TrackStatus` 7 种统一状态语义。
 
-**当前进度**：M1-M13 全部完成 —— M1 管理面（承运商/凭证/查询记录）、M2 查询网关（对外 API 全链路）、M3 承运商回调接收（仅落库更新轨迹）、M4 监控统计、M5 对外 OpenAPI 文档、M6 五份客户端 SDK、M7 客户端门户（注册/应用/套餐/订单）、M8 支付（Stripe / PayPal）、M9 虚拟币（USDT TRC20 / BEP20 / ERC20）、M10 支付方式配置、M11 网关安全中间件、M12 CDN 接入方案（Cloudflare + 缓存头落地）、M13 CDN 服务商管理。客户端 → e-cat → worker → 承运商的轨迹查询链路可演示，Python / PHP / Node.js / Go / Rust 五份零依赖 SDK 拷贝即用。
+**当前进度**：管理面（承运商/查询记录/统计）、查询网关（对外 API 全链路）、承运商回调接收（仅落库更新轨迹）、监控统计、对外 OpenAPI 文档、客户端门户（注册/应用/套餐/订单）、支付（Stripe / PayPal / 虚拟币）、网关安全中间件、CDN 加速（Cloudflare + 缓存头）均已完成。客户端 → e-cat → worker → 承运商的轨迹查询链路可演示。
 
-**项目宠物 E-Cat** —— 戴追踪雷达帽、手捧包裹的猫，SVG 单文件矢量，自带呼吸 / 眨眼 / 摇尾 / 雷达扫描动画并遵循 `prefers-reduced-motion` 降级。`docs/diagrams/mascot.svg` 是唯一形象源文件，已接入管理端安装向导（`/install`）、404 / 5xx 错误页、Flutter 管理端（登录页 + Web 首屏加载页）、HarmonyOS 客户端登录页、API 文档页角标与站点 favicon。
+**项目宠物 E-Cat** —— 戴追踪雷达帽、手捧包裹的猫，SVG 单文件矢量，自带呼吸 / 眨眼 / 摇尾 / 雷达扫描动画并遵循 `prefers-reduced-motion` 降级。`docs/diagrams/mascot.svg` 是唯一形象源文件，已接入管理端安装向导（`/install`）、404 / 5xx 错误页、API 文档页角标与站点 favicon。
 
 ## 项目说明
 
@@ -30,10 +30,10 @@
 - **自动识别**：187 条单号正则规则顺序敏感、优先命中国内通道；识别不了的场景可显式调用 `domestic()` / `international()`；
 - **统一状态**：各家五花八门的原始状态映射为统一的 `TrackStatus` 枚举（待揽收 / 运输中 / 派送中 / 已签收 / 异常 / 退回 / 无法识别）；
 - **全球覆盖**：DHL、FedEx、UPS、USPS 四大快递与各国邮政 S10 系统（欧洲、拉美加勒比、非洲中东、亚太四区域）；
-- **对外 API**：e-cat 查询网关提供 API-Key 鉴权、Redis 缓存命中（`X-Cache: HIT`）、限流 429、按承运商熔断 503、RoundRobin worker 负载均衡；五份零依赖 SDK（Python / PHP / Node.js / Go / Rust）拷贝即用；
+- **对外 API**：e-cat 查询网关提供 API-Key 鉴权、Redis 缓存命中（`X-Cache: HIT`）、限流 429、按承运商熔断 503、RoundRobin worker 负载均衡；
 - **查询全审计**：每次查询落库 `logistics_tracking_query`（成功/失败、耗时、错误码），管理面可查可统计；
 - **客户端门户与计费**（M7-M10）：客户端注册/登录（client JWT 与 admin 隔离）、应用管理与 X-API-Key 自设、套餐/订单 API；Stripe / PayPal 双渠道 + USDT TRC20 / BEP20 / ERC20 虚拟币支付，Stripe 支付方式（Apple Pay / Google Pay / Klarna / SEPA 等）经配置即生效；
-- **CDN 加速**（M12/M13）：Cloudflare 免费版全站 HTTPS + 静态资源边缘缓存，CDN 服务商/域名/密钥管理面可配置（凭证加密落库）；
+- **CDN 加速**（M12）：Cloudflare 免费版全站 HTTPS + 静态资源边缘缓存；
 - **密钥零硬编码**：各家密钥全部经配置注入，数据库层用 Encryptable 密文存储，代码与密钥完全分离。
 
 ## 项目架构
@@ -46,7 +46,7 @@ e-cat 网关（Rust）负责对外 API 的 API-Key 鉴权、Redis 缓存命中�
 
 **e-cat 复用 209 家 PHP 适配器的分工方案**：209 个适配器是 PHP（`src/Carriers/Domestic` 45 家 + `International` 164 家），Rust 重写是数月工程且丧失上游包持续更新收益；e-cat 不需要懂承运商协议，只依赖一个稳定的内部契约（`/internal/tracking/query` + `/internal/carriers` 注册表同步）。凭证永不下发到 e-cat，安全边界清晰。
 
-管理面（浏览器）→ `/admin/*`：JWT + RBAC 权限 + 操作审计，覆盖 carrier / carrier-credential / tracking-query / statistics / client / client-app / plan / order / cdn-provider。
+管理面（浏览器）→ `/admin/*`：JWT + RBAC 权限 + 操作审计，覆盖 tracking-query / statistics / client / client-app / plan / order。
 
 ## 项目结构
 
@@ -61,24 +61,19 @@ integrated-global-logistics/
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
 │   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
-│   ├── apps/
-│   │   ├── flutter/                # Flutter Web 管理后台（PC 风格）
-│   │   └── harmonyos/              # HarmonyOS 原生客户端
 │   ├── config/                     # 配置（含中文注释）
 │   ├── database/
 │   │   └── install.sql             # SQL 安装脚本（含权限种子数据）
-│   └── docs/                       # API / 架构 / 设计 / 安全文档（12 语言）
+│   └── docs/                       # API / 架构 / 设计 / 安全文档
 ├── infrastructure/                 # Rust e-cat 微服务框架 + 查询网关
 │   ├── ecat/                       # 聚合 crate（App 骨架）
 │   ├── ecat-transport-http/        # axum HTTP 传输
 │   ├── ecat-data-redis/            # 轨迹缓存 + 限流存储
 │   ├── ecat-client/                # RoundRobin 负载均衡
 │   └── tracking-gateway/           # 对外查询网关（workspace 新成员）
-├── sdk/                            # 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust）
 └── docs/                           # 平台规划与图示
     ├── diagrams/                   # SVG 架构图（本 README 引用）
-    ├── translations/               # 12 语言 README
-    └── logistics-aggregation-platform-plan.md  # 实施规划
+    ├── translations/               # English README
 ```
 
 ## 生命周期
@@ -105,7 +100,6 @@ integrated-global-logistics/
 - **客户端密钥安全**（M7）：X-API-Key 客户端自设（≥16 位），sha256 落库、明文仅创建时返回一次；client JWT（token_type=client）与 admin JWT 隔离；
 - **网关攻击检测**（M11）：`ecat-security` SecurityBodyLayer 已集成至网关（注入 / 协议 / 数据序列化 / 文件 / 敏感数据泄露攻击检测），攻击载荷在网关层即被拦截，应用层安全包继续兜底；
 - **CDN 安全**（M12）：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则 + 网关应用层检测）；Tunnel 回源源站零公网暴露；回调走仅 DNS 独立子域直连防 CDN 故障丢单；限流按 X-API-Key 计数不受 CDN 边缘 IP 影响；鉴权端点一律 no-store 防数据串号；
-- **CDN 凭证加密管理**（M13）：CDN 服务商 access_key / access_secret 经 `Encryptable` 加密存储于 `logistics_cdn_provider` 表，管理面 `/admin/cdn/provider` 配置；
 - **统一错误语义**：限流 429、熔断 503、承运商错误 `carrier_error`，不向客户端泄露内部细节。
 
 ## 功能清单
@@ -119,11 +113,10 @@ integrated-global-logistics/
 - **客户端门户与套餐**：注册 / 登录 / 应用管理 / 套餐 / 订单 API，X-API-Key 客户端自设，client JWT 与 admin 完全隔离；
 - **API 网关防护**：API-Key 鉴权、Redis 限流（429）、按承运商熔断（503）、防 SSRF，攻击载荷在网关层即被拦截；
 - **CDN 安全分发**：Cloudflare 免费版全站 HTTPS + 双层 WAF + 边缘缓存，Tunnel 回源源站零公网暴露；
-- **多语言 SDK**：Python / PHP / Node.js / Go / Rust 五份零依赖 SDK，拷贝即用。
 
 ## 一键安装
 
-推荐使用 Docker Compose 一键部署 —— 一条命令启动 5 个服务（Nginx / PHP / MySQL / Redis / Elasticsearch），含健康检查与数据持久化：
+推荐使用 Docker Compose 一键部署 —— 一条命令启动 4 个服务（Nginx / PHP / MySQL / Redis），含健康检查与数据持久化：
 
 ```bash
 bash install.sh
@@ -160,22 +153,7 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 
 网关默认监听 `0.0.0.0:8080`（`tracking-gateway/config/config.json` 可改），worker 指向 PHP internal 端点（默认 `http://127.0.0.1:8787`），API-Key 与内部令牌在配置中声明。
 
-**SDK 调用**（五份零依赖客户端，拷贝即用）：
-
-```python
-from tracking_client import TrackingClient
-client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
-result = client.query_tracking("LX123456789CN")
-```
-
-```bash
-curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
-  -H "Content-Type: application/json" -d '{"tracking_no": "LX123456789CN"}'
-```
-
-各语言用法与示例见 [sdk/README.md](sdk/README.md)。
-
-详细部署见 [admin/README.md](admin/README.md)（Docker Compose 编排 5 个服务：Nginx / PHP / MySQL / Redis / Elasticsearch）与实施规划文档。
+详细部署见 [admin/README.md](admin/README.md)（Docker Compose 编排 4 个服务：Nginx / PHP / MySQL / Redis）与实施规划文档。
 
 ## 文档
 
@@ -183,26 +161,11 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
 - [admin/docs/ARCHITECTURE.md](admin/docs/ARCHITECTURE.md) —— 架构设计
 - [admin/docs/DESIGN.md](admin/docs/DESIGN.md) —— 设计文档
 - [admin/docs/SECURITY.md](admin/docs/SECURITY.md) —— 安全架构
-- [docs/logistics-aggregation-platform-plan.md](docs/logistics-aggregation-platform-plan.md) —— 平台实施规划（架构、数据流、数据库设计、API 契约、里程碑）
 - [admin/README.md](admin/README.md) —— 管理后台完整说明（技术栈、数据库规范、部署、CI/CD）
-- [sdk/README.md](sdk/README.md) —— 对外 API 客户端 SDK（Python / PHP / Node.js / Go / Rust，五份零依赖，拷贝即用）
 
-## 翻译
+## English
 
-| 语言 | 链接 |
-|------|------|
-| English / 英语 | [docs/translations/en/README.md](docs/translations/en/README.md) |
-| 한국어 / 韩语 | [docs/translations/ko/README.md](docs/translations/ko/README.md) |
-| Русский / 俄语 | [docs/translations/ru/README.md](docs/translations/ru/README.md) |
-| Deutsch / 德语 | [docs/translations/de/README.md](docs/translations/de/README.md) |
-| Français / 法语 | [docs/translations/fr/README.md](docs/translations/fr/README.md) |
-| Español / 西班牙语 | [docs/translations/es/README.md](docs/translations/es/README.md) |
-| Português / 葡萄牙语 | [docs/translations/pt/README.md](docs/translations/pt/README.md) |
-| हिन्दी / 印地语 | [docs/translations/hi/README.md](docs/translations/hi/README.md) |
-| العربية / 阿拉伯语 | [docs/translations/ar/README.md](docs/translations/ar/README.md) |
-| বাংলা / 孟加拉语 | [docs/translations/bn/README.md](docs/translations/bn/README.md) |
-| Bahasa Indonesia / 印尼语 | [docs/translations/id/README.md](docs/translations/id/README.md) |
-| 日本語 / 日语 | [docs/translations/ja/README.md](docs/translations/ja/README.md) |
+- [English / 英语](docs/translations/en/README.md)
 
 ## 开源不易，欢迎支持
 
@@ -210,64 +173,18 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/query \
 |:---:|:---:|
 | <img src="docs/weixinpay.png" width="130" height="130" alt="微信"> | <img src="docs/alipay.png" width="130" height="130" alt="支付宝"> |
 
-### 全球转账打赏（跨境汇款）
-
-**收款人信息**
-
-- 收款人姓名：WANG KEXUN
-- 收款账户号码：881015918251
-
-**收款银行**
-
-- ZA Bank SWIFT Code：AABLHKHHXXX
-- 银行名称：ZA Bank Limited
-- 银行编号：387
-- 银行地址：Core F, Cyberport 3, 100 Cyberport Road, Hong Kong
-
-**跨境汇款代理银行（如需）**
-
-> 此为跨境汇款代理银行（中转银行）信息，非收款银行信息。请向汇款银行查询是否需要提供跨境汇款代理银行信息。
-
-- **汇入港元、人民币及美元**，代理银行为 Citibank：
-  - 银行名称：Citibank N.A. Hong Kong
-  - SWIFT Code：CITIHKHXXXX
-  - 银行编号：006
-  - 分行名称：Hong Kong Branch
-  - 分行编号：391
-  - 银行地址：Citibank Tower, Citibank Plaza, 3 Garden Road, Central, Hong Kong
-- **汇入其他币种**，代理银行为 BNY Mellon：
-  - 银行名称：THE BANK OF NEW YORK MELLON
-  - SWIFT Code：IRVTUS3NXXX
-  - 银行地址：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
-
-### 虚拟币打赏 (Crypto Donation)
-
-如果这个项目对你有帮助，欢迎扫描二维码打赏支持，谢谢！
-
-| 主网 (Network) | 二维码 (QR Code) | 钱包地址 (Wallet Address) |
-|---|---|---|
-| BNB Smart Chain (BEP20) | [<img src="docs/coin/1.jpg" width="150" alt="BNB Smart Chain (BEP20)">](docs/coin/1.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Tron (TRC20) | [<img src="docs/coin/2.jpg" width="150" alt="Tron (TRC20)">](docs/coin/2.jpg) | `TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
-| Ethereum (ERC20) | [<img src="docs/coin/3.jpg" width="150" alt="Ethereum (ERC20)">](docs/coin/3.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Aptos | [<img src="docs/coin/4.jpg" width="150" alt="Aptos">](docs/coin/4.jpg) | `0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
-| Plasma | [<img src="docs/coin/5.jpg" width="150" alt="Plasma">](docs/coin/5.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Polygon POS | [<img src="docs/coin/6.jpg" width="150" alt="Polygon POS">](docs/coin/6.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Solana | [<img src="docs/coin/7.jpg" width="150" alt="Solana">](docs/coin/7.jpg) | `2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` |
-| The Open Network (TON) | [<img src="docs/coin/8.jpg" width="150" alt="The Open Network (TON)">](docs/coin/8.jpg) | `UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
-| Arbitrum One | [<img src="docs/coin/9.jpg" width="150" alt="Arbitrum One">](docs/coin/9.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| AVAX C-Chain | [<img src="docs/coin/10.jpg" width="150" alt="AVAX C-Chain">](docs/coin/10.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-
----
-
-## License
-
-MIT
+## 项目授权 / Project License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
-<!-- TRANSLATE-READY -->
+- 本项目仅供个人学习、研究使用。
+- 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。
+- 商业授权请联系 **erik@erik.xyz**。
+- 未经授权的商业使用，作者将在全球范围内依法追究法律责任，并保留终身追责的权利。
+- 第三方组件仍遵循其各自原有的许可证；视觉资产适用仓库内的 ASSETS-LICENSE.md（如适用）。
 
-<!-- pet-expressions:start -->
+**English:** This project is provided for personal study and research only. Commercial use of any kind requires prior written authorization from the author (erik@erik.xyz). Unauthorized commercial use will be pursued for legal liability worldwide, and the author reserves the right to pursue such liability for life. Third-party components remain under their original licenses; visual assets are governed by ASSETS-LICENSE.md where applicable.
+
 ## 项目宠物表情形态 · E-Cat
 
 <table align="center">
@@ -288,4 +205,3 @@ SVG / PNG）**不是开源资产**，版权归作者所有。未经书面许可�
 
 > 代码部分仍遵循仓库原有 `LICENSE`；第三方素材（如明确标注的 Go Gopher 等）仍遵循其原许可证。
 <!-- assets-license:end -->
-

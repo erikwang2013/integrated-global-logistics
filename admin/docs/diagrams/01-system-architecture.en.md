@@ -1,14 +1,14 @@
 > Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
-> [中文](01-system-architecture.md) | [English](01-system-architecture.en.md) | [한국어](01-system-architecture.ko.md) | [Русский](01-system-architecture.ru.md) | [Deutsch](01-system-architecture.de.md) | [Français](01-system-architecture.fr.md) | [Español](01-system-architecture.es.md) | [Português](01-system-architecture.pt.md) | [हिन्दी](01-system-architecture.hi.md) | [العربية](01-system-architecture.ar.md) | [বাংলা](01-system-architecture.bn.md) | [Bahasa Indonesia](01-system-architecture.id.md) | [日本語](01-system-architecture.ja.md)
+> [中文](01-system-architecture.md) | [English](01-system-architecture.en.md)
 
 # System Architecture (Topology)
 
 ```mermaid
 flowchart TB
     subgraph clients["Client Layer"]
-        flutter["Flutter Web<br/>PC Admin Console"]
-        harmony["HarmonyOS ArkTS<br/>Phone/Tablet Client"]
+        adminui["Layui Admin<br/>Browser"]
+        apiclient["Third-party Client / API"]
     end
 
     subgraph gateway["Gateway Layer"]
@@ -25,12 +25,12 @@ flowchart TB
 
     subgraph storage["Storage Layer"]
         mysql[("MySQL 8.0<br/>Primary Storage - logistics_ Prefix")]
-        es[("Elasticsearch<br/>Full-text Search - logistics_ Prefix")]
+        es[("MySQL LIKE Search<br/>logistics_ Prefix")]
         redis[("Redis<br/>Session/Cache/Captcha")]
     end
 
-    flutter --> nginx
-    harmony --> nginx
+    adminui --> nginx
+    apiclient --> nginx
     nginx --> auth
     auth --> perm
     perm --> admin
@@ -44,8 +44,8 @@ flowchart TB
     auth --> redis
     public --> redis
 
-    style flutter fill:#1677FF,color:#fff
-    style harmony fill:#1677FF,color:#fff
+    style adminui fill:#1677FF,color:#fff
+    style apiclient fill:#1677FF,color:#fff
     style nginx fill:#722ED1,color:#fff
     style auth fill:#FA8C16,color:#fff
     style perm fill:#FA8C16,color:#fff
