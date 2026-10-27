@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz -->
 # Ecat
 
-[简体中文](../../../README.md) | **[English](../../../README.en.md)** | [日本語](../ja/README.md) | [한국어](../ko/README.md) | [Русский](../ru/README.md) | [Deutsch](../de/README.md) | [Français](../fr/README.md) | [Español](../es/README.md) | [Português](../pt/README.md) | [हिन्दी](../hi/README.md) | [العربية](../ar/README.md) | [বাংলা](../bn/README.md) | [Bahasa Indonesia](../id/README.md)
+[简体中文](../../../README.md) | **[English](../../../README.en.md)**
 
 Ecat's Chinese name: 一只猫 (literally "a cat")
 
