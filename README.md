@@ -173,6 +173,47 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 |:---:|:---:|
 | <img src="docs/weixinpay.png" width="130" height="130" alt="微信"> | <img src="docs/alipay.png" width="130" height="130" alt="支付宝"> |
 
+## 开源版 vs 商业版
+
+本仓库是**开源版**：保留 209 家承运商轨迹查询的核心链路，适合个人学习、研究与二次开发。`open-project/integrated-global-logistics` 是**商业版**，在同一核心之上补齐管理面、检索、多端客户端与对外集成能力；商业授权与交付条款请联系 **erik@erik.xyz**。
+
+### 规模对比
+
+| 维度 | 开源版 | 商业版 |
+|---|---:|---:|
+| PHP 源文件 | 176 | 193 |
+| Rust 源文件 | 105 | 109 |
+| 后台控制器 | 26 | 30 |
+| 数据模型 | 12 | 16 |
+| 后台路由 | 57 | 62 |
+| 数据表 | 13 | 17 |
+| 管理端 | PHP + Layui | PHP + Layui + Flutter Web |
+| 移动端 | 无 | HarmonyOS 原生客户端 |
+| 对外 SDK | 无 | Python / PHP / Node.js / Go / Rust 五份 |
+| 全文检索 | MySQL LIKE | Elasticsearch + Scout |
+| 文档语言 | 中文 / 英文 | 12 种语言（含英文） |
+
+### 商业版独有能力
+
+- **承运商与凭据管理面（M1）**：`/admin/carrier`、`/admin/carrier/credential`，后台维护承运商档案与加密凭据，新增 2 张表。
+- **回调订阅与异步推送（M3）**：`/admin/callback/subscription` 订阅配置、HMAC 签名、幂等键、指数退避重试与手动重推，新增 `logistics_callback_subscription` 表；开源版只保留入站回调落库。
+- **CDN 服务商管理（M13）**：`/admin/cdn/provider` 管理 Cloudflare 等 CDN 服务商与加密凭据，新增 `logistics_cdn_provider` 表。
+- **Elasticsearch / Scout 全文检索**：`admin/config/scout.php`、搜索队列与 `Searchable` 模型，支持比 MySQL LIKE 更完整的检索能力。
+- **多端客户端**：Flutter Web 管理端（29 个 Dart 文件，PC 管理台风格）与 HarmonyOS 原生客户端（12 个 ArkTS 页面）。
+- **五语言零依赖 SDK**：Python / PHP / Node.js / Go / Rust，拷贝即用，覆盖对外 API 的鉴权、查询与错误处理。
+- **完整多语言文档**：除中英文外保留 11 种语言翻译；开源版已收敛为中英文。
+
+### 两版共有
+
+- 209 家承运商适配器（国内 45 + 国际 164）、187 条单号识别规则、`TrackStatus` 7 种统一状态。
+- Rust `tracking-gateway`：API-Key 鉴权、Redis 缓存、限流、按承运商熔断、RoundRobin worker 负载均衡。
+- 客户端门户（注册 / 应用 / 套餐 / 订单）、Stripe / PayPal 与 USDT 多链支付、RBAC / JWT / 操作审计、安装向导、监控统计与 OpenAPI 文档。
+- 入站承运商回调接收、轨迹落库与查询审计。
+
+**商业版授权联系：erik@erik.xyz**
+
+**English:** The open edition keeps the core 209-carrier tracking pipeline for personal study and research. The commercial edition adds carrier/credential CRUD, callback subscriptions with async retry, CDN provider management, Elasticsearch/Scout search, a Flutter Web admin, a HarmonyOS client, five zero-dependency SDKs, and 12-language documentation. Commercial licensing and delivery terms: **erik@erik.xyz**.
+
 ## 项目授权 / Project License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
