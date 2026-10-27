@@ -479,5 +479,3 @@ Policy: https://erik.xyz/security-policy
 **13.4 网关攻击检测（M11）**：`ecat-security` SecurityBodyLayer 已集成至 tracking-gateway（注入 / 协议 / 数据序列化 / 文件 / 敏感数据泄露攻击检测），攻击载荷在网关层即被拦截返回安全错误（HandleErrorLayer 消化 SecurityError）；应用层 `erikwang2013/security-php` 继续兜底，两层串行互补。
 
 **13.5 CDN 安全（M12）**：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则集挡 DDoS / 已知漏洞 / 扫描，网关 `ecat-security` 挡应用层攻击载荷）；Tunnel 回源源站零公网暴露（备选：回源 IP 段白名单 + 自定义回源头 + mTLS）；回调（`/api/callback/*`、`/api/payment/webhook/*`）走仅 DNS 独立子域直连回源，CDN 故障不丢单；网关限流按 X-API-Key 计数与来源 IP 无关，CDN 边缘 IP 不改变限流语义；API-Key 鉴权端点一律 no-store 防跨用户缓存串号；「CF-Connecting-IP」仅在绑定回源白名单时可信。
-
-**13.6 CDN 服务商密钥管理（M13）**：CDN 服务商档案（access_key / access_secret / 域名列表）存 `logistics_cdn_provider` 表，密钥字段经 `Encryptable` 加密落库，管理面 `/admin/cdn/provider` CRUD 维护。

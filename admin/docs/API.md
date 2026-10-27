@@ -1944,7 +1944,6 @@ SDK 在信封 `code != 0` 或网络失败时抛异常（`TrackingApiError`），
 | GET | `/admin/order` | 订单列表（状态/渠道筛选） |
 | POST | `/admin/order/{id}/confirm` | 手动确认订单（兜底） |
 | POST | `/admin/order/{id}/cancel` | 取消订单 |
-| GET/POST/PUT/DELETE | `/admin/cdn/provider` | CDN 服务商凭证 CRUD（access_key/access_secret 加密存储） |
 
 ### 18.2 客户端门户（`/api/*`，客户端 JWT `token_type=client`）
 

@@ -123,9 +123,6 @@ Route::group('/admin', function () {
     Route::get('/tracking/statistics', [app\admin\controller\StatisticsController::class, 'index']);
     Route::get('/order/statistics', [app\admin\controller\StatisticsController::class, 'order']);
 
-    // 物流聚合 — CDN 服务商
-    Route::resource('/cdn/provider', app\admin\controller\CdnProviderController::class);
-
     // 物流聚合 — 回调订阅
 
     // 物流聚合 — 客户端管理

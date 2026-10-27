@@ -177,29 +177,6 @@ CREATE TABLE `logistics_order` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
 
 -- -------------------------------------------
--- M13 CDN 服务商配置表
--- -------------------------------------------
-DROP TABLE IF EXISTS `logistics_cdn_provider`;
-
-CREATE TABLE `logistics_cdn_provider` (
-  `id` bigint unsigned NOT NULL COMMENT '主键ID，由snowflake生成',
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '服务商代码: cloudflare/cloudfront/aliyun/tencent',
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '服务商显示名称',
-  `access_key` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '凭证 Key（加密存储；Cloudflare=API Token，阿里/AWS=AccessKey ID）',
-  `access_secret` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '凭证 Secret（加密存储；阿里/AWS=AccessKey Secret，Cloudflare 留空）',
-  `extra` json DEFAULT NULL COMMENT '扩展参数（JSON：zone_id/email/region 等各家私有参数）',
-  `domains` json DEFAULT NULL COMMENT '域名列表（JSON数组，如 ["api.erik.xyz","cdn.erik.xyz"]）',
-  `status` tinyint unsigned NOT NULL DEFAULT '1' COMMENT '状态: 0=禁用 1=启用',
-  `sort` int unsigned NOT NULL DEFAULT '0' COMMENT '排序值，越小越靠前',
-  `remark` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '' COMMENT '备注',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_code` (`code`),
-  KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CDN服务商配置表';
-
--- -------------------------------------------
 -- M1 权限种子（菜单 type=1 + API type=3，ID 沿用 install.sql 的 snowflake 分段约定）
 -- -------------------------------------------
 INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
@@ -274,22 +251,5 @@ INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUE
 ('10000000000000001', '21000000000000169'),
 ('10000000000000001', '21000000000000170'),
 ('10000000000000001', '21000000000000171');
-
--- -------------------------------------------
--- M13 CDN服务商管理权限种子（菜单 type=1 + API type=3）
--- -------------------------------------------
-INSERT INTO `logistics_admin_permission` (`id`, `parent_id`, `name`, `slug`, `type`, `icon`, `path`, `sort`, `created_at`, `updated_at`) VALUES
-('21000000000000201', '0', 'CDN服务商', 'cdn_provider', 1, 'link', '/admin/cdn/provider', 14, NOW(), NOW()),
-('21000000000000211', '21000000000000201', '查看CDN服务商', 'get.admin/cdn/provider', 3, '', '', 1, NOW(), NOW()),
-('21000000000000212', '21000000000000201', '创建CDN服务商', 'post.admin/cdn/provider', 3, '', '', 2, NOW(), NOW()),
-('21000000000000213', '21000000000000201', '更新CDN服务商', 'put.admin/cdn/provider', 3, '', '', 3, NOW(), NOW()),
-('21000000000000214', '21000000000000201', '删除CDN服务商', 'delete.admin/cdn/provider', 3, '', '', 4, NOW(), NOW());
-
-INSERT INTO `logistics_admin_role_permission` (`role_id`, `permission_id`) VALUES
-('10000000000000001', '21000000000000201'),
-('10000000000000001', '21000000000000211'),
-('10000000000000001', '21000000000000212'),
-('10000000000000001', '21000000000000213'),
-('10000000000000001', '21000000000000214');
 
 SET FOREIGN_KEY_CHECKS = 1;
