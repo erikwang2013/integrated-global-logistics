@@ -177,21 +177,22 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 
 本仓库是**开源版**：保留 209 家承运商轨迹查询的核心链路，适合个人学习、研究与二次开发。**商业版**由作者单独提供，在同一核心之上补齐管理面、检索、多端客户端与对外集成能力；商业授权与交付条款请联系 **erik@erik.xyz**。
 
-### 规模对比
+### 多维度对比
+
+数据为当前代码快照的静态清点，不含运行时压测；两版同源，商业版是开源版的超集。
 
 | 维度 | 开源版 | 商业版 |
-|---|---:|---:|
-| PHP 源文件 | 176 | 193 |
-| Rust 源文件 | 105 | 109 |
-| 后台控制器 | 26 | 30 |
-| 数据模型 | 12 | 16 |
-| 后台路由 | 57 | 62 |
-| 数据表 | 13 | 17 |
-| 管理端 | PHP + Layui | PHP + Layui + Flutter Web |
-| 移动端 | 无 | HarmonyOS 原生客户端 |
-| 对外 SDK | 无 | Python / PHP / Node.js / Go / Rust 五份 |
-| 全文检索 | MySQL LIKE | Elasticsearch + Scout |
-| 文档语言 | 中文 / 英文 | 12 种语言（含英文） |
+|---|---|---|
+| **功能覆盖** | 26 控制器 / 12 模型 / 13 表 / 57 路由；轨迹查询核心闭环 | 30 / 16 / 17 / 62；增加承运商与凭据、回调订阅、CDN 服务商三个管理域 |
+| **安全防护** | 9 个中间件（AdminAuth / AdminPermission / ClientAuth / RateLimit / SecurityFilter / OperationLog 等）、JWT、RBAC、入站回调 HMAC、查询审计 | 同一套中间件与安全检测器；另增承运商/CDN 凭据加密（Encryptable 5 个模型 vs 2 个）、出站订阅 HMAC/幂等/退避重试 |
+| **性能与规模** | Rust `tracking-gateway` + PHP webman/Layui；Redis 缓存/限流、按承运商熔断、RoundRobin；4 个 compose 服务 | 同一 gateway；增加 Elasticsearch/Scout 索引与搜索队列，5 个 compose 服务；检索更强但资源占用更高 |
+| **数据与检索** | 13 张表；MySQL LIKE | 17 张表；Elasticsearch + Scout，保留 MySQL 回退 |
+| **测试与质量** | 6 个 PHPUnit 文件 / 26 用例；684 个 Rust 测试；无仓库内 CI workflow | 6 个 PHPUnit 文件 / 28 用例；685 个 Rust 测试；同样无 CI workflow |
+| **部署与运维** | docker-compose（nginx/app/mysql/redis）、install.sh、健康检查、Prometheus 指标、apidoc | 同左 + Elasticsearch 容器；另需构建 Flutter/HarmonyOS 客户端 |
+| **多端与国际化** | Layui 管理端；中文/英文文档；无对外 SDK | Layui + Flutter Web + HarmonyOS；Python/PHP/Node/Go/Rust 五语言 SDK；12 种语言文档 |
+| **扩展性与二次开发** | 209 家承运商适配器、187 条单号识别规则；OpenAPI 文档；可直接改 PHP/Rust | 同左 + 管理端 CRUD、五语言 SDK、ES 检索、多端参考实现 |
+| **授权与商业支持** | 个人学习/研究；商业使用需书面授权 | 商业授权、交付与支持；联系 **erik@erik.xyz** |
+| **适用场景** | 个人学习、研究、二次开发、小规模自建 | 生产部署、多承运商凭据运营、企业检索、多端交付、对外 API 集成 |
 
 ### 商业版独有能力
 
@@ -212,7 +213,7 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 
 **商业版授权联系：erik@erik.xyz**
 
-**English:** The open edition keeps the core 209-carrier tracking pipeline for personal study and research. The commercial edition adds carrier/credential CRUD, callback subscriptions with async retry, CDN provider management, Elasticsearch/Scout search, a Flutter Web admin, a HarmonyOS client, five zero-dependency SDKs, and 12-language documentation. Commercial licensing and delivery terms: **erik@erik.xyz**.
+**English:** The open edition keeps the core 209-carrier tracking pipeline for personal study and research. The commercial edition adds carrier/credential CRUD, callback subscriptions with async retry, CDN provider management, Elasticsearch/Scout search, a Flutter Web admin, a HarmonyOS client, five zero-dependency SDKs, and 12-language documentation. The comparison table above covers feature scope, security, performance, data/search, tests, deployment, clients/i18n, extensibility, licensing and fit. Commercial licensing and delivery terms: **erik@erik.xyz**.
 
 ## 项目授权 / Project License
 
