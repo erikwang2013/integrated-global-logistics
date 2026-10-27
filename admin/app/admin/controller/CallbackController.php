@@ -7,8 +7,6 @@ declare(strict_types=1);
 
 namespace app\admin\controller;
 
-use app\model\Carrier;
-use app\model\CarrierCredential;
 use app\model\TrackingEvent;
 use app\model\TrackingQuery;
 use support\Redis;
@@ -24,9 +22,10 @@ class CallbackController extends BaseController
 {
     public function receive(Request $request, string $carrier): Response
     {
-        // 承运商白名单
-        $carrierModel = Carrier::where('code', $carrier)->where('status', 1)->first();
-        if (!$carrierModel) {
+        // 承运商白名单：以包配置中声明的承运商代码为准
+        $logisticsConfig = config('logistics');
+        $carrierConfig = is_array($logisticsConfig) ? ($logisticsConfig[$carrier] ?? null) : null;
+        if (!is_array($carrierConfig)) {
             return json(['code' => 404, 'message' => 'carrier not found'], 404);
         }
 
@@ -38,10 +37,7 @@ class CallbackController extends BaseController
 
         // 签名校验：配置了 webhook_secret 的承运商必须携带有效签名，否则 401；未配置则白名单放行
         // sign = sha256(secret + payload 去除 sign 字段后的紧凑 JSON)；sign 随 payload 发送，故只能对去 sign 后的内容签名
-        $secret = CarrierCredential::where('carrier_id', $carrierModel->id)
-            ->where('status', 1)->value('extra');
-        $secret = is_string($secret) ? json_decode($secret, true) : (is_array($secret) ? $secret : []);
-        $secret = (string) ($secret['webhook_secret'] ?? '');
+        $secret = (string) ($carrierConfig['webhook_secret'] ?? '');
         if ($secret !== '') {
             $signPayload = $payload;
             unset($signPayload['sign']);

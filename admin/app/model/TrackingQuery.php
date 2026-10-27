@@ -37,8 +37,4 @@ class TrackingQuery extends Model
         return $date->format('Y-m-d H:i:s');
     }
 
-    public function carrier()
-    {
-        return $this->belongsTo(Carrier::class, 'carrier_id', 'id');
-    }
 }
