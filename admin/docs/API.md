@@ -1889,47 +1889,6 @@ curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
 curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
 ```
 
-### 17.3 调用示例（SDK）
-
-五份零依赖 SDK 见仓库 `sdk/` 目录（Python / PHP / Node.js / Go / Rust，拷贝即用）：
-
-```python
-from tracking_client import TrackingClient
-client = TrackingClient("demo-api-key", "http://127.0.0.1:8080")
-result = client.query_tracking("LX123456789CN")
-print(result["status"], result["events"][0]["description"])
-```
-
-```php
-require "TrackingClient.php";
-$client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
-$carriers = $client->list_carriers();
-```
-
-```js
-const { TrackingClient } = require("./tracking-client.js");
-const client = new TrackingClient("demo-api-key", "http://127.0.0.1:8080");
-const detail = await client.getTracking("query_no");
-console.log(detail.status);
-```
-
-```go
-import "trackingclient"
-client := trackingclient.NewClient("demo-api-key", "http://127.0.0.1:8080")
-raw, err := client.QueryTracking("LX123456789CN", "china-post")
-if err != nil { panic(err) }
-fmt.Println(string(raw))
-```
-
-```rust
-use trackingclient::tracking_client::TrackingClient;
-let client = TrackingClient::new("demo-api-key", "http://127.0.0.1:8080")?;
-let detail = client.get_tracking("query_no")?;
-println!("{}", detail);
-```
-
-SDK 在信封 `code != 0` 或网络失败时抛异常（`TrackingApiError`），携带 `code` / `message` / `error_code` / `error_message` / `http_status`；限流与熔断错误建议退避重试，承运商侧错误无需重试。完整用法见 `sdk/README.md`。
-
 ## 18. 物流业务端点（M7-M13）
 
 ### 18.1 管理端（`/admin/*`，admin JWT + RBAC）
