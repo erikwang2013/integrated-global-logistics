@@ -15,5 +15,13 @@
     <php>
         <ini name="display_errors" value="On"/>
         <ini name="error_reporting" value="-1"/>
+        <!-- 测试环境固定配置：force=true 确保覆盖本机 .env，且 getenv() 可见 -->
+        <!-- 本机 imagick 扩展常量缺失，测试固定使用 gd 驱动 -->
+        <env name="POSTER_IMAGE_DRIVER" value="gd" force="true"/>
+        <env name="APP_DEBUG" value="1" force="true"/>
+        <env name="APP_NAME" value="webman-test" force="true"/>
+        <env name="JWT_SECRET_KEY" value="test-jwt-secret-key-0123456789abcdef" force="true"/>
+        <env name="ENCRYPTABLE_KEY" value="test-encryptable-key-0123456789abcdef" force="true"/>
+        <env name="ENCRYPTION_KEY" value="test-encryption-key-0123456789abcdef" force="true"/>
     </php>
 </phpunit>

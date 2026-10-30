@@ -331,20 +331,14 @@ CREATE TABLE `logistics_order` (
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_order_no` (`order_no`),
+  UNIQUE KEY `uk_tx_id` (`tx_id`),
   KEY `idx_client_id` (`client_id`),
   KEY `idx_app_id` (`app_id`),
   KEY `idx_status` (`status`),
   KEY `idx_channel` (`channel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单表';
 
--- -------------------------------------------
--- 默认管理员账号 admin / admin888
--- -------------------------------------------
-INSERT INTO `logistics_admin_user` (`id`, `username`, `password`, `real_name`, `status`, `created_at`, `updated_at`) VALUES
-('21000000000000100', 'erik', '$2y$10$OMKpk/QJFvFg.785anhTR.n038Gmwf.yx9sOPcbS/AgIt3ChKXswG', 'erik', 1, NOW(), NOW());
-
-INSERT INTO `logistics_admin_user_role` (`user_id`, `role_id`) VALUES
-('21000000000000100', '10000000000000001');
+-- 管理员账号由安装向导创建，这里不写死种子账号
 
 -- -------------------------------------------
 -- M7 客户端管理权限种子（菜单 type=1 + API type=3）

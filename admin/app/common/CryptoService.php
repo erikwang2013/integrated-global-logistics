@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 namespace app\common;
 
+use app\model\Order;
 use GuzzleHttp\Client;
 use Throwable;
 
@@ -78,6 +79,28 @@ class CryptoService
     }
 
     /**
+     * 金额唯一化：基础金额 + 0.01–0.99 中第一个未占用的偏移，同链未完成订单金额互不相同
+     * shortcut: 金额唯一性依赖 0.01–0.99 偏移，跨链/跨时间窗仍可能碰撞，必要时改为独立收款地址
+     */
+    public static function uniqueAmount(float $base, array $usedAmounts): float
+    {
+        for ($cents = 1; $cents <= 99; $cents++) {
+            $candidate = round($base + $cents / 100, 2);
+            $conflict = false;
+            foreach ($usedAmounts as $used) {
+                if (abs($candidate - (float) $used) < 0.005) {
+                    $conflict = true;
+                    break;
+                }
+            }
+            if (!$conflict) {
+                return $candidate;
+            }
+        }
+        return $base;
+    }
+
+    /**
      * 发起虚拟币支付，返回 {chain, address, amount, coin, memo}
      */
     public static function initiate(string $chain, string $orderNo, int $priceCents): array
@@ -89,18 +112,32 @@ class CryptoService
         if (!$address['ok']) {
             return $address;
         }
+        // 重复 pay 必须复用已展示的金额，否则用户已按旧金额转账却匹配不上
+        $existing = Order::where('order_no', $orderNo)->where('status', 'pending')->value('crypto_amount');
+        if ($existing !== null && (float) $existing > 0) {
+            $amount = (float) $existing;
+        } else {
+            // 排除当前订单，避免把自己的金额当成已占用而反复改金额
+            $usedAmounts = Order::where('chain', $chain)
+                ->where('status', 'pending')
+                ->where('order_no', '!=', $orderNo)
+                ->pluck('crypto_amount')
+                ->all();
+            $amount = self::uniqueAmount(self::amountFor($priceCents, self::usdtUsdRate()), $usedAmounts);
+        }
         return [
             'ok' => true,
             'chain' => $chain,
             'address' => $address['address'],
-            'amount' => self::amountFor($priceCents, self::usdtUsdRate()),
+            'amount' => $amount,
             'coin' => 'USDT',
             'memo' => self::memoFor($chain, $orderNo),
         ];
     }
 
     /**
-     * TRC20 链上核验：Tronscan 公共 API，时间窗=下单时间起 48h，memo 精确匹配，金额 ≥ 应付额
+     * TRC20 链上核验：Tronscan 公共 API，时间窗=下单时间起 48h，金额 ±0.001 唯一匹配
+     * 标准 transfer 无 memo（data 恰为 136 hex）；data 带 memo 时必须一致，否则由金额唯一性防串单
      * 匹配到返回 tx hash；无匹配/请求失败返回 null（人工核对兜底，不抛致命错误）
      */
     public static function verifyTrc20(string $address, string $memo, float $amountUsdt, int $fromTs): ?string
@@ -126,11 +163,12 @@ class CryptoService
                 if (($tx['contract_ret'] ?? 'SUCCESS') !== 'SUCCESS') {
                     continue;
                 }
-                // USDT 6 位小数；+0.001 容差兜住四舍五入
-                if ((float) ($tx['amount'] ?? 0) / 1000000 + 0.001 < $amountUsdt) {
+                // USDT 6 位小数；金额唯一化匹配（±0.001 容差兜住四舍五入）
+                if (abs((float) ($tx['amount'] ?? 0) / 1000000 - $amountUsdt) > 0.001) {
                     continue;
                 }
-                if (self::memoFromData((string) ($tx['data'] ?? '')) !== $memo) {
+                $memoInData = self::memoFromData((string) ($tx['data'] ?? ''));
+                if ($memoInData !== '' && $memoInData !== $memo) {
                     continue;
                 }
                 $hash = (string) ($tx['transaction_id'] ?? '');

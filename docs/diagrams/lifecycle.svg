@@ -20,6 +20,7 @@
   <text x="150" y="216" text-anchor="middle" font-size="12.5" fill="#E9F2FB">GET /v1/tracking/{no}</text>
   <text x="150" y="266" text-anchor="middle" font-size="12.5" fill="#17A2B8" font-weight="bold">缓存命中即返</text>
   <text x="150" y="286" text-anchor="middle" font-size="12.5" fill="#17A2B8" font-weight="bold">X-Cache: HIT</text>
+  <text x="150" y="306" text-anchor="middle" font-size="12.5" fill="#17A2B8" font-weight="bold">失败 502 · 15s 负缓存</text>
 
   <g font-size="13" fill="#212529">
     <rect x="292" y="96" width="106" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
@@ -39,12 +40,12 @@
 
     <rect x="778" y="96" width="118" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
     <text x="837" y="118" text-anchor="middle" font-weight="bold">缓存查找</text>
-    <text x="837" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">cache:track:{c}:{no}</text>
+    <text x="837" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">cache:query:{key}:{no}</text>
     <line x1="896" y1="121" x2="938" y2="121" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
 
     <rect x="944" y="96" width="112" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
     <text x="1000" y="118" text-anchor="middle" font-weight="bold">熔断检查</text>
-    <text x="1000" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">按承运商</text>
+    <text x="1000" y="136" text-anchor="middle" font-size="11.5" fill="#6C757D">5xx 计入</text>
     <line x1="1056" y1="121" x2="1096" y2="121" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
   </g>
 
@@ -55,7 +56,7 @@
     <line x1="424" y1="213" x2="466" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
 
     <rect x="472" y="188" width="150" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
-    <text x="547" y="210" text-anchor="middle" font-weight="bold">PHP worker 门面</text>
+    <text x="547" y="210" text-anchor="middle" font-weight="bold">PHP worker 门面 ×8</text>
     <text x="547" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">Logistics::domestic/intl</text>
     <line x1="622" y1="213" x2="664" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
 
@@ -66,7 +67,7 @@
 
     <rect x="858" y="188" width="170" height="50" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
     <text x="943" y="210" text-anchor="middle" font-weight="bold">落库 + 写缓存</text>
-    <text x="943" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">logistics_tracking_query</text>
+    <text x="943" y="228" text-anchor="middle" font-size="11.5" fill="#6C757D">共享 track + 详情缓存</text>
     <line x1="1028" y1="213" x2="1084" y2="213" stroke="#1F4E79" stroke-width="2" marker-end="url(#arrow)"/>
     <rect x="1088" y="196" width="60" height="34" rx="8" fill="#17A2B8"/>
     <text x="1118" y="217" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#FFFFFF">返回</text>
@@ -79,7 +80,7 @@
   <text x="150" y="434" text-anchor="middle" font-size="12.5" fill="#E8F8FA">异步 · 承运商 webhook</text>
   <text x="150" y="454" text-anchor="middle" font-size="12.5" fill="#E8F8FA">→ 验签落库 → 队列推送</text>
   <text x="150" y="494" text-anchor="middle" font-size="12.5" fill="#E8F8FA">POST /api/callback/{carrier}</text>
-  <text x="150" y="514" text-anchor="middle" font-size="12.5" fill="#E8F8FA">白名单路由，不走 RBAC</text>
+  <text x="150" y="514" text-anchor="middle" font-size="12.5" fill="#E8F8FA">白名单路由 · 真实 4xx/5xx</text>
   <text x="150" y="560" text-anchor="middle" font-size="12.5" fill="#FFFFFF" font-weight="bold">at-least-once + 幂等键</text>
 
   <g font-size="13" fill="#212529">
@@ -90,12 +91,12 @@
 
     <rect x="480" y="394" width="110" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="535" y="416" text-anchor="middle" font-weight="bold">签名校验</text>
-    <text x="535" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">HMAC / digest</text>
+    <text x="535" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">HMAC · 缺失 401</text>
     <line x1="590" y1="419" x2="632" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
 
     <rect x="638" y="394" width="140" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="708" y="416" text-anchor="middle" font-weight="bold">事件落库</text>
-    <text x="708" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">logistics_tracking_event</text>
+    <text x="708" y="434" text-anchor="middle" font-size="11.5" fill="#6C757D">event 表 · 单次 ≤100</text>
     <line x1="778" y1="419" x2="820" y2="419" stroke="#17A2B8" stroke-width="2" marker-end="url(#arrow2)"/>
 
     <rect x="826" y="394" width="150" height="50" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>

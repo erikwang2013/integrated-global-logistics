@@ -87,6 +87,7 @@
   <text x="910" y="238" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#1F4E79">translations/</text>
   <text x="910" y="254" text-anchor="middle" font-size="11" fill="#6C757D">English README</text>
 
+  <text x="80" y="286" font-size="12" fill="#6C757D">v1.2.0 新增：admin/support/bootstrap/Secrets.php · admin/tests/ · admin/docs/nginx-docker.conf</text>
 
   <!-- 底部注释 -->
   <rect x="80" y="300" width="1080" height="168" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>

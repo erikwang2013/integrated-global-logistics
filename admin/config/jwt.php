@@ -12,8 +12,8 @@ declare(strict_types=1);
  * @link https://github.com/erikwang2013/jwt-webman
  */
 return [
-    // JWT 签名密钥，生产环境请使用 64 位以上随机字符串并通过环境变量注入
-    'secret' => getenv('JWT_SECRET_KEY') ?: 'open-admin-jwt-secret-change-in-production',
+    // JWT 签名密钥，必须通过环境变量注入；不再提供公开默认值（见 support\bootstrap\Secrets）
+    'secret' => getenv('JWT_SECRET_KEY') ?: '',
 
     // 签名算法，支持 HS256/HS384/HS512/RS256
     'algorithm' => getenv('JWT_ALGORITHM') ?: 'HS256',

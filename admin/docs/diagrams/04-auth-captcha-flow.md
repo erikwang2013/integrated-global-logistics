@@ -12,8 +12,8 @@ sequenceDiagram
     Note over U,CAP: 第一步: 获取验证码
     CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
-    CAP-->>SV: key, image(base64 PNG), targets
-    SV-->>CL: 200 {key, image, extra.targets}
+    CAP-->>SV: key, image(base64 PNG), extra.texts
+    SV-->>CL: 200 {key, image, extra.texts}
     end
 
     rect rgb(230, 255, 230)
@@ -38,9 +38,9 @@ sequenceDiagram
             SV-->>CL: 401 用户名或密码错误
         else 凭证正确
             SV->>JWT: jwt()->create()
-            JWT-->>SV: access_token(2h)
+            JWT-->>SV: access_token(2h, token_type=access)
             SV->>JWT: jwt()->refresh()
-            JWT-->>SV: refresh_token(14d)
+            JWT-->>SV: refresh_token(14d, 单次使用)
             SV-->>CL: 200 {tokens, user}
         end
     end

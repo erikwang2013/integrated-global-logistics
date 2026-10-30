@@ -18,6 +18,17 @@ use Webman\Validation\Validator;
 class ConfigController extends BaseController
 {
     /**
+     * 敏感配置值打码：密钥类 key 一律返回 ***
+     */
+    public static function maskValue(string $key, string $value): string
+    {
+        // 只打码真正的密钥字段；webhook_url / *_id 等非密钥配置保持可读
+        return preg_match('/(secret|password|private_key)|(^|_)(api|app|access)[_-]?key($|_)|(^|_)token($|_)/i', $key)
+            ? '***'
+            : $value;
+    }
+
+    /**
      * @Apidoc\Title("配置列表")
      * @Apidoc\Group("系统配置")
      * @Apidoc\Url("/admin/config")
@@ -45,7 +56,11 @@ class ConfigController extends BaseController
                        ->orderBy('group')
                        ->orderBy('key')
                        ->get()
-                       ->map(fn($item) => $this->encodeIds($item->toArray()));
+                       ->map(function ($item) {
+                           $data = $this->encodeIds($item->toArray());
+                           $data['value'] = self::maskValue((string) ($data['key'] ?? ''), (string) ($data['value'] ?? ''));
+                           return $data;
+                       });
 
         return $this->success([
             'list'  => $list,
@@ -95,7 +110,9 @@ class ConfigController extends BaseController
         $config->description = $request->input('description', '');
         $config->save();
 
-        return $this->success($this->encodeIds($config->toArray()), trans('messages.create_success'));
+        $data = $this->encodeIds($config->toArray());
+        $data['value'] = self::maskValue((string) $config->key, (string) ($data['value'] ?? ''));
+        return $this->success($data, trans('messages.create_success'));
     }
 
     /**
@@ -117,8 +134,10 @@ class ConfigController extends BaseController
             return $this->fail(trans('messages.config_not_found'), 404);
         }
 
-        if ($request->input('value') !== null) {
-            $config->value = $request->input('value');
+        // 列表返回的是打码值；客户端原样回写时不要用 *** 覆盖真实密钥
+        $value = $request->input('value');
+        if ($value !== null && $value !== '***') {
+            $config->value = $value;
         }
         if ($request->input('type') !== null) {
             $config->type = $request->input('type');
@@ -129,7 +148,9 @@ class ConfigController extends BaseController
 
         $config->save();
 
-        return $this->success($this->encodeIds($config->toArray()), trans('messages.update_success'));
+        $data = $this->encodeIds($config->toArray());
+        $data['value'] = self::maskValue((string) $config->key, (string) ($data['value'] ?? ''));
+        return $this->success($data, trans('messages.update_success'));
     }
 
     /**

@@ -17,7 +17,6 @@ use app\common\EncryptionService;
 use app\model\AdminUser;
 use app\model\OperationLog;
 use app\model\AdminRole;
-use app\model\SystemConfig;
 use support\Request;
 
 /**
@@ -31,7 +30,7 @@ class ExportController extends BaseController
      * @Apidoc\Method("POST")
      * @Apidoc\Url("/admin/export/excel")
      * @Apidoc\Desc("导出数据为Excel文件，支持多表多字段")
-     * @Apidoc\Param("table", type="string", require=true, desc="表名(admin_user/operation_log/admin_role/system_config)")
+     * @Apidoc\Param("table", type="string", require=true, desc="表名(admin_user/operation_log/admin_role)")
      * @Apidoc\Param("columns", type="array", require=false, desc="导出字段列表")
      * @Apidoc\Param("conditions", type="object", require=false, desc="筛选条件")
      * @Apidoc\Param("title", type="string", require=false, desc="导出标题", default="数据导出")
@@ -42,6 +41,9 @@ class ExportController extends BaseController
         $columns = $request->input('columns', []);
         $conditions = $request->input('conditions', []);
         $title = $request->input('title', '数据导出');
+        if (!is_array($conditions)) {
+            $conditions = [];
+        }
 
         // 获取导出字段映射
         $exportColumns = $this->getExportColumns($table);
@@ -219,11 +221,11 @@ class ExportController extends BaseController
 
     private function fetchExportData(string $table, array $columns, array $conditions): array
     {
+        // 不提供 system_config：配置值包含支付密钥等敏感数据
         $modelMap = [
             'admin_user' => AdminUser::class,
             'operation_log' => OperationLog::class,
             'admin_role' => AdminRole::class,
-            'system_config' => SystemConfig::class,
         ];
 
         if (!isset($modelMap[$table])) {
@@ -259,11 +261,6 @@ class ExportController extends BaseController
             'admin_role' => [
                 'id' => 'ID', 'name' => '角色名称', 'slug' => '角色标识',
                 'description' => '描述', 'status' => '状态', 'created_at' => '创建时间',
-            ],
-            'system_config' => [
-                'id' => 'ID', 'group' => '分组', 'key' => '配置键',
-                'value' => '配置值', 'type' => '类型', 'description' => '说明',
-                'created_at' => '创建时间',
             ],
         ];
 

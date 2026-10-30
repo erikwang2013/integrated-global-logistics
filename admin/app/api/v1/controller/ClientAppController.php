@@ -326,12 +326,9 @@ class ClientAppController
             return json(['code' => 422, 'message' => '订单状态不允许支付', 'data' => []]);
         }
 
-        // manual 渠道：保持原模拟支付流程，由管理员人工确认
+        // manual 渠道：自助支付不产生实际收款，订单保持 pending，由管理员确认收款后再确认
         if ($order->channel === 'manual') {
-            $order->status = 'paid';
-            $order->paid_at = date('Y-m-d H:i:s');
-            $order->save();
-            return json(['code' => 0, 'message' => '支付成功，等待管理员确认开通', 'data' => [
+            return json(['code' => 0, 'message' => '请等待管理员确认收款', 'data' => [
                 'order_no' => $order->order_no,
                 'channel' => 'manual',
                 'payment_code' => substr(hash('sha256', $order->order_no), 0, 16),
@@ -343,7 +340,7 @@ class ClientAppController
         if ($order->channel === 'crypto') {
             $result = CryptoService::initiate((string) $order->chain, $order->order_no, (int) $order->amount);
             if (!$result['ok']) {
-                return json(['code' => 422, 'message' => $result['message'] ?? '支付发起失败', 'data' => []]);
+                return json(['code' => $result['code'], 'message' => $result['message'] ?? '支付发起失败', 'data' => []]);
             }
             $order->chain = $result['chain'];
             $order->crypto_amount = $result['amount'];

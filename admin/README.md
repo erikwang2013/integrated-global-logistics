@@ -112,7 +112,7 @@ composer install
 
 ### 2. 配置环境变量
 
-复制并修改环境变量（可选，不配置则使用 `config/*.php` 中的默认值）:
+安全密钥必须配置（安装向导会自动生成并写入 `.env`；手工部署用 `openssl rand -hex 32` 生成 JWT / 内部令牌，两个 32 字符加密密钥用 `openssl rand -hex 16`）：
 
 ```bash
 cp .env.example .env
@@ -122,13 +122,17 @@ cp .env.example .env
 
 | 环境变量 | 说明 | 默认值 |
 |---------|------|--------|
-| `JWT_SECRET` | JWT 签名密钥 | `open-admin-jwt-secret-change-in-production` |
-| `HASHIDS_SALT` | Hashids 盐值 | `open-admin-hashids-salt-2026` |
-| `ENCRYPTION_KEY` | API 加密密钥 | 32 字节默认值 |
-| `SNOWFLAKE_DATACENTER_ID` | 数据中心 ID (0-31) | `1` |
-| `SNOWFLAKE_WORKER_ID` | 工作节点 ID (0-31) | `1` |
+| `JWT_SECRET_KEY` | JWT 签名密钥 | 无，必填 |
+| `ENCRYPTABLE_KEY` | 数据库字段加密密钥（32 字符） | 无，必填 |
+| `ENCRYPTION_KEY` | API 传输加密密钥（32 字符） | 无，必填 |
+| `INTERNAL_TOKEN` | 网关 → PHP worker 共享密钥 | 无，gRPC 部署必填 |
+| `INTERNAL_GRPC_LISTEN` | 内部 gRPC 监听地址 | `tcp://127.0.0.1:8792` |
+| `INTERNAL_GRPC_WORKERS` | 内部 gRPC worker 进程数 | 8 |
+| `ENCRYPTION_PREVIOUS_KEYS` | 旧加密密钥（迁移历史数据） | 无 |
+| `SNOWFLAKE_DATACENTER_ID` | 数据中心 ID (0-31) | 由进程 PID 派生 |
+| `SNOWFLAKE_WORKER_ID` | 工作节点 ID (0-31) | 由进程 PID 派生 |
 
-**生产环境务必修改所有密钥为随机字符串。**
+已安装环境缺少 `JWT_SECRET_KEY` / `ENCRYPTABLE_KEY` / `ENCRYPTION_KEY` 或仍使用旧公开默认值时应用拒绝启动（`APP_DEBUG=true` 仅告警）；`INTERNAL_TOKEN` 为空时内部接口 fail-closed。`.env.example` 中的旧公开默认值不可用于生产。若历史数据使用旧公开 `ENCRYPTABLE_KEY` 加密，需设置 `ENCRYPTION_PREVIOUS_KEYS=open-admin-db-encryption-key-32b` 并重加密，否则解密失败。
 
 ### 3. 一键安装
 
@@ -144,12 +148,14 @@ php start.php start
 
 | 步骤 | 内容 |
 |------|------|
-| ① 数据库配置 | 主机地址、端口、数据库名、用户名、密码 |
-| ② 管理员设置 | 管理员用户名、密码（默认 admin / admin888） |
+| ① 数据库配置 | 主机地址（Docker 填 `mysql`）、端口、数据库名、用户名、密码 |
+| ② 管理员设置 | 管理员用户名、密码（自行设置，不再有默认账号，表单不预填 `admin888`） |
 
-点击「开始安装」后自动完成建表、播种权限数据、创建管理员账号，并写入 `.env` 数据库配置。
+点击「开始安装」后自动完成建表、播种权限数据，用预处理语句创建管理员并绑定 `super_admin`，写入 `.env` 数据库配置，并生成 JWT / 数据库加密 / 传输加密 / 内部接口随机密钥（Docker 下同步写入 `.env.docker`）。
 
-> 安装完成后生成 `runtime/install.lock` 锁定文件。需重新安装时删除此文件即可。
+安装完成后按部署方式重启使密钥生效：Docker 执行 `docker compose up -d --force-recreate app`，非 Docker 执行 `php start.php restart -d`。`.env` 中的 `INTERNAL_TOKEN` 需同步到查询网关的 `internal_token`（网关侧 `TRACKING_GATEWAY_INTERNAL_TOKEN`），否则内部 gRPC 调用返回 401。
+
+> 安装完成后生成 `runtime/install.lock` 锁定文件。请勿删除；安装器检测到已有管理员会拒绝重复安装。确需重装时先备份数据库，并在手动清理数据后再删除该文件。
 
 ### 4. 登录
 
@@ -157,28 +163,29 @@ php start.php start
 
 ### 6. Docker Compose 一键部署（推荐生产环境）
 
-项目提供完整的 Docker 编排方案，包含 4 个服务：Nginx、PHP (webman app)、MySQL、Redis。
+项目提供完整的 Docker 编排方案，包含 4 个服务：Nginx、PHP (webman app)、MySQL、Redis。仅 Nginx 发布 80/443，MySQL / Redis 不发布宿主端口，app 的 8787 仅在容器网络内可达。
 
 ```bash
-# 1. 配置 Docker 环境变量
-cp .env.docker .env
+# 1. 确认 Docker 环境变量（install.sh 会检查，缺失时从示例复制）
+ls .env.docker
 
 # 2. 启动所有服务
-docker-compose up -d
+docker compose up -d
 
 # 3. 浏览器访问安装向导完成初始化
-# http://localhost:8787/install  (填入数据库和管理员信息)
-# 或手动执行 SQL 迁移（进入 app 容器）:
-# docker-compose exec app mysql -h mysql -u root -p < database/install.sql
+# http://localhost/install  (数据库主机填 mysql，管理员账号自行设置)
 
-# 4. 访问
-# http://localhost:8787  (webman)
-# http://localhost:8080  (Nginx 反向代理)
+# 4. 安装完成后重建 app，使安装器生成的新密钥生效
+docker compose up -d --force-recreate app
+
+# 5. 访问
+# http://localhost  (Nginx → app:8787)
 ```
 
 - `Dockerfile`: PHP 8.3 + OPcache + Composer，基于 `php:8.3-cli`
-- `docker-compose.yml`: 4 个服务编排，网络隔离，数据卷持久化
-- `.env.docker`: Docker 环境专用环境变量
+- `docker-compose.yml`: 4 个服务编排，网络隔离，数据卷持久化，`app` 通过 `env_file: .env.docker` 读取配置
+- `.env.docker`: Docker 环境专用环境变量（安装器会同步生成的密钥）
+- `docs/nginx-docker.conf`: 容器内 Nginx 站点配置，反代 `app:8787`，以覆盖方式设置 `X-Forwarded-For`
 
 
 ## 数据库规范
@@ -223,17 +230,35 @@ docker-compose up -d
 
 | 服务 | 镜像 | 端口 |
 |------|------|------|
-| `nginx` | nginx:alpine | 80, 443 |
-| `app` | 本地 `Dockerfile` 构建 | 8787 |
-| `mysql` | mysql:8.0 | 3306 |
-| `redis` | redis:7-alpine | 6379 |
+| `nginx` | nginx:alpine | 宿主 80, 443 |
+| `app` | 本地 `Dockerfile` 构建 | 仅容器网络 `8787` |
+| `mysql` | mysql:8.0 | 仅容器网络 `3306` |
+| `redis` | redis:7-alpine | 仅容器网络 `6379` |
 
 PHP 镜像通过 `Dockerfile` 构建，基础镜像 `php:8.3-cli`，启用 OPcache。
 
 ```bash
-cp .env.docker .env
-docker-compose up -d
+docker compose up -d
+# 浏览器完成 /install 后，重建 app 使新密钥生效
+docker compose up -d --force-recreate app
 ```
+
+### 升级到 v1.2.0
+
+1. 备份数据库，确认 `logistics_order.tx_id` 已建立唯一索引 `uk_tx_id`。
+2. 在 `.env` / `.env.docker` 配置 `JWT_SECRET_KEY`、`ENCRYPTABLE_KEY`、`ENCRYPTION_KEY`、`INTERNAL_TOKEN`（安装器可生成；手工可用 `openssl rand -hex 32`，两个加密密钥需 32 字符，用 `openssl rand -hex 16`）；已安装环境缺失前三个密钥或仍为公开默认值会拒绝启动，`INTERNAL_TOKEN` 为空时内部接口 fail-closed。
+3. 历史数据若使用旧公开 `ENCRYPTABLE_KEY` 加密，设置 `ENCRYPTION_PREVIOUS_KEYS=open-admin-db-encryption-key-32b` 并重加密。
+4. 为每个承运商配置 `webhook_secret`；未配置时回调默认返回 401（`CALLBACK_ALLOW_UNSIGNED=1` 仅开发）。
+5. 删除或禁用旧默认账号 `erik`；安装表单不再预填 `admin888`。
+6. 同步网关令牌：`TRACKING_GATEWAY_INTERNAL_TOKEN` 必须等于 PHP 的 `INTERNAL_TOKEN`；空 token 网关拒绝启动，`demo-api-key` 已移除。
+7. 重启：Docker `docker compose up -d --force-recreate app`；非 Docker `php start.php restart -d`。
+8. 不要删除 `runtime/install.lock`；重装需先备份数据库并清理数据。
+
+### 查询网关对接
+
+- PHP 内部 gRPC 默认监听 `127.0.0.1:8792`（`INTERNAL_GRPC_LISTEN` 覆盖），worker 进程数默认 8（`INTERNAL_GRPC_WORKERS` 覆盖）。
+- 内部接口未配置 `INTERNAL_TOKEN` 时 fail-closed；网关 `internal_token` 为空时拒绝启动。
+- 网关对外默认 `0.0.0.0:8080`，API-Key 由管理端审核通过后写入 Redis，不再提供 demo key。
 
 ### CI/CD
 
@@ -251,7 +276,7 @@ GitHub Actions 持续集成流水线：`.github/workflows/ci.yml`
 
 ### Nginx 安全配置
 
-生产部署请参考 `docs/nginx-security.conf` 配置反向代理安全加固。
+Docker 部署使用 `docs/nginx-docker.conf`（反代 `app:8787`，覆盖写入 `X-Forwarded-For` 防止伪造来源 IP，限制请求频率与连接数）；裸机部署可参考 `docs/nginx-security.conf` 做反向代理安全加固。
 
 ## 开源不易，欢迎支持
 

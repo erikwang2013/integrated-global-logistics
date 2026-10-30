@@ -16,9 +16,9 @@ return [
     // webman 插件装载开关：缺失时 Config::loadFromDir 会跳过整个插件配置目录
     'enable' => true,
 
-    // 数据库加密密钥，生产环境请使用 32 字节随机字符串并通过环境变量注入
+    // 数据库加密密钥，必须通过环境变量注入；不再提供公开默认值（见 support\bootstrap\Secrets）
     // 注意: 与 API 传输加密密钥 ENCRYPTION_KEY 独立，两者不可共用
-    'key' => getenv('ENCRYPTABLE_KEY') ?: 'open-admin-db-encryption-key-32b',
+    'key' => getenv('ENCRYPTABLE_KEY') ?: '',
 
     // 加密算法，需与 key 长度匹配（aes-256-cbc 要求 32 字节 key）
     'cipher' => getenv('ENCRYPTABLE_CIPHER') ?: 'aes-256-cbc',

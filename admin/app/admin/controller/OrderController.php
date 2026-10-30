@@ -112,8 +112,15 @@ class OrderController extends BaseController
                 $fromTs = $order->created_at instanceof \DateTimeInterface ? $order->created_at->getTimestamp() : time();
                 $txId = CryptoService::verifyTrc20($addr['address'], $order->memo, (float) $order->crypto_amount, $fromTs);
                 if ($txId) {
-                    $order->tx_id = $txId;
-                    $order->save();
+                    // 同一 tx 不能核销多个订单：先查，冲突直接拒绝；唯一索引兜住并发
+                    if (Order::where('tx_id', $txId)->where('id', '!=', $order->id)->exists()) {
+                        return $this->fail('链上交易已被其他订单使用', 422);
+                    }
+                    try {
+                        Order::where('id', $order->id)->whereNull('tx_id')->update(['tx_id' => $txId]);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        return $this->fail('链上交易已被其他订单使用', 422);
+                    }
                 }
             }
         }

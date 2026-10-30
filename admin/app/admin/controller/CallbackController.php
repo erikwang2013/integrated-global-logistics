@@ -26,32 +26,33 @@ class CallbackController extends BaseController
         $logisticsConfig = config('logistics');
         $carrierConfig = is_array($logisticsConfig) ? ($logisticsConfig[$carrier] ?? null) : null;
         if (!is_array($carrierConfig)) {
-            return json(['code' => 404, 'message' => 'carrier not found'], 404);
+            return json(['code' => 404, 'message' => 'carrier not found'])->withStatus(404);
         }
 
         $raw = (string) $request->rawBody();
         $payload = json_decode($raw, true);
         if (!is_array($payload)) {
-            return json(['code' => 400, 'message' => 'invalid json body'], 400);
+            return json(['code' => 400, 'message' => 'invalid json body'])->withStatus(400);
         }
 
-        // 签名校验：配置了 webhook_secret 的承运商必须携带有效签名，否则 401；未配置则白名单放行
+        // 签名校验：未配置 webhook_secret 默认拒绝，只有显式 CALLBACK_ALLOW_UNSIGNED=1 才放行
         // sign = sha256(secret + payload 去除 sign 字段后的紧凑 JSON)；sign 随 payload 发送，故只能对去 sign 后的内容签名
         $secret = (string) ($carrierConfig['webhook_secret'] ?? '');
-        if ($secret !== '') {
-            $signPayload = $payload;
-            unset($signPayload['sign']);
-            $canonical = json_encode($signPayload, JSON_UNESCAPED_UNICODE);
-            if (!isset($payload['sign']) || !hash_equals(hash('sha256', $secret . $canonical), (string) $payload['sign'])) {
-                return json(['code' => 401, 'message' => 'invalid signature'], 401);
+        if ($secret === '') {
+            if (getenv('CALLBACK_ALLOW_UNSIGNED') !== '1') {
+                return json(['code' => 401, 'message' => 'callback secret not configured'])->withStatus(401);
             }
+        } elseif (!self::verifySignature($payload, $secret)) {
+            return json(['code' => 401, 'message' => 'invalid signature'])->withStatus(401);
         }
 
         $trackingNo = trim((string) ($payload['tracking_no'] ?? ''));
         $events = $payload['events'] ?? [];
         if ($trackingNo === '' || !is_array($events) || empty($events)) {
-            return json(['code' => 400, 'message' => 'tracking_no and non-empty events required'], 400);
+            return json(['code' => 400, 'message' => 'tracking_no and non-empty events required'])->withStatus(400);
         }
+        // 单次回调事件数量上限，避免超大请求拖垮落库
+        $events = array_slice($events, 0, 100);
 
         $normalized = [];
         $deduped = 0;
@@ -60,10 +61,10 @@ class CallbackController extends BaseController
                 continue;
             }
             $event = [
-                'event_code' => (string) ($ev['event_code'] ?? ''),
-                'event_desc' => (string) ($ev['event_desc'] ?? ''),
-                'location'   => (string) ($ev['location'] ?? ''),
-                'event_time' => (string) ($ev['event_time'] ?? '') ?: date('Y-m-d H:i:s'),
+                'event_code' => mb_substr((string) ($ev['event_code'] ?? ''), 0, 64),
+                'event_desc' => mb_substr((string) ($ev['event_desc'] ?? ''), 0, 500),
+                'location'   => mb_substr((string) ($ev['location'] ?? ''), 0, 200),
+                'event_time' => mb_substr(((string) ($ev['event_time'] ?? '')) ?: date('Y-m-d H:i:s'), 0, 32),
             ];
             $eventId = $this->generateId();
             // 唯一键(tracking_no,event_code,event_time)去重：承运商重发同事件时跳过落库
@@ -90,7 +91,7 @@ class CallbackController extends BaseController
             if ($deduped > 0) {
                 return json(['code' => 0, 'message' => 'ok', 'deduped' => $deduped]);
             }
-            return json(['code' => 400, 'message' => 'no valid event'], 400);
+            return json(['code' => 400, 'message' => 'no valid event'])->withStatus(400);
         }
 
         // 更新该运单最新一条查询记录为成功，result 呈现最新事件与标准化状态
@@ -121,6 +122,20 @@ class CallbackController extends BaseController
         }
 
         return json(['code' => 0, 'message' => 'ok']);
+    }
+
+    /**
+     * 校验回调签名：sha256(secret + 去 sign 后的紧凑 JSON)，常量时间比较
+     */
+    public static function verifySignature(array $payload, string $secret): bool
+    {
+        if ($secret === '' || !isset($payload['sign'])) {
+            return false;
+        }
+        $signPayload = $payload;
+        unset($signPayload['sign']);
+        $canonical = json_encode($signPayload, JSON_UNESCAPED_UNICODE);
+        return hash_equals(hash('sha256', $secret . $canonical), (string) $payload['sign']);
     }
 
     /** event_code → 标准 tracking 状态（TrackStatus 枚举值），未识别默认 UNKNOWN */

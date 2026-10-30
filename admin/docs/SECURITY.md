@@ -99,17 +99,18 @@ CSP 策略要点：
 Redis Sorted Set 滑动窗口 + Lua 原子化脚本，关键操作：
 
 ```lua
--- 1. 清理窗口外的旧记录
-redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, windowStart)
--- 2. 检查当前窗口计数
+-- KEYS[1]=限流键；ARGV[1..5]=windowStart, limit, now, member, ttl
+redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1])
 local count = redis.call('ZCARD', KEYS[1])
--- 3. 超限则返回 {0, count}，未超限则 ZADD 并返回 {1, count+1}
-if count >= limit then return {0, count} end
-redis.call('ZADD', KEYS[1], now, now . '.' . random)  -- 随机后缀避免同毫秒覆盖
-redis.call('EXPIRE', KEYS[1], window + 10)
+if count >= tonumber(ARGV[2]) then return {0, count} end
+redis.call('ZADD', KEYS[1], ARGV[3], ARGV[4])
+redis.call('EXPIRE', KEYS[1], ARGV[5])
+return {1, count + 1}
 ```
 
 Lua 脚本在 Redis 服务端单线程执行，**天然原子化**，消除 TOCTOU（Time-of-check to Time-of-use）竞态条件。
+
+> v1.2.0 修复了 phpredis `eval` 参数签名（`eval(script, args, num_keys)`）——此前参数顺序错误导致限流实际未生效；现在 `RateLimit::buildEvalArgs()` 显式返回 `[args, 1]` 并有测试覆盖。Redis 不可用时仍 fail-open。
 
 ### 限流配置
 
@@ -153,13 +154,13 @@ try {
 
 登录接口在速率限制的基础上，额外增加了**账号锁定**机制，防止针对特定用户的定向暴力破解。
 
-**锁定流程**：
+**锁定流程**（按用户名 + IP，避免锁死其他来源的正常用户）：
 
 ```
-登录失败 → Redis INCR account_lockout:{userId} TTL=900s
-连续 5 次失败 → Redis SETEX account_locked:{userId} 900 1
+登录失败 → Redis INCR login_fail:{username}:{ip} TTL=900s
+连续 5 次失败 → Redis SETEX account_lock:{username}:{ip} 900 1
             → 返回 429 "账号已被锁定，请15分钟后再试"
-            → 清除计数器 DEL account_lockout:{userId}
+            → 清除计数器 DEL login_fail:{username}:{ip}
 ```
 
 **锁定期间行为**：
@@ -173,9 +174,9 @@ try {
 | MAX_LOGIN_ATTEMPTS | 5 | 最大连续失败次数 |
 | LOCKOUT_DURATION | 900 | 锁定持续时间（秒），即 15 分钟 |
 
-注意：账号锁定基于 `userId` 而非 IP，因此攻击者更换 IP 无法绕过锁定。与 IP 限流（10次/分钟）叠加形成双重防护：
-- IP 层面：10 次/分钟限流阻止分布式暴力破解
-- 账号层面：5 次失败锁定阻止定向暴力破解
+注意：账号锁定键为 `用户名 + IP`，同一来源对同一用户名的定向爆破会被锁定，也不会因其他来源的失败而锁死正常账号。与 IP 限流（10次/分钟）叠加形成双重防护：
+- IP 层面：10 次/分钟限流阻止高频尝试
+- 账号层面：同一用户名 + IP 连续 5 次失败锁定 15 分钟，阻止定向暴力破解
 
 ---
 
@@ -190,9 +191,9 @@ AdminAuth 中间件实现，挂载在需要认证的路由组上。
 | 参数 | 值 | 说明 |
 |------|-----|------|
 | 算法 | HS256 | HMAC-SHA256 对称签名 |
-| 密钥 | `JWT_SECRET` | 环境变量注入，生产环境需更换 |
-| access_token TTL | 7200s (2h) | `JWT_TTL` |
-| refresh_token TTL | 1209600s (14d) | `JWT_REFRESH_TTL` |
+| 密钥 | `JWT_SECRET_KEY` | 环境变量注入，无代码默认值；安装器生成，缺失或旧公开默认值拒绝启动 |
+| access_token TTL | 7200s (2h) | `JWT_DEFAULT_EXPIRE` |
+| refresh_token TTL | 1209600s (14d) | `JWT_REFRESH_EXPIRE` |
 | 签发者 | `open-admin` | `JWT_ISSUER` |
 | 受众 | `open-admin` | `JWT_AUDIENCE` |
 
@@ -202,9 +203,13 @@ AdminAuth 中间件实现，挂载在需要认证的路由组上。
 1. 空 token → 直接 401 `{"code": 401, "message": "未登录"}`
 2. 检查 Redis 黑名单 `jwt_blacklist:{md5(token)}` → 命中 → 401 `Token已失效，请重新登录`
 3. JWT decode → 失败（过期/签名不匹配） → 401 `Token已过期或无效`
-4. 成功 → 注入 `$request->adminId` 和 `$request->adminUsername`
+4. 校验 `token_type`：AdminAuth 仅接受 `access`（缺失视为旧版 access，兼容过渡）；`refresh` / `client` 一律 401
+5. 查询管理员状态：不存在或 `status != 1` → 401 `账号不存在或已被禁用`（禁用立即失效）
+6. 成功 → 注入 `$request->adminId` 和 `$request->adminUsername`
 
-**黑名单机制**：用户登出时，将 `md5(token)` 写入 Redis，TTL 设为 JWT 剩余有效期。Redis 故障时黑名单检查被跳过（fail-open），此时已登出的 Token 仍可短期使用，但 JWT 本身的短期有效期（2h）作为兜底保护。
+**刷新与轮换**：`/api/v1/auth/refresh` 只接受 `token_type=refresh`。旧 refresh 通过 Redis `SET NX` 原子占用，并发重放只有一个请求成功；成功刷新后旧 refresh 写入黑名单（TTL 为剩余有效期），同时返回新的 access + refresh。access token 不能用于刷新，client token 与 admin token 互不通用。
+
+**黑名单机制**：用户登出时，将 `md5(token)` 写入 Redis，TTL 设为 JWT 剩余有效期。Redis 故障时黑名单检查被跳过（fail-open），此时已登出的 Token 仍可短期使用，但 JWT 本身的短期有效期（2h）作为兜底保护；禁用账号的校验直接查库，不依赖 Redis。
 
 ### 6.2 并发会话限制
 
@@ -214,13 +219,11 @@ AdminAuth 中间件实现，挂载在需要认证的路由组上。
 
 ```
 登录成功 → 签发新 Token
-         → 查询当前用户有效 Token 数量: Redis SCARD user_tokens:{userId}
-         → 若数量 >= 3（MAX_CONCURRENT_SESSIONS）:
-            → 按创建时间升序排列，移除最旧的 Token:
-              Redis SREM user_tokens:{userId} <oldest_token_id>
-              Redis SETEX jwt_blacklist:{md5(oldest_token)} TTL remaining
-         → 将新 Token 加入集合: Redis SADD user_tokens:{userId} <new_token_id>
-            Redis SET user_token:{token_id} {userId} EX {TTL}
+         → 清理已过期成员: Redis ZREMRANGEBYSCORE user_tokens:{userId} 0 now
+         → 将新 Token 写入 ZSET: Redis ZADD user_tokens:{userId} <exp> <md5(token)>
+         → 若 ZCARD > 3（MAX_CONCURRENT_SESSIONS）:
+            → 取 score 最小（最早过期）的成员，ZREM 并从集合删除
+            → Redis SETEX jwt_blacklist:{md5(oldest_token)} <remaining_ttl> 1
 ```
 
 **配置常量**：
@@ -231,7 +234,7 @@ AdminAuth 中间件实现，挂载在需要认证的路由组上。
 
 **被挤下线场景**：当用户在第 4 台设备登录时，第 1 台设备的 Token 被强制加入黑名单，后续请求返回 401 "Token已失效，请重新登录"。
 
-登出时，当前 Token 从集合中移除。Token 自然过期时，Redis key 自动失效，集合成员随之减少。
+登出时当前 Token 从 ZSET 移除；Token 自然过期后，成员在下一次登录的过期清理中被移除。
 
 ### 6.3 RBAC 权限模型
 
@@ -261,7 +264,7 @@ API 权限标识格式：`{method}.{path}`
 - `get.admin/user` — 查看用户列表
 
 **鉴权流程**：
-1. `$request->adminId` 为空 → 放行（路由未配置认证前置）
+1. `$request->adminId` 为空 → 401 `未登录`（不允许绕过认证直接进入管理路由）
 2. 获取用户 → 角色（跳过 `status=0` 的禁用角色）→ 权限列表
 3. 超级管理员（`slug = '*'`）→ 直接放行
 4. 构造 `strtolower(method) . '.' . trim(path, '/')` → 对比权限列表
@@ -355,8 +358,8 @@ OperationLog 中间件对 POST / PUT / DELETE 请求自动记录操作日志。G
 
 - 对外 API 返回的数据库 BIGINT ID 编码为 hash 字符串（如 `xK3mN9qR2pL7wV8b`）
 - 客户端请求时传入 hash 字符串，后台自动解码为原始 ID
-- 盐值 `HASHIDS_SALT` 环境变量注入，盐值不同则编解码结果完全不同
-- hash 最小长度 16 位，使用 62 位字母数字字符集
+- 当前 `config/hashids.php` 的 `main` 连接盐值为空、最小长度为 0；Hashids 只增加枚举成本，**不是安全边界**，越权访问由 JWT + RBAC 拦截
+- 盐值可按环境在 `config/hashids.php` 配置；修改盐值会使已发出的 hashid 链接失效
 - BaseController 提供 `encodeId()`, `decodeId()`, `encodeIds()` 便捷方法
 
 **导出脱敏**：Excel/PDF 导出时（ExportController），敏感字段统一脱敏：
@@ -368,31 +371,37 @@ OperationLog 中间件对 POST / PUT / DELETE 请求自动记录操作日志。G
 
 ## 9. 密钥管理
 
-所有密钥通过 `.env` 环境变量注入，配置文件使用 `getenv()` 读取并内置兜底默认值（仅开发环境安全）。
+所有密钥通过 `.env` 环境变量注入；JWT / 数据库加密 / 传输加密 / 内部令牌不再有代码默认值。安装器自动生成随机密钥并写入 `.env`（Docker 同步 `.env.docker`）。
 
-| 环境变量 | 用途 | 包 | 生产要求 |
-|----------|------|-----|---------|
-| JWT_SECRET | JWT 签名密钥 | erikwang2013/jwt-webman | 64+ 字符随机字符串 |
-| JWT_ALGORITHM | JWT 签名算法 | 同上 | 保持 HS256 |
-| HASHIDS_SALT | ID 编码盐值 | erikwang2013/hashids | 随机字符串 |
-| SNOWFLAKE_DATACENTER_ID | 数据中心 ID (0-31) | erikwang2013/snowflake-php | 单机房保持默认 |
-| ENCRYPTION_KEY | API 传输层加密密钥 | erikwang2013/encryption | 32 字节随机字符串 |
-| ENCRYPTABLE_KEY | DB 存储层加密密钥 | erikwang2013/encryptable | 32 字节随机字符串，与传输密钥不同 |
+`support/bootstrap/Secrets.php` 在进程启动时校验：已安装环境（存在 `runtime/install.lock`）缺失 `JWT_SECRET_KEY` / `ENCRYPTABLE_KEY` / `ENCRYPTION_KEY`，或仍等于旧版公开默认值时拒绝启动；`APP_DEBUG=true` 时仅记录告警。`INTERNAL_TOKEN` 不在该处校验：PHP 侧为空时内部接口 fail-closed，网关侧为空时拒绝启动。开发环境可临时开启调试，生产环境不得依赖此降级。
+
+| 环境变量 | 用途 | 生成/格式 | 生产要求 |
+|----------|------|-----------|---------|
+| `JWT_SECRET_KEY` | JWT 签名密钥 | 安装器生成；`openssl rand -hex 32` | 必填，无默认值 |
+| `JWT_ALGORITHM` | JWT 签名算法 | `HS256` | 保持 HS256 |
+| `ENCRYPTION_KEY` | API 传输层加密密钥 | 32 字符随机串；`openssl rand -hex 16` | 必填，与存储密钥不同 |
+| `ENCRYPTABLE_KEY` | DB 存储层加密密钥 | 32 字符随机串；`openssl rand -hex 16` | 必填，与传输密钥不同 |
+| `INTERNAL_TOKEN` | 网关 → PHP worker 共享密钥 | 安装器生成随机串 | 必填；为空时内部 gRPC fail-closed |
+| `ENCRYPTION_PREVIOUS_KEYS` | 历史加密密钥列表 | 逗号分隔 | 仅迁移旧数据时临时配置 |
+| `SNOWFLAKE_DATACENTER_ID` / `SNOWFLAKE_WORKER_ID` | Snowflake 节点 ID (0-31) | 默认由 PID 派生 | 跨主机部署必须显式分配 |
+| `HASHIDS_SALT` | ID 编码盐值（`.env` 模板中存在，当前 `config/hashids.php` 未读取） | 盐值为空 | 仅混淆，不是安全边界 |
 
 **安全要求**：
-- `.env` 文件已加入 `.gitignore`，严禁提交到版本库
-- `.env.example` 是公开模板文件，不包含真实密钥
-- 生产环境**必须**更换所有默认密钥为随机字符串
-- 建议使用 `openssl rand -base64 32` 生成密钥
+- `.env` / `.env.docker` 已加入 `.gitignore`，严禁提交到版本库
+- `.env.example` 是公开模板文件，不包含真实密钥；其中的旧公开默认值不可用于生产
+- 已安装环境缺失密钥或仍使用旧公开默认值将拒绝启动，不再“自动兜底”
+- 手工生成：JWT / 内部令牌用 `openssl rand -hex 32`；`ENCRYPTABLE_KEY` / `ENCRYPTION_KEY` 需 32 字符，用 `openssl rand -hex 16`
+- 轮换加密密钥：新密钥写入 `ENCRYPTABLE_KEY`，旧密钥加入 `ENCRYPTION_PREVIOUS_KEYS`，读取旧数据后触发重加密，完成后再移除旧密钥
 
 ### 密钥存储隔离
 
 | 层 | 配置键 | 密钥环境变量 |
 |----|--------|-------------|
 | 传输加密 | `config/encryption.php` → `key` | `ENCRYPTION_KEY` |
-| 存储加密 | `config/encryptable.php` → `key` | `ENCRYPTABLE_KEY` |
-| ID 混淆 | `config/hashids.php` → `connections.main.salt` | `HASHIDS_SALT` |
-| JWT 签名 | `config/plugin/erikwang2013/jwt/jwt` | `JWT_SECRET` |
+| 存储加密 | `config/encryptable.php` / 插件 `previous_keys` | `ENCRYPTABLE_KEY` / `ENCRYPTION_PREVIOUS_KEYS` |
+| ID 混淆 | `config/hashids.php` → `connections.main.salt` | 当前默认空；非安全边界 |
+| JWT 签名 | `config/plugin/erikwang2013/jwt/jwt.php` | `JWT_SECRET_KEY` |
+| 内部 gRPC | `config/logistics.php` → `internal_token` | `INTERNAL_TOKEN` |
 
 ---
 
@@ -414,7 +423,7 @@ Policy: https://erik.xyz/security-policy
 
 ## 11. Nginx 安全配置
 
-项目提供 `docs/nginx-security.conf` 作为生产环境 Nginx 反向代理的安全加固参考配置。
+项目提供 `docs/nginx-security.conf`（裸机参考）与 `docs/nginx-docker.conf`（Docker 编排实际挂载）两份 Nginx 配置。
 
 **包含的安全措施**：
 
@@ -426,10 +435,12 @@ Policy: https://erik.xyz/security-policy
 | `limit_conn_zone` | 并发连接数限制 |
 | `add_header` 安全头 | 在 Nginx 层面追加 X-XSS-Protection 等安全头 |
 | `if ($request_method)` | Nginx 层面拒绝非标准 HTTP 方法 |
+| `proxy_set_header X-Forwarded-For $remote_addr` | **覆盖**而非追加客户端自带 XFF，防止伪造来源 IP 绕过限流 |
 | SSL/TLS 配置 | 现代 TLS 1.2/1.3 配置，禁用弱加密套件 |
 | 隐藏后端头 | `proxy_hide_header` 移除 webman 版本等敏感头 |
+| 数据服务端口 | MySQL / Redis 不发布宿主端口，仅容器网络可达 |
 
-**使用方式**：将 `docs/nginx-security.conf` 中的配置合并到您的 Nginx server 块中，根据实际域名和证书路径调整。
+**使用方式**：Docker 部署直接挂载 `docs/nginx-docker.conf`；裸机部署将 `docs/nginx-security.conf` 合并到 Nginx server 块中，根据实际域名和证书路径调整。
 
 ---
 
@@ -451,8 +462,15 @@ Policy: https://erik.xyz/security-policy
 | ID 枚举 | 遍历数字 ID 猜测数据量 | Hashids 混淆为随机字符串 |
 | 数据泄露 | DB 拖库 / 中间人 / 日志泄露 | 三层加密/脱敏 + OperationLog 敏感字段过滤 |
 | DoS 攻击 | 超大请求体 / 高频请求 | 请求体 10MB 限制 + RateLimit 60/min + IP 黑名单 |
-| 权限提升 | 低权限用户访问管理接口 | RBAC method.path 粒度鉴权 |
+| 权限提升 | 低权限用户访问管理接口 | RBAC method.path 粒度鉴权；AdminPermission 无 adminId 直接 401 |
 | 文件上传攻击 | shell.php.png 双扩展名 | SecurityMiddleware (erikwang2013/security-php) 恶意文件检测 |
+| Refresh Token 重放 | 窃取 refresh token 后并发刷新 | refresh 单次使用（Redis `SET NX` 原子占用）+ 旧 token 黑名单轮换；access/refresh/client 类型严格区分 |
+| 已禁用账号继续访问 | 管理员被禁用后旧 token 仍有效 | AdminAuth 每次请求查库校验 `status=1`，禁用/删除立即 401 |
+| 未签名回调注入 | 直接 POST 伪造承运商轨迹事件 | 未配置 `webhook_secret` 默认 401；仅 `CALLBACK_ALLOW_UNSIGNED=1` 开发放行；签名常量时间比较 |
+| 支付回调重放 / 重复链上交易 | 重复确认订单或复用 tx_id | Stripe 要求 `payment_status=paid`；PayPal 先 capture 且只对本地订单扣款；确认事务 + 行锁；`orders.tx_id` 唯一索引，重复交易 422 |
+| 配置密钥泄露 | 配置列表/操作日志回显明文密钥 | 列表对 secret/password/private_key/api_key/app_key/access_key/token 打码；`***` 回写忽略；操作日志对 `/admin/config` 的 value 打码 |
+| 内部接口暴露 | 外部直接调用 gRPC 查询 | 默认仅监听 `127.0.0.1:8792`；空 `INTERNAL_TOKEN` fail-closed；网关空 token 拒绝启动 |
+| 来源 IP 伪造 | 客户端自带 X-Forwarded-For 绕过限流 | Nginx 以 `$remote_addr` 覆盖写入 `X-Forwarded-For`，不追加客户端值 |
 
 ### 12.2 已知局限
 
@@ -461,20 +479,32 @@ Policy: https://erik.xyz/security-policy
 | CSRF 保护仅对浏览器有效 | 非浏览器客户端（curl, Postman, 移动 App）可跳过 Origin/Referer 检查 | 非浏览器客户端天然不受 CSRF 攻击；依赖 JWT 认证替代 Cookie |
 | Redis 不可用时限流和黑名单降级为 fail-open | 攻击者可绕过限流和高频拦截 | 监控 Redis 可用性告警；IP 黑名单支持 file/redis/cache 三后端可降级 |
 | 无独立 WAF 引擎 | 基于正则匹配的检测，非专用 WAF 规则引擎 | 生产环境建议前置 Nginx ModSecurity 或 Cloudflare WAF |
-| JWT 无状态无法主动失效 | Token 未过期前无法从服务端主动吊销（除黑名单外） | 黑名单 + 短期 2h TTL 降低风险窗口 |
-| 管理员端点无特殊限流 | 管理员接口与普通接口共用 60/min 默认限制 | 管理员操作频率天然低，暂无需区分 |
+| JWT 无状态无法主动失效 | Token 未过期前无法从服务端主动吊销（除黑名单外） | 黑名单 + 短期 2h TTL + 禁用账号每请求查库，降低风险窗口 |
+| 管理员端点未单独限流 | 管理接口与普通接口共用 60/min 默认阈值，仅登录/注册有更严格限制 | 管理员操作频率天然低；高敏感接口另需密码二次确认，后续可按路径单独配置 |
+| 网关无 single-flight | 缓存未命中时并发请求可能重复转发上游 | 承运商 5xx / 网络失败写入 15s 负缓存，故障期间抑制重复请求；正常并发穿透待后续实现请求合并 |
+| Hashids 盐默认空 | ID 可被枚举，不能作为访问控制 | 授权由 JWT + RBAC 执行；生产可在 `config/hashids.php` 设置盐值 |
+| 导出临时文件未自动清理 | `runtime/tmp/export_*` 可能长期残留 | 文件仅含脱敏数据；建议运维定期清理 runtime/tmp |
+| 查询记录无保留策略 | `logistics_tracking_query` 持续增长 | 按业务需要自行归档/清理，当前未内置 TTL |
+| Rust workspace 依赖绝对路径 | `ecat-security` 仍引用作者机器的绝对路径（1.0.8），标准环境 `cargo check` 可能失败 | 构建网关前检查 workspace 依赖；CI/部署环境需替换为可用路径或发布版 |
+| 安装器未做完整 MySQL 端到端测试 | 特定 MySQL 版本/权限下安装向导可能失败 | 安装前备份；失败时查看应用日志并手动核对 `.env` 与表结构 |
 | PCRE 回溯限制 | 包内置 1,000,000 回溯上限+finally恢复，极端复杂输入仍有性能风险 | 请求体大小限制 (10MB) 兜底 |
 
 ---
 
 ## 13. 客户端门户与支付安全（M7–M10）
 
-**13.1 客户端密钥（M7）**：X-API-Key 由客户端自设（≥16 位），数据库存 `sha256(api_key)`、明文仅创建时返回一次；appid 为服务端生成的公开标识；客户端 JWT（`token_type=client`）由 ClientAuth 中间件校验，与 admin JWT 隔离。
+**13.1 客户端密钥（M7）**：X-API-Key 由客户端自设（≥16 位），数据库存 `sha256(api_key)`、明文仅创建时返回一次；appid 为服务端生成的公开标识；客户端 JWT（`token_type=client`）由 ClientAuth 中间件校验，与 admin JWT 隔离；刷新接口只接受 refresh token，access/client token 不能用于刷新。
 
-**13.2 支付 webhook 验签（M8/M10）**：Stripe Checkout 以 HMAC-SHA256 验签；PayPal Orders v2 调用 `/v1/notifications/verify-webhook-signature` 验签；webhook 自动确认订单，admin 手动兜底防丢单；支付密钥（stripe_secret_key / paypal_secret 等）经 `Encryptable` 加密存入 `logistics_system_config`。
+**13.2 支付 webhook 验签（M8/M10）**：Stripe Checkout 以 HMAC-SHA256 验签，仅 `payment_status=paid` 的 `checkout.session.completed` / `async_payment_succeeded` 确认订单；PayPal Orders v2 调用 `/v1/notifications/verify-webhook-signature` 验签，APPROVED 只是授权，先 `/capture` 且只对本地存在订单扣款，`PAYMENT.CAPTURE.COMPLETED` 才确认；manual 渠道保持 pending，由管理员确认，不自动置 paid；确认逻辑使用事务 + 应用行锁，Redis 密钥写入在事务提交后执行；`orders.tx_id` 唯一索引拒绝重复链上交易（422）。支付密钥（stripe_secret_key / paypal_secret 等）经 `Encryptable` 加密存入 `logistics_system_config`。
 
-**13.3 虚拟币到账验证（M9）**：USDT 支持 TRC20 / BEP20 / ERC20 三链；TRC20 经 Tronscan 公共 API 自动验证到账，BEP20 / ERC20 由人工确认。
+**13.3 虚拟币到账验证（M9）**：USDT 支持 TRC20 / BEP20 / ERC20 三链；TRC20 经 Tronscan 公共 API 自动验证到账，金额在基础价上做 0.01–0.99 唯一化偏移，重复发起复用已展示金额；BEP20 / ERC20 由人工确认。
 
 **13.4 网关攻击检测（M11）**：`ecat-security` SecurityBodyLayer 已集成至 tracking-gateway（注入 / 协议 / 数据序列化 / 文件 / 敏感数据泄露攻击检测），攻击载荷在网关层即被拦截返回安全错误（HandleErrorLayer 消化 SecurityError）；应用层 `erikwang2013/security-php` 继续兜底，两层串行互补。
 
-**13.5 CDN 安全（M12）**：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则集挡 DDoS / 已知漏洞 / 扫描，网关 `ecat-security` 挡应用层攻击载荷）；Tunnel 回源源站零公网暴露（备选：回源 IP 段白名单 + 自定义回源头 + mTLS）；回调（`/api/callback/*`、`/api/payment/webhook/*`）走仅 DNS 独立子域直连回源，CDN 故障不丢单；网关限流按 X-API-Key 计数与来源 IP 无关，CDN 边缘 IP 不改变限流语义；API-Key 鉴权端点一律 no-store 防跨用户缓存串号；「CF-Connecting-IP」仅在绑定回源白名单时可信。
+**13.5 CDN 安全（M12）**：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则集挡 DDoS / 已知漏洞 / 扫描，网关 `ecat-security` 挡应用层攻击载荷）；Tunnel 回源源站零公网暴露（备选：回源 IP 段白名单 + 自定义回源头 + mTLS）；回调（`/api/callback/*`、`/api/payment/webhook/*`）走仅 DNS 独立子域直连回源，CDN 故障不丢单；网关限流按 API-Key 哈希计数与来源 IP 无关，CDN 边缘 IP 不改变限流语义；API-Key 鉴权端点一律 no-store 防跨用户缓存串号；「CF-Connecting-IP」仅在绑定回源白名单时可信；Nginx 以覆盖方式写入 `X-Forwarded-For`，不信任客户端自带值。
+
+**13.6 承运商回调（M3）**：`/api/callback/{carrier}` 先做承运商白名单校验；未配置 `webhook_secret` 时默认返回 401，只有显式 `CALLBACK_ALLOW_UNSIGNED=1` 的开发环境才放行；签名算法为 `sha256(secret + 去 sign 字段后的紧凑 JSON)`，使用 `hash_equals` 常量时间比较；单次事件上限 100 条，字段按长度截断；`(tracking_no, event_code, event_time)` 唯一键去重；参数/签名错误返回真实 HTTP 400/401/404，重复事件视为成功。
+
+**13.7 内部 gRPC（e-cat → PHP worker）**：PHP 侧默认监听 `127.0.0.1:8792`（`INTERNAL_GRPC_LISTEN` 可覆盖），worker 进程数默认 8（`INTERNAL_GRPC_WORKERS` 可覆盖）；所有 RPC 必须携带 `x-internal-token`，`INTERNAL_TOKEN` 为空时 fail-closed 拒绝全部请求；网关 `internal_token` 为空时拒绝启动。网关与 PHP 的令牌必须一致，且通过容器/内网传输，不暴露公网。
+
+**13.8 配置与错误详情**：配置列表对 `secret` / `password` / `private_key` / `api_key` / `app_key` / `access_key` / `token` 类键打码，`webhook_url`、`*_id` 等非密钥配置保持可读；更新时忽略 `***` 回写，避免覆盖真实密钥；操作日志对 `/admin/config` 的 `value` 字段打码；上游承运商异常详情只写服务端日志，API 响应只返回通用错误文案。

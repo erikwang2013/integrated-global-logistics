@@ -4,7 +4,7 @@
 flowchart TB
     subgraph transport["传输层加密 - encryption"]
         e1["客户端发送敏感数据"]
-        e2["AES-256-CBC 加密"]
+        e2["AES-256-CBC 加密<br/>ENCRYPTION_KEY(32字符，无代码默认值)"]
         e3["API传输密文"]
         e4["服务端解密处理"]
         e1 --> e2 --> e3 --> e4
@@ -12,9 +12,9 @@ flowchart TB
 
     subgraph storage["存储层加密 - encryptable"]
         d1["Model casts配置<br/>email=>Encryptable::class<br/>phone=>Encryptable::class<br/>id_card=>Encryptable::class"]
-        d2["写入时自动加密"]
+        d2["写入时自动加密<br/>ENCRYPTABLE_KEY(32字符，无代码默认值)"]
         d3["MySQL VARCHAR(500)存储密文"]
-        d4["读取时自动解密"]
+        d4["读取时自动解密<br/>旧密钥数据需 ENCRYPTION_PREVIOUS_KEYS"]
         d1 --> d2 --> d3 --> d4
     end
 

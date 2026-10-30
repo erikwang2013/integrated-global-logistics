@@ -4,14 +4,14 @@
 flowchart LR
     subgraph gen["1.生成"]
         g1["SnowflakeService::generate()"]
-        g2["datacenter_id(5bit) + worker_id(5bit)<br/>+ timestamp(41bit) + sequence(12bit)"]
+        g2["datacenter_id(5bit) + worker_id(5bit)<br/>+ timestamp(41bit) + sequence(12bit)<br/>默认 PID 派生，env 可覆盖"]
         g3["BIGINT(18)<br/>例: 1750123456789"]
         g1 --> g2 --> g3
     end
 
     subgraph store["2.存储"]
         s1["MySQL logistics_* 表<br/>id BIGINT UNSIGNED NOT NULL"]
-        s2["敏感字段 encryptable cast<br/>AES-128-ECB 加密存储"]
+        s2["敏感字段 encryptable cast<br/>AES-256-CBC + HMAC 加密存储"]
         g3 --> s1 --> s2
     end
 

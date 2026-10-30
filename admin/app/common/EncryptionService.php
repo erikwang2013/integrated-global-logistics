@@ -57,7 +57,11 @@ class EncryptionService
     {
         if (self::$instance === null) {
             $config = config('encryption', []);
-            $key = $config['key'] ?? 'open-admin-api-encryption-key32b';
+            $key = (string)($config['key'] ?? '');
+            if ($key === '') {
+                // 空 key 加密无意义且等同公开密钥，必须显式配置
+                throw new \RuntimeException('ENCRYPTION_KEY is not configured');
+            }
 
             // EncryptionManagerFactory 要求主密钥恰好 32 字节
             if (strlen($key) !== 32) {

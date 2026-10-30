@@ -45,27 +45,27 @@
     <text x="220" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">高性能网关</text>
     <text x="220" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Rust e-cat 常驻进程低延迟</text>
     <text x="220" y="464" text-anchor="middle" font-size="13.5" fill="#212529">缓存命中即返，不进 PHP</text>
-    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">worker 无状态可水平扩展</text>
+    <text x="220" y="492" text-anchor="middle" font-size="13.5" fill="#212529">8 worker 无状态可水平扩展</text>
     <text x="220" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">内部契约面小：queryTrack + registry</text>
     <text x="220" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">跨语言耦合可控，凭证不下发网关</text>
 
     <rect x="420" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
     <rect x="420" y="354" width="360" height="10" rx="5" fill="#2E86DE"/>
     <text x="600" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">弹性治理</text>
-    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Redis 缓存（TTL 5~60min）</text>
+    <text x="600" y="436" text-anchor="middle" font-size="13.5" fill="#212529">Redis 缓存 · 详情按 Key 隔离</text>
     <text x="600" y="464" text-anchor="middle" font-size="13.5" fill="#212529">按 API-Key/IP 限流（429）</text>
-    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">按承运商熔断（503 快速失败）</text>
+    <text x="600" y="492" text-anchor="middle" font-size="13.5" fill="#212529">按承运商熔断（5xx 计入）</text>
     <text x="600" y="520" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin 负载均衡</text>
-    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">包内 RetryingClient 自带 2 次重试</text>
+    <text x="600" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">详情缓存 7 天 · 负缓存 15s · 6s×1 重试</text>
 
     <rect x="800" y="354" width="360" height="230" rx="8" fill="#FFFFFF" stroke="#DEE2E6" stroke-width="1.5"/>
     <rect x="800" y="354" width="360" height="10" rx="5" fill="#17A2B8"/>
     <text x="980" y="402" text-anchor="middle" font-size="18" font-weight="bold" fill="#1F4E79">安全合规</text>
-    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">凭证 Encryptable 加密落库</text>
-    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">回调 HMAC 签名校验</text>
-    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">操作审计全链路记录</text>
-    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">18 层纵深防御 · 密钥零硬编码</text>
-    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">内部接口仅内网 + 共享密钥头</text>
+    <text x="980" y="436" text-anchor="middle" font-size="13.5" fill="#212529">平台密钥 Encryptable 落库 · 承运商凭证配置注入</text>
+    <text x="980" y="464" text-anchor="middle" font-size="13.5" fill="#212529">回调 HMAC 验签 · 默认拒绝</text>
+    <text x="980" y="492" text-anchor="middle" font-size="13.5" fill="#212529">支付 Webhook 验签 · tx 唯一</text>
+    <text x="980" y="528" text-anchor="middle" font-size="12.5" fill="#6C757D">安装器生成密钥 · 缺失拒绝启动</text>
+    <text x="980" y="558" text-anchor="middle" font-size="12.5" fill="#17A2B8">内部 gRPC 仅回环 + 密钥头</text>
   </g>
 <text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

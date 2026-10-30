@@ -48,7 +48,9 @@ flowchart LR
 ```mermaid
 flowchart TD
     start["Request Arrives"] --> extract["Extract Token→adminId"]
-    extract --> findRoles["Query User Roles"]
+    extract --> hasId{"adminId Present?"}
+    hasId -->|"No"| unauth["401 Unauthorized"]
+    hasId -->|"Yes"| findRoles["Query User Roles"]
     findRoles --> collectSlug["Collect All permission.slug"]
     collectSlug --> buildKey["Construct method.path"]
     buildKey --> check{"slug==* or<br/>slug Matches?"}
@@ -57,7 +59,10 @@ flowchart TD
 
     style allow fill:#52C41A,color:#fff
     style deny fill:#FF4D4F,color:#fff
+    style unauth fill:#FA8C16,color:#fff
 ```
+
+> `AdminPermission` returns 401 when `$request->adminId` is empty instead of allowing the request through. AdminAuth has already verified the access token and the admin's `status=1` at this point.
 
 ## Permission Types
 

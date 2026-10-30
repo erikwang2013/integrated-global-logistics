@@ -8,14 +8,14 @@
 flowchart LR
     subgraph gen["1. Generation"]
         g1["SnowflakeService::generate()"]
-        g2["datacenter_id(5bit) + worker_id(5bit)<br/>+ timestamp(41bit) + sequence(12bit)"]
+        g2["datacenter_id(5bit) + worker_id(5bit)<br/>+ timestamp(41bit) + sequence(12bit)<br/>worker/datacenter derived from PID unless env overrides"]
         g3["BIGINT(18)<br/>Example: 1750123456789"]
         g1 --> g2 --> g3
     end
 
     subgraph store["2. Storage"]
         s1["MySQL logistics_* Tables<br/>id BIGINT UNSIGNED NOT NULL"]
-        s2["Sensitive Fields encryptable cast<br/>AES-128-ECB Encrypted Storage"]
+        s2["Sensitive Fields encryptable cast<br/>AES-256-CBC + HMAC Encrypted Storage"]
         g3 --> s1 --> s2
     end
 
@@ -36,3 +36,5 @@ flowchart LR
     style t1 fill:#52C41A,color:#fff
     style r1 fill:#722ED1,color:#fff
 ```
+
+> The Hashids salt is empty by default and is not a security boundary; set a unique salt in `config/hashids.php` before deploying. IDs remain protected by authentication and authorization.

@@ -43,7 +43,9 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-    start["请求到达"] --> extract["提取Token→adminId"]
+    start["请求到达"] --> hasId{"adminId 存在?"}
+    hasId -->|"否"| deny401["401 未登录"]
+    hasId -->|"是"| extract["提取Token→adminId"]
     extract --> findRoles["查询用户角色"]
     findRoles --> collectSlug["收集所有permission.slug"]
     collectSlug --> buildKey["构造method.path"]
@@ -53,6 +55,7 @@ flowchart TD
 
     style allow fill:#52C41A,color:#fff
     style deny fill:#FF4D4F,color:#fff
+    style deny401 fill:#FF4D4F,color:#fff
 ```
 
 ## 权限类型

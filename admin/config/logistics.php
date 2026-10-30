@@ -23,7 +23,16 @@ $config = array_map(
 );
 
 // 内部接口共享密钥（e-cat → PHP worker，X-Internal-Token 头）；
-// 生产环境必须通过 INTERNAL_TOKEN 环境变量覆盖默认值
-$config['internal_token'] = env('INTERNAL_TOKEN', 'lg-internal-8f3a2c9e6b1d4f7a');
+// 无内置默认值：未配置 INTERNAL_TOKEN 时内部接口拒绝所有请求（fail closed）
+$config['internal_token'] = env('INTERNAL_TOKEN', '');
+
+// 承运商请求必须在网关 15s 超时之前返回：6s × 2 次尝试 + 退避 ≈ 12.2s。
+// http_errors=false 保持与包默认一致，让 4xx/5xx 由重试客户端按响应处理。
+$config['max_retries'] = 1;
+$config['http_client'] = new \GuzzleHttp\Client([
+    'timeout' => 6.0,
+    'connect_timeout' => 3.0,
+    'http_errors' => false,
+]);
 
 return $config;

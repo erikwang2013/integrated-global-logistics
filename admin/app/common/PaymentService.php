@@ -11,6 +11,8 @@ use app\model\Order;
 use app\model\Plan;
 use app\model\SystemConfig;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use support\Db;
 use support\Redis;
 use Throwable;
 
@@ -121,9 +123,10 @@ class PaymentService
                 'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
                 'json' => [
                     'intent' => 'CAPTURE',
-                    'custom_id' => $order->order_no,
                     'purchase_units' => [[
+                        // custom_id 必须挂在 purchase_unit 上，webhook 才读得到订单号
                         'reference_id' => $order->order_no,
+                        'custom_id' => $order->order_no,
                         'amount' => [
                             'currency_code' => 'USD',
                             'value' => number_format($order->amount / 100, 2, '.', ''),
@@ -151,6 +154,48 @@ class PaymentService
             return ['ok' => true, 'url' => $approveUrl];
         } catch (Throwable $e) {
             error_log('[payment] paypal order failed: ' . $e->getMessage());
+            return ['ok' => false, 'code' => 'payment_gateway_error', 'message' => '支付网关调用失败，请稍后重试'];
+        }
+    }
+
+    /**
+     * PayPal 订单收款（capture）：APPROVED 只是授权，必须 capture 才真正扣款
+     * 返回 ['ok'=>true,'status'=>'COMPLETED','capture_id'=>..]；ORDER_ALREADY_CAPTURED 视为成功（幂等）
+     */
+    public static function capturePaypalOrder(string $paypalOrderId): array
+    {
+        $clientId = self::getConfig('paypal_client_id');
+        $secret = self::getConfig('paypal_secret');
+        if ($clientId === '' || $secret === '' || $paypalOrderId === '') {
+            return ['ok' => false, 'code' => 'payment_config_missing', 'message' => '支付配置缺失，请联系管理员'];
+        }
+        try {
+            $client = new Client(['timeout' => self::TIMEOUT]);
+            $token = self::paypalAccessToken($client, $clientId, $secret);
+            if ($token === '') {
+                return ['ok' => false, 'code' => 'payment_gateway_error', 'message' => '支付网关认证失败，请稍后重试'];
+            }
+            $resp = $client->post(self::paypalBase() . '/v2/checkout/orders/' . rawurlencode($paypalOrderId) . '/capture', [
+                'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
+                'body' => '{}',
+            ]);
+            $data = json_decode((string) $resp->getBody(), true);
+            return [
+                'ok' => true,
+                'status' => (string) ($data['status'] ?? ''),
+                'capture_id' => (string) ($data['purchase_units'][0]['payments']['captures'][0]['id'] ?? ''),
+            ];
+        } catch (Throwable $e) {
+            // 重复 capture 返回 422 ORDER_ALREADY_CAPTURED：已扣过款，按成功处理
+            if ($e instanceof RequestException && $e->getResponse()?->getStatusCode() === 422) {
+                $data = json_decode((string) $e->getResponse()->getBody(), true);
+                foreach (($data['details'] ?? []) as $detail) {
+                    if (($detail['issue'] ?? '') === 'ORDER_ALREADY_CAPTURED') {
+                        return ['ok' => true, 'status' => 'COMPLETED', 'capture_id' => ''];
+                    }
+                }
+            }
+            error_log('[payment] paypal capture failed: ' . $e->getMessage());
             return ['ok' => false, 'code' => 'payment_gateway_error', 'message' => '支付网关调用失败，请稍后重试'];
         }
     }
@@ -221,47 +266,63 @@ class PaymentService
 
     /**
      * 订单确认（共享逻辑）：pending→paid + 已通过审核的应用按套餐续期 + 重写网关 Redis 密钥
-     * 幂等：非 pending 订单直接跳过
+     * 事务 + 条件更新抢占，防止并发 webhook 重复续期；非 pending 订单幂等跳过
      */
     public static function confirmOrder(Order $order, ?string $remark = null): array
     {
-        if ($order->status !== 'pending') {
-            return ['ok' => true, 'skipped' => true, 'status' => $order->status];
-        }
+        $redisWrite = null;
+        $result = Db::transaction(function () use ($order, $remark, &$redisWrite) {
+            $affected = Order::where('id', $order->id)->where('status', 'pending')->update([
+                'status' => 'paid',
+                'paid_at' => date('Y-m-d H:i:s'),
+            ]);
+            if ($affected === 0) {
+                return ['ok' => true, 'skipped' => true, 'status' => $order->status];
+            }
+            $order->refresh();
 
-        $order->status = 'paid';
-        $order->paid_at = date('Y-m-d H:i:s');
-        $order->save();
+            // 同一 app 可能有多笔并发确认，锁住应用行避免 expire_at 丢失更新
+            $app = $order->app()->lockForUpdate()->first();
+            if (!$app || $app->status !== 'approved') {
+                return ['ok' => true, 'skipped' => false, 'renewed' => false];
+            }
+            $plan = $order->plan;
+            $days = $plan ? (int) $plan->valid_days : 0;
+            if ($days <= 0) {
+                return ['ok' => true, 'skipped' => false, 'renewed' => false];
+            }
 
-        $app = $order->app;
-        if (!$app || $app->status !== 'approved') {
-            return ['ok' => true, 'skipped' => false, 'renewed' => false];
-        }
-        $plan = $order->plan;
-        $days = $plan ? (int) $plan->valid_days : 0;
-        if ($days <= 0) {
-            return ['ok' => true, 'skipped' => false, 'renewed' => false];
-        }
+            $oldTs = $app->expire_at ? strtotime($app->expire_at . ' UTC') : 0;
+            $expireTs = max($oldTs ?: 0, time()) + $days * 86400;
+            $app->valid_days = $days;
+            $app->expire_at = gmdate('Y-m-d H:i:s', $expireTs);
+            if ($remark !== null && $remark !== '') {
+                $app->review_remark = $remark;
+            }
+            $app->save();
 
-        $oldTs = $app->expire_at ? strtotime($app->expire_at . ' UTC') : 0;
-        $expireTs = max($oldTs ?: 0, time()) + $days * 86400;
-        $app->valid_days = $days;
-        $app->expire_at = gmdate('Y-m-d H:i:s', $expireTs);
-        if ($remark !== null && $remark !== '') {
-            $app->review_remark = $remark;
-        }
-        $app->save();
-
-        try {
-            $payload = json_encode([
-                'appid' => $app->appid,
-                'status' => 'approved',
+            // Redis 写在事务提交后，避免 DB 回滚后留下已生效的网关 key
+            $redisWrite = [
+                'sha' => (string) $app->api_key_sha256,
+                'appid' => (string) $app->appid,
                 'expire_at' => $expireTs,
-            ], JSON_UNESCAPED_UNICODE);
-            Redis::setex("api_keys:{$app->api_key_sha256}", max($expireTs - time(), 1), $payload);
-        } catch (Throwable) {}
+            ];
 
-        return ['ok' => true, 'skipped' => false, 'renewed' => true];
+            return ['ok' => true, 'skipped' => false, 'renewed' => true];
+        });
+
+        if (is_array($redisWrite)) {
+            try {
+                $payload = json_encode([
+                    'appid' => $redisWrite['appid'],
+                    'status' => 'approved',
+                    'expire_at' => $redisWrite['expire_at'],
+                ], JSON_UNESCAPED_UNICODE);
+                Redis::setex("api_keys:{$redisWrite['sha']}", max($redisWrite['expire_at'] - time(), 1), $payload);
+            } catch (Throwable) {}
+        }
+
+        return $result;
     }
 
     private static function paypalAccessToken(Client $client, string $clientId, string $secret): string

@@ -36,7 +36,7 @@ class CaptchaController
         $difficulty = $request->input('difficulty', 'medium');
 
         try {
-            $result = captcha_create('random');
+            $result = captcha_create('random', ['difficulty' => $difficulty]);
 
             return json([
                 'code' => 0,

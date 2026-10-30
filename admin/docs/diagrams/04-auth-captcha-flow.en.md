@@ -16,8 +16,8 @@ sequenceDiagram
     Note over U,CAP: Step 1: Get Captcha
     CL->>SV: POST /api/v1/captcha/generate
     SV->>CAP: captcha_create('click')
-    CAP-->>SV: key, image(base64 PNG), targets
-    SV-->>CL: 200 {key, image, extra.targets}
+    CAP-->>SV: key, image(base64 PNG), extra.texts
+    SV-->>CL: 200 {key, image, extra.texts}
     end
 
     rect rgb(230, 255, 230)
@@ -41,10 +41,10 @@ sequenceDiagram
         alt Invalid Credentials
             SV-->>CL: 401 Username or Password Incorrect
         else Valid Credentials
-            SV->>JWT: jwt()->create()
+            SV->>JWT: jwt()->create(token_type=access)
             JWT-->>SV: access_token(2h)
             SV->>JWT: jwt()->refresh()
-            JWT-->>SV: refresh_token(14d)
+            JWT-->>SV: refresh_token(14d, token_type=refresh)
             SV-->>CL: 200 {tokens, user}
         end
     end
@@ -59,3 +59,10 @@ sequenceDiagram
     SV-->>CL: 200 {dashboard data}
     end
 ```
+
+Notes:
+
+- Access, refresh and client tokens are strictly separated (`token_type`); each endpoint accepts only its own type.
+- Refresh is single-use: the server claims the token with Redis `SET NX`, rotates it, and blacklists the old one. Replay returns 401.
+- `AdminAuth` checks `status=1` on every request, so a disabled admin is rejected immediately.
+- Login lockout is keyed by `username + IP`: 5 failures lock for 15 minutes. The rate limiter also applies separately (login 10 req/min).

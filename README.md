@@ -18,6 +18,8 @@
 - **tracking-gateway 高频网关**（Rust e-cat 框架）—— 对外查询 API 的第一道入口：Redis 缓存、限流、按承运商熔断、worker 负载均衡，只做高频面，不懂承运商协议；
 - **global-logistics 统一门面**（PHP 包）—— 209 家承运商适配器（国内 45 + 国际 164）、187 条单号自动识别规则、`TrackStatus` 7 种统一状态语义。
 
+**当前版本**：v1.2.0（破坏性更新，升级步骤见下文）。
+
 **当前进度**：管理面（承运商/查询记录/统计）、查询网关（对外 API 全链路）、承运商回调接收（仅落库更新轨迹）、监控统计、对外 OpenAPI 文档、客户端门户（注册/应用/套餐/订单）、支付（Stripe / PayPal / 虚拟币）、网关安全中间件、CDN 加速（Cloudflare + 缓存头）均已完成。客户端 → e-cat → worker → 承运商的轨迹查询链路可演示。
 
 **项目宠物 E-Cat** —— 戴追踪雷达帽、手捧包裹的猫，SVG 单文件矢量，自带呼吸 / 眨眼 / 摇尾 / 雷达扫描动画并遵循 `prefers-reduced-motion` 降级。`docs/diagrams/mascot.svg` 是唯一形象源文件，已接入管理端安装向导（`/install`）、404 / 5xx 错误页、API 文档页角标与站点 favicon。
@@ -34,7 +36,7 @@
 - **查询全审计**：每次查询落库 `logistics_tracking_query`（成功/失败、耗时、错误码），管理面可查可统计；
 - **客户端门户与计费**（M7-M10）：客户端注册/登录（client JWT 与 admin 隔离）、应用管理与 X-API-Key 自设、套餐/订单 API；Stripe / PayPal 双渠道 + USDT TRC20 / BEP20 / ERC20 虚拟币支付，Stripe 支付方式（Apple Pay / Google Pay / Klarna / SEPA 等）经配置即生效；
 - **CDN 加速**（M12）：Cloudflare 免费版全站 HTTPS + 静态资源边缘缓存；
-- **密钥零硬编码**：各家密钥全部经配置注入，数据库层用 Encryptable 密文存储，代码与密钥完全分离。
+- **密钥零硬编码**：承运商凭证在 `config/plugin/erikwang2013/global-logistics/app.php` 模板中按承运商配置，部署时注入；JWT / 数据库加密 / 传输加密 / 内部令牌由安装器生成并写入 `.env`，代码不提供默认值；支付密钥等经 `Encryptable` 加密存储。
 
 ## 项目架构
 
@@ -44,7 +46,7 @@
 
 e-cat 网关（Rust）负责对外 API 的 API-Key 鉴权、Redis 缓存命中、限流、按承运商熔断与 RoundRobin 负载均衡；缓存命中、限流拒绝、熔断快速失败都在 e-cat 侧完成，PHP worker 只承接真实查询流量，水平扩展只需加 worker。
 
-**e-cat 复用 209 家 PHP 适配器的分工方案**：209 个适配器是 PHP（`src/Carriers/Domestic` 45 家 + `International` 164 家），Rust 重写是数月工程且丧失上游包持续更新收益；e-cat 不需要懂承运商协议，只依赖一个稳定的内部契约（`/internal/tracking/query` + `/internal/carriers` 注册表同步）。凭证永不下发到 e-cat，安全边界清晰。
+**e-cat 复用 209 家 PHP 适配器的分工方案**：209 个适配器是 PHP（`src/Carriers/Domestic` 45 家 + `International` 164 家），Rust 重写是数月工程且丧失上游包持续更新收益；e-cat 不需要懂承运商协议，只依赖一个稳定的内部 gRPC 契约（`InternalService` 的 `Query` / `Detect` / `Carriers`），经 `x-internal-token` 共享密钥鉴权。内部服务默认只监听 `127.0.0.1:8792`，凭证永不下发到 e-cat，安全边界清晰。
 
 管理面（浏览器）→ `/admin/*`：JWT + RBAC 权限 + 操作审计，覆盖 tracking-query / statistics / client / client-app / plan / order。
 
@@ -60,10 +62,12 @@ integrated-global-logistics/
 │   │   ├── api/                    # API v1（验证码 / 登录 / 刷新令牌）
 │   │   ├── common/                 # Hashids / Snowflake / 加密脱敏服务
 │   │   ├── middleware/             # 安全过滤 / 限流 / JWT / RBAC / 审计
+│   │   ├── process/                # HTTP / 监控 / 内部 gRPC worker
 │   │   └── model/                  # 数据模型（logistics_ 前缀，snowflake 主键）
 │   ├── config/                     # 配置（含中文注释）
 │   ├── database/
-│   │   └── install.sql             # SQL 安装脚本（含权限种子数据）
+│   │   └── install.sql             # SQL 安装脚本（含权限种子数据，不含默认管理员）
+│   ├── support/bootstrap/          # 启动引导（Secrets.php 校验密钥）
 │   └── docs/                       # API / 架构 / 设计 / 安全文档
 ├── infrastructure/                 # Rust e-cat 微服务框架 + 查询网关
 │   ├── ecat/                       # 聚合 crate（App 骨架）
@@ -80,9 +84,9 @@ integrated-global-logistics/
 
 ![生命周期](docs/diagrams/lifecycle.svg)
 
-**查询链路（同步）**：客户端 → API-Key 鉴权 → Redis 限流 → 缓存查找（命中即返，`X-Cache: HIT`）→ 熔断检查（OPEN 则 503 快速失败）→ RoundRobin 选 worker → PHP worker 的 `Logistics` 门面（包内 RetryingClient 自带 2 次重试）→ 209 家承运商 → 落库 `logistics_tracking_query` + 写缓存 → 返回标准化 JSON。
+**查询链路（同步）**：客户端 → API-Key 鉴权 → Redis 限流（按 API-Key 哈希）→ 缓存查找（命中即返，`X-Cache: HIT`；共享运单缓存 + 按 API-Key 隔离的详情缓存，详情 TTL 7 天）→ 熔断检查（OPEN 则 503 快速失败）→ RoundRobin 选 worker → PHP worker 的 `Logistics` 门面（上游 HTTP 6s 超时 × 1 次重试，共 2 次尝试，约 12.2s，小于网关 15s 超时）→ 209 家承运商 → 落库 `logistics_tracking_query` + 写缓存 → 返回标准化 JSON。承运商 5xx / 网络失败写入 15s 负缓存，故障期间不重复转发；网关未实现 single-flight，并发穿透由负缓存兜底。
 
-**回调链路（异步）**：承运商 webhook → `/api/callback/{carrier}` 白名单路由 + 签名校验 → 落库 `logistics_tracking_event` + 更新查询记录。
+**回调链路（异步）**：承运商 webhook → `/api/callback/{carrier}` 白名单路由 + 签名校验 → 落库 `logistics_tracking_event` + 更新查询记录；未配置 `webhook_secret` 默认返回 401，仅 `CALLBACK_ALLOW_UNSIGNED=1` 的开发环境放行。
 
 > 商户侧订阅回推已移除；如需事件通知，请从 `logistics_tracking_event` 表自行消费。
 
@@ -92,22 +96,22 @@ integrated-global-logistics/
 
 分层纵深防御，要点如下：
 
-- **网关层**（tracking-gateway）：API-Key 鉴权、Redis 限流（按 key / IP）、按承运商熔断、防 SSRF（worker 端点白名单解析）；`/internal` 仅监听内网 + 共享密钥头；凭证隔离 —— e-cat 不持凭证明文；
-- **应用层**（admin）：JWT + 黑名单（2h access / 14d refresh）、RBAC method.path 粒度权限、操作审计全链路记录；`SecurityFilter` 拦截 XSS / SQL 注入 / CSRF / 命令注入 / 路径遍历；敏感数据 `Encryptable` 加密落库 + 脱敏导出；登录 5 次失败锁定 15 分钟 + 点击验证码；
-- **回调安全**：白名单路由 + HMAC 签名校验，at-least-once 投递 + 幂等键防重复推送；
-- **支付安全**（M8/M10）：Stripe / PayPal webhook 验签（HMAC-SHA256 / verify-webhook-signature），自动确认订单 + admin 手动兜底；支付密钥 `Encryptable` 加密存储于 `logistics_system_config`；
-- **虚拟币到账验证**（M9）：USDT TRC20 经 Tronscan API 自动验证，BEP20 / ERC20 人工确认；
-- **客户端密钥安全**（M7）：X-API-Key 客户端自设（≥16 位），sha256 落库、明文仅创建时返回一次；client JWT（token_type=client）与 admin JWT 隔离；
+- **网关层**（tracking-gateway）：API-Key 鉴权、Redis 限流（按 API-Key 哈希 / IP）、按承运商熔断（5xx 与传输失败计入）、防 SSRF（worker 端点白名单解析）；内部 gRPC 默认仅监听 `127.0.0.1:8792`，空 `INTERNAL_TOKEN` 时 PHP 内部接口 fail-closed、网关空 token 拒绝启动；凭证隔离 —— e-cat 不持凭证明文；
+- **应用层**（admin）：JWT + 黑名单（2h access / 14d refresh，refresh 单次使用并轮换）、access / refresh / client token_type 严格区分、禁用管理员立即失效、RBAC method.path 粒度权限、操作审计全链路记录；`SecurityFilter` 拦截 XSS / SQL 注入 / CSRF / 命令注入 / 路径遍历；敏感数据 `Encryptable` 加密落库 + 脱敏导出；登录 5 次失败按用户名 + IP 锁定 15 分钟 + 点击验证码；
+- **回调安全**：白名单路由 + 签名校验（sha256(secret + 去 sign 后的紧凑 JSON)，常量时间比较）；未配置 `webhook_secret` 默认 401（`CALLBACK_ALLOW_UNSIGNED=1` 仅开发）；单次事件上限 100 条、字段截断、唯一键幂等去重；错误返回真实 HTTP 4xx/5xx；
+- **支付安全**（M8/M10）：Stripe / PayPal webhook 验签；Stripe 仅在 `payment_status=paid`（含 `async_payment_succeeded`）时确认，PayPal APPROVED 先 `/capture` 且只对本地存在订单扣款、`CAPTURE.COMPLETED` 才确认；manual 渠道保持 pending 由管理员确认；确认走事务 + 应用行锁，`orders.tx_id` 唯一索引拒绝重复链上交易（422）；支付密钥 `Encryptable` 加密存储于 `logistics_system_config`；
+- **虚拟币到账验证**（M9）：USDT TRC20 经 Tronscan API 自动验证，金额在基础价上做 0.01–0.99 唯一化偏移，重复发起复用已展示金额；BEP20 / ERC20 人工确认；
+- **客户端密钥安全**（M7）：X-API-Key 客户端自设（≥16 位），sha256 落库、明文仅创建时返回一次；client JWT（token_type=client）与 admin JWT 隔离，刷新仅接受 refresh token；
 - **网关攻击检测**（M11）：`ecat-security` SecurityBodyLayer 已集成至网关（注入 / 协议 / 数据序列化 / 文件 / 敏感数据泄露攻击检测），攻击载荷在网关层即被拦截，应用层安全包继续兜底；
-- **CDN 安全**（M12）：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则 + 网关应用层检测）；Tunnel 回源源站零公网暴露；回调走仅 DNS 独立子域直连防 CDN 故障丢单；限流按 X-API-Key 计数不受 CDN 边缘 IP 影响；鉴权端点一律 no-store 防数据串号；
-- **统一错误语义**：限流 429、熔断 503、承运商错误 `carrier_error`，不向客户端泄露内部细节。
+- **CDN 安全**（M12）：Cloudflare 免费版全站 HTTPS + 双层 WAF（边缘托管规则 + 网关应用层检测）；Tunnel 回源源站零公网暴露；回调走仅 DNS 独立子域直连防 CDN 故障丢单；限流按 X-API-Key 哈希计数不受 CDN 边缘 IP 影响；Nginx 以覆盖方式设置 `X-Forwarded-For`，防止客户端伪造来源 IP；鉴权端点一律 no-store 防数据串号；
+- **统一错误语义**：限流 429、熔断 503、网关错误 400 / 401 / 404 / 502 / 500，承运商错误 `carrier_error`；异常详情只写服务端日志，不向客户端泄露内部细节。
 
 ## 功能清单
 
 ![平台功能](docs/diagrams/description.svg)
 
 - **轨迹聚合查询**：一个单号查遍全球 —— 187 条单号规则自动识别国内 / 国际通道与承运商，209 家承运商适配器统一输出 `TrackStatus` 7 种标准状态；
-- **多承运商接入**：国内 45 + 国际 164 家适配器，DHL / FedEx / UPS / USPS 与各国邮政 S10 全覆盖，凭证加密落库、密钥零硬编码；
+- **多承运商接入**：国内 45 + 国际 164 家适配器，DHL / FedEx / UPS / USPS 与各国邮政 S10 全覆盖；承运商凭证按 `global-logistics` 配置模板注入，平台与支付密钥经 `Encryptable` 加密存储，代码不含真实密钥；
 - **管理后台 RBAC**：JWT + 黑名单 + method.path 粒度权限 + 全链路操作审计，安全过滤拦截 XSS / SQL 注入 / CSRF / 命令注入；
 - **支付闭环**：Stripe / PayPal 双渠道 + USDT TRC20 / BEP20 / ERC20 虚拟币，webhook 验签自动确认订单，支付方式配置即生效；
 - **客户端门户与套餐**：注册 / 登录 / 应用管理 / 套餐 / 订单 API，X-API-Key 客户端自设，client JWT 与 admin 完全隔离；
@@ -116,7 +120,7 @@ integrated-global-logistics/
 
 ## 一键安装
 
-推荐使用 Docker Compose 一键部署 —— 一条命令启动 4 个服务（Nginx / PHP / MySQL / Redis），含健康检查与数据持久化：
+推荐使用 Docker Compose 一键部署 —— 一条命令启动 4 个服务（Nginx / PHP / MySQL / Redis），仅 Nginx 发布 80/443，MySQL / Redis 不暴露宿主端口；含健康检查与数据持久化：
 
 ```bash
 bash install.sh
@@ -129,7 +133,9 @@ cd integrated-global-logistics   # 进入项目根目录
 bash install.sh                  # 默认对外端口 80，可用 NGINX_PORT=8080 覆盖
 ```
 
-脚本自动检查 Docker 环境、启动全部服务并轮询健康检查（最多 120 秒）；就绪后访问 `http://localhost/install` 完成安装向导（数据库初始化 + 管理员创建）。Docker Compose 详细部署见 [admin/README.md](admin/README.md)。
+脚本自动检查 Docker 环境、启动全部服务并轮询 `/health`（最多 120 秒）；就绪后访问 `http://localhost/install` 完成安装向导（数据库初始化 + 管理员创建），Docker 环境下数据库主机填 `mysql`。
+
+安装器会生成 JWT / 数据库加密 / 传输加密 / 内部接口随机密钥并写入 `.env`（Docker 同时同步 `.env.docker`），不预置默认管理员；安装完成后执行 `docker compose up -d --force-recreate app` 让新密钥生效。`runtime/install.lock` 请勿删除；已有管理员时安装器拒绝重装，确需重装需先备份数据库并清理数据。Docker Compose 详细部署见 [admin/README.md](admin/README.md)。
 
 ## 快速开始
 
@@ -141,7 +147,7 @@ composer install
 php start.php start
 ```
 
-启动后浏览器访问安装向导完成数据库初始化和管理员创建：`http://localhost:8787/install`（默认端口 8787，可在 `config/server.php` 修改）。
+启动后浏览器访问安装向导完成数据库初始化和管理员创建：`http://localhost:8787/install`（默认端口 8787，可在 `config/server.php` 修改）。安装器会生成密钥并写入 `.env`，完成后执行 `php start.php restart -d` 让密钥生效；`.env` 中的 `INTERNAL_TOKEN` 需与查询网关保持一致。
 
 **infrastructure 查询网关**（Rust e-cat）：
 
@@ -151,9 +157,20 @@ cargo build --offline
 TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/tracking-gateway
 ```
 
-网关默认监听 `0.0.0.0:8080`（`tracking-gateway/config/config.json` 可改），worker 指向 PHP internal 端点（默认 `http://127.0.0.1:8787`），API-Key 与内部令牌在配置中声明。
+网关默认监听 `0.0.0.0:8080`（`tracking-gateway/config/config.json` 可改），worker 指向 PHP 内部 gRPC 端点（默认 `http://127.0.0.1:8792`）。`internal_token` 为空时网关拒绝启动，需通过 `TRACKING_GATEWAY_INTERNAL_TOKEN` 注入与 PHP `INTERNAL_TOKEN` 相同的值；`api_keys` 中的 demo key 已移除，API-Key 由管理端审核通过后写入 Redis。PHP 内部 gRPC 默认监听 `127.0.0.1:8792`（`INTERNAL_GRPC_LISTEN` 可覆盖），worker 进程数默认 8（`INTERNAL_GRPC_WORKERS` 可覆盖）。
 
 详细部署见 [admin/README.md](admin/README.md)（Docker Compose 编排 4 个服务：Nginx / PHP / MySQL / Redis）与实施规划文档。
+
+## 升级到 v1.2.0（破坏性变更）
+
+- **密钥无默认值**：`JWT_SECRET_KEY`、`ENCRYPTABLE_KEY`（32 字符）、`ENCRYPTION_KEY`（32 字符）、`INTERNAL_TOKEN` 必须显式配置。安装器会自动生成；手工部署可用 `openssl rand -hex 32` 生成 `JWT_SECRET_KEY` / `INTERNAL_TOKEN`，`ENCRYPTABLE_KEY` / `ENCRYPTION_KEY` 需 32 字符，使用 `openssl rand -hex 16`。已安装环境缺失 `JWT_SECRET_KEY` / `ENCRYPTABLE_KEY` / `ENCRYPTION_KEY` 或仍为旧公开默认值时应用拒绝启动（`APP_DEBUG=true` 仅告警）；`INTERNAL_TOKEN` 为空时内部接口 fail-closed。`.env.example` 中的旧公开默认值不可用于生产。
+- **默认管理员移除**：`install.sql` 不再创建 `erik / 123456`，安装表单也不再预填 `admin888`；安装向导用预处理语句创建管理员并绑定 `super_admin`。已有环境请删除或禁用旧默认账号。
+- **旧加密数据**：若历史数据使用旧公开 `ENCRYPTABLE_KEY`（`open-admin-db-encryption-key-32b`）加密，升级时设置 `ENCRYPTION_PREVIOUS_KEYS=open-admin-db-encryption-key-32b`，并尽快重加密；否则解密失败。
+- **回调签名**：为每个承运商配置 `webhook_secret`；未配置时回调默认返回 401，仅开发环境可显式 `CALLBACK_ALLOW_UNSIGNED=1` 放行。
+- **数据库索引**：`logistics_order.tx_id` 增加唯一索引 `uk_tx_id`，重复链上交易将返回 422；升级已有库时需先确认/补齐该索引。
+- **网关令牌**：网关 `internal_token` 与 PHP `INTERNAL_TOKEN` 必须一致（网关侧用 `TRACKING_GATEWAY_INTERNAL_TOKEN` 注入）；空 token 网关拒绝启动，`demo-api-key` 已删除。
+- **重启方式**：Docker 执行 `docker compose up -d --force-recreate app`；非 Docker 执行 `php start.php restart -d`。
+- **安装锁**：不要删除 `runtime/install.lock`；重装需先备份数据库并清理数据。
 
 ## 文档
 
@@ -187,7 +204,7 @@ TRACKING_GATEWAY_CONFIG=tracking-gateway/config/config.json ./target/debug/track
 | **安全防护** | 9 个中间件（AdminAuth / AdminPermission / ClientAuth / RateLimit / SecurityFilter / OperationLog 等）、JWT、RBAC、入站回调 HMAC、查询审计 | 同一套中间件与安全检测器；另增承运商/CDN 凭据加密（Encryptable 5 个模型 vs 2 个）、出站订阅 HMAC/幂等/退避重试 |
 | **性能与规模** | Rust `tracking-gateway` + PHP webman/Layui；Redis 缓存/限流、按承运商熔断、RoundRobin；4 个 compose 服务 | 同一 gateway；增加 Elasticsearch/Scout 索引与搜索队列，5 个 compose 服务；检索更强但资源占用更高 |
 | **数据与检索** | 13 张表；MySQL LIKE | 17 张表；Elasticsearch + Scout，保留 MySQL 回退 |
-| **测试与质量** | 6 个 PHPUnit 文件 / 26 用例；684 个 Rust 测试；无仓库内 CI workflow | 6 个 PHPUnit 文件 / 28 用例；685 个 Rust 测试；同样无 CI workflow |
+| **测试与质量** | 10 个 PHPUnit 文件 / 76 用例 / 280 断言；684 个 Rust 测试；无仓库内 CI workflow | 同源测试集（随商业版快照更新）；685 个 Rust 测试；同样无 CI workflow |
 | **部署与运维** | docker-compose（nginx/app/mysql/redis）、install.sh、健康检查、Prometheus 指标、apidoc | 同左 + Elasticsearch 容器；另需构建 Flutter/HarmonyOS 客户端 |
 | **多端与国际化** | Layui 管理端；中文/英文文档；无对外 SDK | Layui + Flutter Web + HarmonyOS；Python/PHP/Node/Go/Rust 五语言 SDK；12 种语言文档 |
 | **扩展性与二次开发** | 209 家承运商适配器、187 条单号识别规则；OpenAPI 文档；可直接改 PHP/Rust | 同左 + 管理端 CRUD、五语言 SDK、ES 检索、多端参考实现 |

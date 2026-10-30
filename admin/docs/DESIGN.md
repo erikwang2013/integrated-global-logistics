@@ -119,7 +119,7 @@ Controller::method()
 
 ```
 传输层 (encryption)     — AES-256-CBC，独立密钥
-存储层 (encryptable)    — AES-128-ECB，独立密钥，Model $casts 自动处理
+存储层 (encryptable)    — AES-256-CBC（随机 IV + HMAC，`ENCRYPTABLE_CIPHER` 默认 aes-256-cbc），独立密钥，Model $casts 自动处理
 展示层 (mask)           — 手机号: 138****1234，邮箱: a***@example.com
 ```
 
@@ -162,7 +162,7 @@ logistics_system_config (系统配置) — 独立表
 - 类型: `BIGINT UNSIGNED NOT NULL`
 - 特性: **非自增**，由 Snowflake 算法在应用层生成
 - 优势: 全局唯一、分布式友好、趋势递增利于索引、不暴露业务量
-- 配置: datacenter_id(0-31) + worker_id(0-31)，支持 1024 个节点并发
+- 配置: datacenter_id(0-31) + worker_id(0-31)，默认由进程 PID 派生（`SNOWFLAKE_DATACENTER_ID` / `SNOWFLAKE_WORKER_ID` 可覆盖）；跨主机部署需显式分配，避免 ID 冲突
 
 ## 4. API 设计
 
@@ -242,7 +242,8 @@ curl /api/v2/auth/login   # v2（新增分组后）
 | 401 | 未认证 | Token 缺失/过期/无效 |
 | 403 | 无权限 | 用户角色不包含所需权限 |
 | 404 | 不存在 | 资源未找到 |
-| 422 | 验证失败 | 表单参数不符合规则 / 密码确认失败 |
+| 422 | 验证失败 | 表单参数不符合规则 / 密码确认失败 / 重复链上交易 |
+| 429 | 限流 / 锁定 | RateLimit 触发 / 登录失败锁定 |
 | 500 | 服务端错误 | 未预期异常 |
 
 ### 4.5 认证流程（含点击验证码）
@@ -251,7 +252,7 @@ curl /api/v2/auth/login   # v2（新增分组后）
 客户端                               服务端
   │                                    │
   │  ① POST /api/v1/captcha/generate     │ captcha_create('click')
-  │◄── {key, image(base64), targets}  │
+  │◄── {key, image(base64), texts}    │
   │                                    │
   │  ② 用户点击图中文字位置              │
   │                                    │
@@ -269,6 +270,8 @@ curl /api/v2/auth/login   # v2（新增分组后）
   │────────────────────────────────►  │ AdminAuth → AdminPermission
   │◄── 200 {dashboard data}           │
 ```
+
+令牌语义：access / refresh / client 三类 `token_type` 严格区分，AdminAuth 只接受 access；refresh 单次使用（Redis `SET NX` 原子占用），刷新成功后旧 refresh 立即进黑名单并签发新 refresh；管理员被禁用或删除后，其 access token 在下一次请求即返回 401。
 
 ### 4.6 权限模型 (RBAC)
 
@@ -319,29 +322,33 @@ curl /api/v2/auth/login   # v2（新增分组后）
 | 方法限制 | SecurityFilter HTTP 方法白名单，仅允许 GET/POST/PUT/DELETE/OPTIONS/HEAD，非标准方法返回 405 |
 | 攻击拦截 | SecurityFilter 中间件，XSS/SQL注入/路径遍历/命令注入/CSRF 检测拦截 |
 | 人机验证 | 点击验证码（Click Captcha），登录/注册强制校验 |
-| 账号锁定 | 连续 5 次登录失败锁定账号 15 分钟，锁定期间返回 429 |
+| 账号锁定 | 连续 5 次登录失败按用户名 + IP 锁定 15 分钟，锁定期间返回 429 |
 | 会话限制 | 同一用户最多 3 个并发 Token，超出时最旧 Token 自动黑名单 |
-| 限流 | RateLimit 中间件，Redis 滑动窗口，Lua 原子化 |
+| 令牌类型 | access / refresh / client 严格区分；refresh 单次使用并轮换；禁用管理员立即失效 |
+| 限流 | RateLimit 中间件，Redis 滑动窗口，Lua 原子化（phpredis eval 签名已修复） |
 | CSP | Content-Security-Policy 头限制资源来源，防 XSS 与数据注入 |
 | 操作确认 | 删除等敏感操作需输入当前用户密码二次确认 |
 | 传输 | HTTPS + JWT Bearer Token |
 | 接口ID | Hashids 加密，外部不可逆推真实 ID |
 | 请求体 | AES-256-CBC 敏感字段加密 |
 | 数据库 | BIGINT 主键（不暴露自增量） |
-| 数据库 | AES-128-ECB 敏感字段加密存储 |
+| 数据库 | AES-256-CBC + 随机 IV + HMAC 敏感字段加密存储 |
 | 认证 | JWT HS256，2h 过期 + refresh token |
-| 授权 | RBAC，method.path 粒度权限控制 |
+| 授权 | RBAC，method.path 粒度权限控制；AdminPermission 无 adminId 时返回 401 |
 | 审计 | OperationLog 记录所有操作（含来源端 source 自动检测） |
 
 ### 6.2 密钥管理
 
 ```
-JWT_SECRET          → 环境变量注入，64位随机字符串
-HASHIDS_SALT        → 唯一盐值，泄漏后需全局更换
-ENCRYPTION_KEY      → API 传输加密密钥，32字节
-ENCRYPTABLE_KEY     → DB 存储加密密钥，与传输密钥独立
-SCOUT_HOSTS         → ES 地址，内网部署
+JWT_SECRET_KEY            → JWT 签名密钥，安装器生成；代码无默认值
+ENCRYPTABLE_KEY           → DB 存储加密密钥（32 字符），与传输密钥独立
+ENCRYPTION_KEY            → API 传输加密密钥（32 字符）
+INTERNAL_TOKEN            → 网关 → PHP worker 共享密钥；为空时内部接口 fail-closed
+ENCRYPTION_PREVIOUS_KEYS  → 旧加密密钥列表，仅用于迁移历史数据
+HASHIDS_SALT              → `.env` 模板中存在，但 `config/hashids.php` 当前未读取；盐值为空，只做 ID 混淆，不是权限边界
 ```
+
+已安装环境缺失 `JWT_SECRET_KEY` / `ENCRYPTABLE_KEY` / `ENCRYPTION_KEY`，或仍为旧公开默认值时，`support/bootstrap/Secrets.php` 拒绝启动；`APP_DEBUG=true` 时仅记录告警。`INTERNAL_TOKEN` 为空不阻止 PHP 启动，但内部接口一律拒绝；网关侧空 token 直接拒绝启动。手工生成密钥：JWT / 内部令牌用 `openssl rand -hex 32`，`ENCRYPTABLE_KEY` / `ENCRYPTION_KEY` 需 32 字符，用 `openssl rand -hex 16`。
 
 ### 6.3 敏感数据保护
 
@@ -382,6 +389,7 @@ SCOUT_HOSTS         → ES 地址，内网部署
 ```
 Nginx (:443 HTTPS) → webman worker × N (:8787) → MySQL + Redis
                     静态文件: public/
+internal gRPC: 127.0.0.1:8792（仅本机/容器网络，e-cat → PHP worker）
 ```
 
 ### 8.2 Docker Compose（推荐生产环境）
@@ -390,16 +398,17 @@ Nginx (:443 HTTPS) → webman worker × N (:8787) → MySQL + Redis
 
 | 服务 | 镜像/构建 | 端口 | 说明 |
 |------|----------|------|------|
-| `nginx` | nginx:alpine | 80, 443 | 反向代理 + 静态文件 + Gzip |
-| `app` | 本地 `Dockerfile` 构建 | 8787 | PHP 8.3 + OPcache + webman |
-| `mysql` | mysql:8.0 | 3306 | 主数据库，数据卷持久化 |
-| `redis` | redis:7-alpine | 6379 | 缓存 / 限流 / 验证码 |
+| `nginx` | nginx:alpine | 宿主 80, 443 | 反向代理 + 静态文件 + Gzip，配置文件 `docs/nginx-docker.conf` |
+| `app` | 本地 `Dockerfile` 构建 | 仅容器网络 8787 | PHP 8.3 + OPcache + webman |
+| `mysql` | mysql:8.0 | 仅容器网络 3306 | 主数据库，数据卷持久化 |
+| `redis` | redis:7-alpine | 仅容器网络 6379 | 缓存 / 限流 / 验证码 |
 
-启动前将 `docker-compose.yml` 中的 `JWT_SECRET`、`HASHIDS_SALT`、`ENCRYPTION_KEY` 等密钥替换为随机字符串。
+MySQL / Redis 不发布宿主端口。密钥不再写入 `docker-compose.yml`：安装器生成后写入 `.env.docker`，`app` 通过 `env_file` 读取。安装完成后需重建 app 使新密钥生效。
 
 ```bash
-cp .env.docker .env
-docker-compose up -d
+docker compose up -d
+# 浏览器完成 /install（数据库主机填 mysql）后：
+docker compose up -d --force-recreate app
 ```
 
 ### 8.3 CI/CD

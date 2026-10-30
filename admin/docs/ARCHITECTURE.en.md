@@ -240,9 +240,9 @@ sequenceDiagram
     SV->>CAP: captcha_create('click')
     CAP->>CAP: Generate 300×200 background image
     CAP->>CAP: Randomly place N Chinese targets
-    CAP->>CAP: Generate key, store targets
-    CAP-->>SV: { key, image(PNG base64), targets }
-    SV-->>CL: 200 { key, image, extra.targets }
+    CAP->>CAP: Generate key, store targets (coordinates stay server-side)
+    CAP-->>SV: { key, image(PNG base64), extra.texts }
+    SV-->>CL: 200 { key, image, extra.texts }
 
     Note over U,CAP: === Step 2: User Clicks ===
     CL->>CL: Render captcha image
@@ -262,10 +262,10 @@ sequenceDiagram
         alt Invalid credentials
             SV-->>CL: 401 Incorrect username or password
         else Credentials valid
-            SV->>JWT: jwt()->create({sub, username})
+            SV->>JWT: jwt()->create({sub, username, token_type: access})
             JWT-->>SV: access_token (2h)
             SV->>JWT: jwt()->refresh()
-            JWT-->>SV: refresh_token (14d)
+            JWT-->>SV: refresh_token (14d, token_type: refresh)
             SV-->>CL: 200 { access_token, refresh_token, user }
         end
     end
@@ -276,6 +276,8 @@ sequenceDiagram
     JWT-->>SV: { sub, username }
     SV-->>CL: 200 { dashboard data }
 ```
+
+> Token types are strictly separated: admin routes accept only `access`, client routes only `client`, and `/api/v1/auth/refresh` only `refresh`. Refresh tokens are single-use (`Redis SET NX`), rotated on every use, and the old token is blacklisted; replay returns 401. `AdminAuth` also checks the admin's `status=1` on every request, so a disabled admin loses access immediately. An empty `adminId` in `AdminPermission` returns 401.
 
 ---
 
@@ -361,14 +363,14 @@ flowchart TD
 flowchart LR
     subgraph "1. Generation"
         G1["SnowflakeService<br/>::generate()"]
-        G2["datacenter_id(5bit)<br/>+ worker_id(5bit)<br/>+ timestamp(41bit)<br/>+ sequence(12bit)"]
+        G2["datacenter_id(5bit)<br/>+ worker_id(5bit)<br/>+ timestamp(41bit)<br/>+ sequence(12bit)<br/>derived from PID by default, env overrides"]
         G3["BIGINT(18)<br/>e.g. 1750123456789"]
         G1 --> G2 --> G3
     end
 
     subgraph "2. Storage"
         S1["MySQL logistics_* Tables<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
-        S2["Sensitive Fields<br/>encryptable cast<br/>AES-128-ECB Encryption"]
+        S2["Sensitive Fields<br/>encryptable cast<br/>AES-256-CBC + HMAC"]
         G3 --> S1
         S1 --> S2
     end
@@ -391,6 +393,8 @@ flowchart LR
     style S2 fill:#FA8C16,color:#fff
 ```
 
+> Snowflake `datacenter_id` / `worker_id` default to values derived from the process PID, with environment overrides for multi-host deployments. The Hashids salt is empty by default (set a unique salt in `config/hashids.php` before deploying) and is not a security boundary; IDs are also protected by access control.
+
 ---
 
 ## 7. Data Encryption Layers
@@ -399,7 +403,7 @@ flowchart LR
 flowchart TB
     subgraph "Transport Layer Encryption (encryption)"
         E1["Client Sends Sensitive Data"]
-        E2["AES-256-CBC Encryption"]
+        E2["AES-256-CBC Encryption<br/>ENCRYPTION_KEY (32 chars)"]
         E3["API Transport Ciphertext"]
         E4["Server Decrypts"]
         E1 --> E2 --> E3 --> E4
@@ -407,7 +411,7 @@ flowchart TB
 
     subgraph "Storage Layer Encryption (encryptable)"
         D1["Model $casts<br/>email => Encryptable::class<br/>phone => Encryptable::class<br/>id_card => Encryptable::class"]
-        D2["Write: Auto-Encrypt"]
+        D2["Write: Auto-Encrypt<br/>ENCRYPTABLE_KEY (32 chars)"]
         D3["MySQL VARCHAR(500)<br/>Stores Ciphertext"]
         D4["Read: Auto-Decrypt"]
         D1 --> D2 --> D3 --> D4
@@ -426,6 +430,8 @@ flowchart TB
     style D2 fill:#FA8C16,color:#fff
     style M1 fill:#52C41A,color:#fff
 ```
+
+> Transport encryption and storage encryption use separate keys: `ENCRYPTION_KEY` for the API transport layer and `ENCRYPTABLE_KEY` for database fields. Both are 32 characters with no code default; the installer generates them. Existing data encrypted with the old public key needs `ENCRYPTION_PREVIOUS_KEYS=open-admin-db-encryption-key-32b` until it is re-encrypted.
 
 ---
 
@@ -543,6 +549,8 @@ sequenceDiagram
     CTL-->>C: File download
 ```
 
+> The export table whitelist excludes `system_config` (and other security-sensitive tables); configuration export is not supported. Sensitive columns are decrypted and masked in the same way as the UI. Temporary files under `runtime/tmp/` are not automatically cleaned; schedule a cleanup job on shared hosts.
+
 ---
 
 ## 10. Admin UI (Layui)
@@ -568,7 +576,7 @@ flowchart TB
     end
 
     subgraph "Layer 4: Authentication"
-        L4["JWT HS256<br/>access_token 2h<br/>refresh_token 14d"]
+        L4["JWT HS256<br/>access/refresh/client separated<br/>access 2h / refresh 14d single-use"]
     end
 
     subgraph "Layer 5: Authorization"
@@ -594,6 +602,8 @@ flowchart TB
     style L7 fill:#FF4D4F,color:#fff
 ```
 
+> Production additionally requires `JWT_SECRET_KEY`, `ENCRYPTABLE_KEY`, `ENCRYPTION_KEY` (32 chars) and `INTERNAL_TOKEN`. `support/bootstrap/Secrets.php` refuses to start an installed environment when one of the three encryption/JWT keys is missing or still set to a public default (`APP_DEBUG=true` only warns). Carrier callbacks fail closed when `webhook_secret` is missing; the internal gRPC port is loopback-only and rejects requests when `INTERNAL_TOKEN` is empty.
+
 ---
 
 ## 12. Deployment Topology
@@ -613,12 +623,13 @@ flowchart TB
         WM1["webman worker 1<br/>:8787"]
         WM2["webman worker 2<br/>:8787"]
         WM3["webman worker N<br/>:8787"]
+        GRPC["Internal gRPC<br/>127.0.0.1:8792<br/>INTERNAL_TOKEN auth"]
     end
 
     subgraph "Data Layer"
-        MYSQL["MySQL 8.0<br/>Master-Slave Replication<br/>logistics_ Prefix"]
+        MYSQL["MySQL 8.0<br/>Master-Slave Replication<br/>logistics_ Prefix<br/>no host port published"]
         ES["MySQL 8.0<br/>Full-Text Search (LIKE)<br/>logistics_ Prefix"]
-        REDIS["Redis 7.x<br/>Sentinel Mode<br/>poster:captcha:*"]
+        REDIS["Redis 7.x<br/>Sentinel Mode<br/>logistics:cache:* (gateway)<br/>poster:captcha:* (captcha)<br/>no host port published"]
     end
 
     subgraph "Monitoring"
@@ -641,3 +652,50 @@ flowchart TB
     style ES fill:#1890FF,color:#fff
     style REDIS fill:#1890FF,color:#fff
 ```
+
+> In the Docker Compose deployment only Nginx publishes host ports 80/443; `app` (8787), MySQL (3306) and Redis (6379) are reachable only on the container network. The internal gRPC listener defaults to `127.0.0.1:8792` and is not exposed externally.
+
+---
+
+## 13. Tracking Gateway and Internal gRPC
+
+The Rust `tracking-gateway` serves `/v1/*` externally and calls the PHP `InternalService` over h2c gRPC internally. The PHP side does not implement gateway logic beyond carrier protocol adapters: it runs queries for the 200+ carriers and persists the results.
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant GW as tracking-gateway (Rust)
+    participant R as Redis
+    participant W as PHP InternalService (gRPC)
+    participant L as Logistics Facade
+    participant DB as MySQL
+
+    C->>GW: POST /v1/tracking/query<br/>X-API-Key
+    GW->>R: rate limit (api_keys / api:{hash})
+    GW->>R: cache cache:track:{carrier}:{no}
+    alt Cache hit
+        R-->>GW: tracking result
+        GW->>R: backfill cache:query:{key_hash}:{query_no} (7 days)
+    else Cache miss
+        GW->>W: InternalService.Query<br/>x-internal-token
+        W->>L: Logistics::track()
+        L->>DB: persist logistics_tracking_query
+        W-->>GW: QueryResponse
+        GW->>R: write shared tracking cache + per-API-Key detail cache
+    end
+    GW-->>C: unified JSON (HTTP status matches code)
+```
+
+| Item | Default / Behavior |
+|---|---|
+| Public listener | `0.0.0.0:8080` (configurable in `config/config.json`) |
+| Internal gRPC | `127.0.0.1:8792`, overridable with `INTERNAL_GRPC_LISTEN`; 8 worker processes, overridable with `INTERNAL_GRPC_WORKERS` |
+| Internal auth | metadata `x-internal-token` = `INTERNAL_TOKEN`; empty on the PHP side fails closed, empty on the gateway side refuses to start |
+| Cache key prefix | `logistics:`; shared `cache:track:{carrier}:{tracking_no}`, `cache:detect:{tracking_no}`, `cache:carriers`; detail `cache:query:{api_key_hash}:{query_no}` |
+| Cache TTL | tracking 300s default (per-carrier override), detect 300s, carrier list 600s, per-API-Key detail 7 days, failure negative cache 15s |
+| Rate limit | 100 requests / 60s / API-Key (key is a SHA-256 hash); 429 when exceeded |
+| Circuit breaker | per carrier, 30s window, failure rate ≥ 0.5 opens for 60s, half-open with 3 probes; 5xx and transport failures count, 4xx does not |
+| Upstream timeout | gateway 15s; PHP carrier HTTP 6s × 1 retry (2 attempts, about 12.2s < 15s) |
+| Error mapping | upstream `code` 4xx/5xx maps to the same HTTP status, everything else becomes 502; breaker open returns 503; custom codes such as 5001 are no longer used |
+
+> Known limitation: the gateway does not implement single-flight, so concurrent requests for the same uncached tracking number may each hit the upstream. The 15-second negative cache limits repeats during an outage.

@@ -15,7 +15,7 @@ use Google\Protobuf\Internal\GPBUtil;
 class QueryResponse extends \Google\Protobuf\Internal\Message
 {
     /**
-     * 0 成功；400/404 参数与未注册；5001 carrier_error；500 内部错误（与对外契约一致）
+     * 0 成功；400 参数；404 未找到；502 承运商故障；500 内部错误（与对外契约一致）
      *
      * Generated from protobuf field <code>int32 code = 1;</code>
      */
@@ -78,7 +78,7 @@ class QueryResponse extends \Google\Protobuf\Internal\Message
      *     Optional. Data for populating the Message object.
      *
      *     @type int $code
-     *           0 成功；400/404 参数与未注册；5001 carrier_error；500 内部错误（与对外契约一致）
+     *           0 成功；400 参数；404 未找到；502 承运商故障；500 内部错误（与对外契约一致）
      *     @type string $message
      *     @type string $error_code
      *     @type string $error_message
@@ -100,7 +100,7 @@ class QueryResponse extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * 0 成功；400/404 参数与未注册；5001 carrier_error；500 内部错误（与对外契约一致）
+     * 0 成功；400 参数；404 未找到；502 承运商故障；500 内部错误（与对外契约一致）
      *
      * Generated from protobuf field <code>int32 code = 1;</code>
      * @return int
@@ -111,7 +111,7 @@ class QueryResponse extends \Google\Protobuf\Internal\Message
     }
 
     /**
-     * 0 成功；400/404 参数与未注册；5001 carrier_error；500 内部错误（与对外契约一致）
+     * 0 成功；400 参数；404 未找到；502 承运商故障；500 内部错误（与对外契约一致）
      *
      * Generated from protobuf field <code>int32 code = 1;</code>
      * @param int $var

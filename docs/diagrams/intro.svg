@@ -15,12 +15,12 @@
     <rect x="40" y="152" width="360" height="16" fill="#1F4E79"/>
     <text x="220" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">admin 管理后台</text>
     <text x="220" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">PHP webman v2 常驻进程 + Layui 管理端</text>
-    <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC 权限 · JWT 鉴权 · 操作审计</text>
-    <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">承运商档案 / 密钥加密管理</text>
+    <text x="220" y="232" text-anchor="middle" font-size="13.5" fill="#212529">RBAC · JWT 三类型 · 禁用即失效</text>
+    <text x="220" y="264" text-anchor="middle" font-size="13.5" fill="#212529">承运商档案 / 支付与密钥管理</text>
     <text x="220" y="296" text-anchor="middle" font-size="13.5" fill="#212529">查询记录 / 统计报表 / 客户端门户</text>
-    <text x="220" y="338" text-anchor="middle" font-size="13" fill="#6C757D">18 层纵深防御 · Excel/PDF 导出</text>
+    <text x="220" y="338" text-anchor="middle" font-size="13" fill="#6C757D">Docker 端口不暴露 · Excel/PDF 导出</text>
     <text x="220" y="368" text-anchor="middle" font-size="13" fill="#6C757D">Redis 缓存 · 承运商注册表</text>
-    <text x="220" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">承载管理面与 PHP worker 池</text>
+    <text x="220" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">承载管理面与 8 worker gRPC 池</text>
   </g>
 
   <!-- 支柱二：tracking-gateway -->
@@ -30,12 +30,12 @@
     <rect x="420" y="152" width="360" height="16" fill="#2E86DE"/>
     <text x="600" y="138" text-anchor="middle" font-size="20" font-weight="bold" fill="#FFFFFF">tracking-gateway 高频网关</text>
     <text x="600" y="196" text-anchor="middle" font-size="14" font-weight="bold" fill="#2E86DE">Rust e-cat 框架常驻进程</text>
-    <text x="600" y="232" text-anchor="middle" font-size="13.5" fill="#212529">Redis 缓存命中即返（X-Cache: HIT）</text>
+    <text x="600" y="232" text-anchor="middle" font-size="13.5" fill="#212529">缓存命中即返 · 详情按 Key 隔离</text>
     <text x="600" y="264" text-anchor="middle" font-size="13.5" fill="#212529">API-Key 鉴权 · 按 key 限流</text>
-    <text x="600" y="296" text-anchor="middle" font-size="13.5" fill="#212529">按承运商熔断（半开探测）</text>
+    <text x="600" y="296" text-anchor="middle" font-size="13.5" fill="#212529">按承运商熔断（5xx 计入）</text>
     <text x="600" y="328" text-anchor="middle" font-size="13.5" fill="#212529">RoundRobin 负载均衡到 worker 池</text>
     <text x="600" y="368" text-anchor="middle" font-size="13" fill="#6C757D">/metrics Prometheus · /health 健康检查</text>
-    <text x="600" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">只做高频面，不懂承运商协议</text>
+    <text x="600" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">15s 负缓存 · 上游 6s × 1 重试</text>
   </g>
 
   <!-- 支柱三：global-logistics -->
@@ -49,7 +49,7 @@
     <text x="980" y="264" text-anchor="middle" font-size="13.5" fill="#212529">国内 45 家 + 国际 164 家</text>
     <text x="980" y="296" text-anchor="middle" font-size="13.5" fill="#212529">187 条单号规则（顺序敏感优先命中）</text>
     <text x="980" y="328" text-anchor="middle" font-size="13.5" fill="#212529">TrackStatus 7 种统一状态语义</text>
-    <text x="980" y="368" text-anchor="middle" font-size="13" fill="#6C757D">PSR-18 · OAuth2 · 失败自动重试</text>
+    <text x="980" y="368" text-anchor="middle" font-size="13" fill="#6C757D">PSR-18 · OAuth2 · 6s × 1 重试</text>
     <text x="980" y="404" text-anchor="middle" font-size="13" fill="#17A2B8">1663 测试用例 / 6662 断言全绿</text>
   </g>
 

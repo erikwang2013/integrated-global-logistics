@@ -21,7 +21,7 @@ message QueryRequest {
 }
 
 message QueryResponse {
-  // 0 成功；400/404 参数与未注册；5001 carrier_error；500 内部错误（与对外契约一致）
+  // 0 成功；400 参数；404 未找到；502 承运商故障；500 内部错误（与对外契约一致）
   int32 code = 1;
   string message = 2;
   string error_code = 3;

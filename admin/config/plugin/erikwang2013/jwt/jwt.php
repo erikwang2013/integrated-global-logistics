@@ -9,7 +9,8 @@
 
 return [
     'enable' => true,
-    'secret_key' => getenv('JWT_SECRET_KEY') ?: 'open-admin-jwt-secret-change-in-production',
+    // 不再提供公开默认密钥，必须由 .env 注入（见 support\bootstrap\Secrets）
+    'secret_key' => getenv('JWT_SECRET_KEY') ?: '',
     'algorithm' => getenv('JWT_ALGORITHM') ?: 'HS256',
     'issuer' => getenv('JWT_ISSUER') ?: 'open-admin',
     'audience' => getenv('JWT_AUDIENCE') ?: 'open-admin',

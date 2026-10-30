@@ -43,8 +43,8 @@ return [
     'internal_grpc' => [
         'handler' => app\process\InternalGrpcWorker::class,
         'workerClass' => app\process\InternalGrpcWorker::class,
-        'listen' => 'tcp://0.0.0.0:8792',
-        'count' => 4,
+        'listen' => getenv('INTERNAL_GRPC_LISTEN') ?: 'tcp://127.0.0.1:8792',
+        'count' => (int) (getenv('INTERNAL_GRPC_WORKERS') ?: 8),
         'user' => '',
         'group' => '',
         'reusePort' => false,

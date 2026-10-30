@@ -238,9 +238,9 @@ sequenceDiagram
     SV->>CAP: captcha_create('click')
     CAP->>CAP: 生成 300×200 背景图
     CAP->>CAP: 随机放置 N 个中文目标
-    CAP->>CAP: 生成 key, 存储 targets
-    CAP-->>SV: { key, image(PNG base64), targets }
-    SV-->>CL: 200 { key, image, extra.targets }
+    CAP->>CAP: 生成 key, 存储 targets（坐标仅服务端）
+    CAP-->>SV: { key, image(PNG base64), extra.texts }
+    SV-->>CL: 200 { key, image, extra.texts }
 
     Note over U,CAP: === 第二步: 用户点击 ===
     CL->>CL: 渲染验证码图片
@@ -359,14 +359,14 @@ flowchart TD
 flowchart LR
     subgraph "1. 生成"
         G1["SnowflakeService<br/>::generate()"]
-        G2["datacenter_id(5bit)<br/>+ worker_id(5bit)<br/>+ timestamp(41bit)<br/>+ sequence(12bit)"]
+        G2["datacenter_id(5bit)<br/>+ worker_id(5bit)<br/>+ timestamp(41bit)<br/>+ sequence(12bit)<br/>默认由 PID 派生，env 可覆盖"]
         G3["BIGINT(18)<br/>例: 1750123456789"]
         G1 --> G2 --> G3
     end
 
     subgraph "2. 存储"
         S1["MySQL logistics_* 表<br/>id BIGINT UNSIGNED<br/>NOT NULL"]
-        S2["敏感字段<br/>encryptable cast<br/>AES-128-ECB 加密"]
+        S2["敏感字段<br/>encryptable cast<br/>AES-256-CBC + HMAC"]
         G3 --> S1
         S1 --> S2
     end
@@ -611,12 +611,13 @@ flowchart TB
         WM1["webman worker 1<br/>:8787"]
         WM2["webman worker 2<br/>:8787"]
         WM3["webman worker N<br/>:8787"]
+        GRPC["内部 gRPC<br/>127.0.0.1:8792<br/>INTERNAL_TOKEN 鉴权"]
     end
 
     subgraph "数据层"
-        MYSQL["MySQL 8.0<br/>主从复制<br/>logistics_ 前缀"]
+        MYSQL["MySQL 8.0<br/>主从复制<br/>logistics_ 前缀<br/>不发布宿主端口"]
         ES["MySQL 8.0<br/>全文检索（LIKE）<br/>logistics_ 前缀"]
-        REDIS["Redis 7.x<br/>哨兵模式<br/>poster:captcha:*"]
+        REDIS["Redis 7.x<br/>哨兵模式<br/>logistics:cache:*（网关）<br/>poster:captcha:*（验证码）<br/>不发布宿主端口"]
     end
 
     subgraph "监控"
@@ -639,3 +640,50 @@ flowchart TB
     style ES fill:#1890FF,color:#fff
     style REDIS fill:#1890FF,color:#fff
 ```
+
+> Docker 编排中仅 Nginx 发布宿主 80/443；`app`（8787）、MySQL（3306）、Redis（6379）仅在容器网络内可达。内部 gRPC 默认 `127.0.0.1:8792`，不对外暴露。
+
+---
+
+## 13. 查询网关与内部 gRPC
+
+Rust `tracking-gateway` 对外提供 `/v1/*`，对内通过 h2c gRPC 调用 PHP 的 `InternalService`；PHP 侧不解析承运商协议之外的网关逻辑，只负责 209 家适配器查询与落库。
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端
+    participant GW as tracking-gateway (Rust)
+    participant R as Redis
+    participant W as PHP InternalService (gRPC)
+    participant L as Logistics 门面
+    participant DB as MySQL
+
+    C->>GW: POST /v1/tracking/query<br/>X-API-Key
+    GW->>R: 限流（api_keys / api:{hash}）
+    GW->>R: 缓存 cache:track:{carrier}:{no}
+    alt 缓存命中
+        R-->>GW: 轨迹结果
+        GW->>R: 补写 cache:query:{key_hash}:{query_no}（7 天）
+    else 未命中
+        GW->>W: InternalService.Query<br/>x-internal-token
+        W->>L: Logistics::track()
+        L->>DB: 落库 logistics_tracking_query
+        W-->>GW: QueryResponse
+        GW->>R: 写共享轨迹缓存 + 按 API-Key 隔离详情缓存
+    end
+    GW-->>C: 统一 JSON（HTTP 状态与 code 一致）
+```
+
+| 项 | 默认值 / 行为 |
+|---|---|
+| 对外监听 | `0.0.0.0:8080`（`config/config.json` 可改） |
+| 内部 gRPC | `127.0.0.1:8792`，`INTERNAL_GRPC_LISTEN` 覆盖；worker 进程数 8，`INTERNAL_GRPC_WORKERS` 覆盖 |
+| 内部鉴权 | metadata `x-internal-token` = `INTERNAL_TOKEN`；PHP 侧为空时 fail-closed，网关侧为空拒绝启动 |
+| 缓存键前缀 | `logistics:`；共享 `cache:track:{carrier}:{tracking_no}`、`cache:detect:{tracking_no}`、`cache:carriers`，详情 `cache:query:{api_key_hash}:{query_no}` |
+| 缓存 TTL | 轨迹默认 300s（可按承运商覆盖）、识别 300s、承运商清单 600s、按 API-Key 详情 7 天、失败负缓存 15s |
+| 限流 | 100 次 / 60s / API-Key（键为 sha256 哈希）；超限 429 |
+| 熔断 | 按承运商统计 30s 窗口，失败率 ≥ 0.5 打开 60s，半开 3 个探测；5xx 与传输失败计入，4xx 不计入 |
+| 上游超时 | 网关 15s；PHP 承运商 HTTP 6s × 1 次重试（2 次尝试，约 12.2s < 15s） |
+| 错误映射 | 上游 `code` 为 4xx/5xx 时原样映射 HTTP，其余落 502；熔断 503；不再使用 5001 等自定义错误码 |
+
+> 已知限制：网关未实现 single-flight，缓存未命中时并发请求可能重复转发上游；当前以 15s 负缓存抑制故障期重复请求。

@@ -1,5 +1,7 @@
 # M3 代码审查（回调与订阅）
 
+> 历史审查记录，部分问题已在 v1.2.0 修复；最新状态以 README/SECURITY/API 为准。
+
 > 状态：**基线预审** — 审查时 M3 diff 尚未落地（coder-php #13 pending、coder-gateway #16 in_progress）。
 > 本文档 = 基线发现（M3 必须对齐的既有代码）+ M3 diff 落地后的验收清单。
 > 基线审查于 2026-08-28，基于 `main @ 1c28cac`。

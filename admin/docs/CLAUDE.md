@@ -81,7 +81,9 @@ open-admin/
 │   ├── model/                  # 数据模型
 │   ├── exception/              # 全局异常处理（浏览器请求渲染项目宠物错误页）
 │   ├── queue/                  # 队列任务
-│   └── process/                # 进程 (Http, Monitor)
+│   └── process/                # 进程 (Http, Monitor, InternalGrpcWorker)
+├── support/
+│   └── bootstrap/Secrets.php   # 启动引导（校验 JWT/加密/内部令牌）
 ├── config/                     # 配置文件
 │   ├── route.php               # 路由 + API 版本策略
 │   └── middleware.php           # 全局中间件注册
@@ -95,7 +97,8 @@ open-admin/
 │   ├── DESIGN.md               # 设计文档
 │   ├── SECURITY.md             # 安全架构设计
 │   ├── API.md                  # API 参考文档
-│   ├── nginx-security.conf     # Nginx 安全参考配置
+│   ├── nginx-security.conf     # Nginx 安全参考配置（裸机）
+│   ├── nginx-docker.conf       # Docker Nginx 站点配置（反代 app:8787，覆盖 XFF）
 │   ├── diagrams/               # 分解架构图
 │   └── superpowers/            # 规范与计划
 │       ├── specs/              # 设计规范
@@ -130,14 +133,21 @@ open-admin/
 /health: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
 ```
 
+- `AdminAuth` 仅接受 `token_type=access`，每次请求查库校验管理员 `status=1`（禁用立即失效）。
+- `AdminPermission` 在 `$request->adminId` 为空时返回 401，不再放行。
+- 登录失败锁定（5 次 / 15 分钟）在 `AuthController` 中按 `用户名 + IP` 执行，不在 RateLimit 中间件内。
+
 ## 安全增强
 
 - **HTTP 方法限制**：SecurityFilter 仅允许 GET/POST/PUT/DELETE/OPTIONS/HEAD，非标准方法返回 405
 - **CSP 头**：Content-Security-Policy + X-Permitted-Cross-Domain-Policies 注入所有响应
-- **账号锁定**：连续 5 次登录失败，账号锁定 15 分钟
+- **账号锁定**：连续 5 次登录失败，按 `用户名 + IP` 锁定 15 分钟
 - **并发会话限制**：同一用户最多 3 个有效 Token，超出时最旧 Token 加入黑名单
+- **令牌类型**：access / refresh / client 严格区分；refresh 单次使用（Redis `SET NX`）并轮换；禁用管理员立即失效
+- **密钥校验**：`support/bootstrap/Secrets.php` 在已安装环境缺失密钥或仍为旧公开默认值时拒绝启动
+- **回调 fail-closed**：未配置 `webhook_secret` 默认 401，仅 `CALLBACK_ALLOW_UNSIGNED=1` 开发放行
 - **security.txt**：`/.well-known/security.txt` RFC 9116 端点
-- **Nginx 安全配置**：`docs/nginx-security.conf` 反向代理安全加固参考
+- **Nginx 安全配置**：Docker 使用 `docs/nginx-docker.conf`，裸机参考 `docs/nginx-security.conf`；以覆盖方式写入 `X-Forwarded-For`
 
 ## API 版本策略
 
@@ -155,6 +165,8 @@ Redis 滑动窗口（Lua 原子化），默认 60 次/分钟/IP/路由：
 - 登录: 10 次/分钟
 - 注册: 5 次/分钟
 - 响应头: `X-RateLimit-Limit/Remaining/Reset`，超限附加 `Retry-After`
+- phpredis `eval` 参数签名为 `eval(script, args, num_keys)`，参数顺序错误会导致限流静默失效；新增限流逻辑请复用 `RateLimit::buildEvalArgs()`
+- 账号锁定不在此中间件：`AuthController` 按 `用户名 + IP` 计数，5 次失败锁 15 分钟
 
 ## 代码规范
 
@@ -165,7 +177,9 @@ Redis 滑动窗口（Lua 原子化），默认 60 次/分钟/IP/路由：
 
 ### 数据库
 - 表前缀: `logistics_`
-- 主键 `id`: BIGINT 类型，非自增，由 snowflake 生成
+- 查询网关 Redis key 前缀: `logistics:`（如 `logistics:cache:track:*`）；PHP 侧另有 `rate_limit:` / `jwt_blacklist:` / `account_lock:` / `captcha_verified:` / `poster:captcha:` 等独立前缀
+- 主键 `id`: BIGINT 类型，非自增，由 snowflake 生成；worker/datacenter 默认由 PID 派生，跨主机需显式设置
+- `logistics_order.tx_id` 有唯一索引 `uk_tx_id`，重复链上交易返回 422
 - 敏感字段使用 `erikwang2013/encryptable` trait 自动加解密
 - 迁移文件使用 SQL 格式
 
@@ -186,10 +200,15 @@ Redis 滑动窗口（Lua 原子化），默认 60 次/分钟/IP/路由：
 | `mysql` | MySQL 8.0，数据卷持久化 |
 | `redis` | Redis 7 Alpine，缓存/限流/Session |
 
+仅 `nginx` 发布宿主 80/443；`app`（8787）、MySQL、Redis 仅在容器网络可达。`app` 通过 `env_file: .env.docker` 读取配置，安装器会把生成的密钥同步进 `.env.docker`。
+
 ```bash
-cp .env.docker .env
-docker-compose up -d
+docker compose up -d
+# 浏览器完成 /install（数据库主机填 mysql）后，重建 app 使密钥生效：
+docker compose up -d --force-recreate app
 ```
+
+内部 gRPC 默认 `tcp://127.0.0.1:8792`、8 个 worker（`INTERNAL_GRPC_LISTEN` / `INTERNAL_GRPC_WORKERS` 覆盖）；网关与 PHP 的 `INTERNAL_TOKEN` 必须一致，空 token 时内部接口 fail-closed。
 
 ### CI/CD
 

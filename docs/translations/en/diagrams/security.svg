@@ -33,7 +33,7 @@
     <text x="390" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">e-cat holds no plaintext</text>
     <rect x="510" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
     <text x="610" y="190" text-anchor="middle" font-weight="bold">Internal Contract</text>
-    <text x="610" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">Intranet-only + shared secret</text>
+    <text x="610" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">gRPC loopback · empty token denied</text>
     <rect x="730" y="168" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#2E86DE"/>
     <text x="830" y="190" text-anchor="middle" font-weight="bold">Unified Errors</text>
     <text x="830" y="208" text-anchor="middle" font-size="11.5" fill="#6C757D">carrier_error hides internals</text>
@@ -52,7 +52,7 @@
   <g font-size="13" fill="#212529">
     <rect x="290" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="390" y="378" text-anchor="middle" font-weight="bold">JWT + Blacklist</text>
-    <text x="390" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">2h access / 14d refresh</text>
+    <text x="390" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">access/refresh/client · rotate</text>
     <rect x="510" y="356" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="610" y="378" text-anchor="middle" font-weight="bold">RBAC Permissions</text>
     <text x="610" y="396" text-anchor="middle" font-size="11.5" fill="#6C757D">method.path + cache</text>
@@ -73,21 +73,34 @@
     <text x="830" y="450" text-anchor="middle" font-size="12.5" font-weight="bold">Injection / Path Traversal</text>
     <text x="830" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">Input boundary filtering</text>
     <rect x="950" y="428" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
-    <text x="1045" y="450" text-anchor="middle" font-size="12.5" font-weight="bold">Encryptable</text>
-    <text x="1045" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">Encrypted store + masking</text>
+    <text x="1045" y="450" text-anchor="middle" font-size="12.5" font-weight="bold">Platform Fields</text>
+    <text x="1045" y="468" text-anchor="middle" font-size="11.5" fill="#6C757D">Phone/email/keys · masked</text>
 
     <rect x="290" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="390" y="522" text-anchor="middle" font-weight="bold">Account Lockout</text>
-    <text x="390" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">5 fails → 15 min lock</text>
+    <text x="390" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">5 fails · username + IP</text>
     <rect x="510" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="610" y="522" text-anchor="middle" font-weight="bold">Click Captcha</text>
     <text x="610" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">Brute-force protection</text>
     <rect x="730" y="500" width="200" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="830" y="522" text-anchor="middle" font-weight="bold">Callback Verify</text>
-    <text x="830" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">HMAC + whitelist route</text>
+    <text x="830" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">401 if unset · HMAC verify</text>
     <rect x="950" y="500" width="190" height="52" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
     <text x="1045" y="522" text-anchor="middle" font-weight="bold">Key Security</text>
-    <text x="1045" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">Env-injected · no hardcode</text>
+    <text x="1045" y="540" text-anchor="middle" font-size="11.5" fill="#6C757D">No default admin · keys required</text>
+
+    <rect x="290" y="564" width="200" height="36" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="390" y="580" text-anchor="middle" font-size="12.5" font-weight="bold">Payment Webhook</text>
+    <text x="390" y="596" text-anchor="middle" font-size="11" fill="#6C757D">Stripe paid · PayPal capture</text>
+    <rect x="510" y="564" width="200" height="36" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="610" y="580" text-anchor="middle" font-size="12.5" font-weight="bold">Crypto Verify</text>
+    <text x="610" y="596" text-anchor="middle" font-size="11" fill="#6C757D">TRC20 unique amount · manual</text>
+    <rect x="730" y="564" width="200" height="36" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="830" y="580" text-anchor="middle" font-size="12.5" font-weight="bold">Docker Network</text>
+    <text x="830" y="596" text-anchor="middle" font-size="11" fill="#6C757D">DB/Redis ports unpublished</text>
+    <rect x="950" y="564" width="190" height="36" rx="8" fill="#F8F9FA" stroke="#17A2B8"/>
+    <text x="1045" y="580" text-anchor="middle" font-size="12.5" font-weight="bold">Event Ingest</text>
+    <text x="1045" y="596" text-anchor="middle" font-size="11" fill="#6C757D">max 100 events · dedup</text>
   </g>
 <text x="1188" y="630" fill="rgba(33,37,41,0.35)" font-size="12" font-family="Arial, sans-serif" text-anchor="end">erik.xyz</text>
 </svg>

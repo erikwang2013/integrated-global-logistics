@@ -67,7 +67,9 @@ open-admin/
 │   │   └── MetricsController.php   # Prometheus metrics
 │   ├── api/v1/controller/      # API v1 controllers (version in URL path)
 │   │   ├── CaptchaController.php
-│   │   └── AuthController.php
+│   │   ├── AuthController.php
+│   │   ├── ClientAuthController.php
+│   │   └── ClientAppController.php
 │   ├── common/                 # Common utilities
 │   │   ├── HashidsService.php
 │   │   ├── SnowflakeService.php
@@ -85,7 +87,9 @@ open-admin/
 │   ├── model/                  # Data models
 │   ├── exception/              # Global exception handling (browser requests render the pet error page)
 │   ├── queue/                  # Queue tasks
-│   └── process/                # Processes (Http, Monitor)
+│   └── process/                # Processes (Http, Monitor, InternalGrpcWorker)
+├── support/
+│   └── bootstrap/Secrets.php   # Startup bootstrap (validates JWT/encryption/internal tokens)
 ├── config/                     # Config files
 │   ├── route.php               # Routes + API version policy
 │   └── middleware.php           # Global middleware registration
@@ -99,7 +103,8 @@ open-admin/
 │   ├── DESIGN.md               # Design document
 │   ├── SECURITY.md             # Security architecture design
 │   ├── API.md                  # API reference
-│   ├── nginx-security.conf     # Nginx security reference config
+│   ├── nginx-security.conf     # Nginx security reference config (bare metal)
+│   ├── nginx-docker.conf       # Docker Nginx site config (proxies app:8787, overwrites XFF)
 │   ├── diagrams/               # Decomposed architecture diagrams
 │   └── superpowers/            # Specs & plans
 │       ├── specs/              # Design specs
@@ -126,21 +131,28 @@ open-admin/
 ## Middleware Execution Chain
 
 ```
-全局:  Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → {路由中间件}
-/admin: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
-/api/v1 public: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
-/api/v1 client portal: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → ClientAuth → Controller
-/health: Cors → Locale(Accept-Language) → SecurityFilter(方法检查→405) → RateLimit → Controller
+Global:  Cors → Locale(Accept-Language) → SecurityFilter(method check→405) → RateLimit → {route middleware}
+/admin: Cors → Locale(Accept-Language) → SecurityFilter(method check→405) → RateLimit → AdminAuth → AdminPermission → OperationLog → Controller
+/api/v1 public: Cors → Locale(Accept-Language) → SecurityFilter(method check→405) → RateLimit → Controller
+/api/v1 client portal: Cors → Locale(Accept-Language) → SecurityFilter(method check→405) → RateLimit → ClientAuth → Controller
+/health: Cors → Locale(Accept-Language) → SecurityFilter(method check→405) → RateLimit → Controller
 ```
+
+- `AdminAuth` accepts only `token_type=access` and checks `status=1` on every request, so disabled admins lose access immediately.
+- `AdminPermission` returns 401 when `$request->adminId` is empty instead of allowing the request.
+- Login lockout (5 failures / 15 minutes) is enforced in `AuthController` per `username + IP`, not in the RateLimit middleware.
 
 ## Security Enhancements
 
 - **HTTP method restriction**: SecurityFilter only allows GET/POST/PUT/DELETE/OPTIONS/HEAD; non-standard methods return 405
 - **CSP header**: Content-Security-Policy + X-Permitted-Cross-Domain-Policies injected into all responses
-- **Account lockout**: after 5 consecutive failed logins, the account is locked for 15 minutes
+- **Account lockout**: after 5 consecutive failed logins, the account is locked for 15 minutes; the counter is keyed by `username + IP`
 - **Concurrent session limit**: at most 3 valid tokens per user; the oldest token is blacklisted when exceeded
+- **Token types**: access / refresh / client are strictly separated; refresh is single-use (Redis `SET NX`) and rotated; disabled admins lose access immediately
+- **Secret validation**: `support/bootstrap/Secrets.php` refuses to start an installed environment when `JWT_SECRET_KEY`, `ENCRYPTABLE_KEY` or `ENCRYPTION_KEY` is missing or still set to an old public default; an empty `INTERNAL_TOKEN` makes the internal gRPC service reject every request
+- **Callback fail-closed**: when `webhook_secret` is missing, callbacks return 401 by default; only `CALLBACK_ALLOW_UNSIGNED=1` (development) allows unsigned calls
 - **security.txt**: `/.well-known/security.txt` RFC 9116 endpoint
-- **Nginx security config**: `docs/nginx-security.conf` reverse-proxy hardening reference
+- **Nginx security config**: Docker uses `docs/nginx-docker.conf`, which overwrites `X-Forwarded-For` with `$remote_addr`; the bare-metal reference `docs/nginx-security.conf` appends instead, so the outermost proxy must overwrite it
 
 ## API Versioning Policy
 
@@ -158,6 +170,8 @@ Redis sliding window (Lua atomic), default 60 req/min/IP/route:
 - Login: 10 req/min
 - Register: 5 req/min
 - Response headers: `X-RateLimit-Limit/Remaining/Reset`, plus `Retry-After` when exceeded
+- phpredis `eval` uses the signature `eval(script, args, num_keys)`; the wrong argument order previously made the limit fail open. Reuse `RateLimit::buildEvalArgs()` for new limiting logic.
+- Account lockout is not in this middleware: `AuthController` counts failures per `username + IP` and locks for 15 minutes after 5 failures.
 
 ## Code Standards
 
@@ -165,7 +179,7 @@ Redis sliding window (Lua atomic), default 60 req/min/IP/route:
 - Global functions/class references are not prefixed with `\`; import them with `use`
 - Config files must include Chinese comments explaining the meaning of each config item
 - All new `.php` files must include the copyright notice in the file header
-- **Redis is accessed via the `support\Redis` utility class** (singleton connection pool, automatically reads the `REDIS_HOST/PORT/PASSWORD/DB` environment variables); all keys are automatically prefixed (default `open-admin:`, configurable via the `REDIS_PREFIX` environment variable)
+- **Redis is accessed via the `support\Redis` utility class** (singleton connection pool, automatically reads the `REDIS_HOST/PORT/PASSWORD/DB` environment variables); all keys are automatically prefixed (default `logistics:`, configurable via the `REDIS_PREFIX` environment variable). The tracking gateway uses `logistics:cache:track:*`; PHP-side sub-prefixes include `rate_limit:`, `jwt_blacklist:`, `account_lock:`, `captcha_verified:` and `poster:captcha:`
 - **Route permissions**: routes in the `/admin` group require `method.path`-style permissions (e.g. `get.admin/dashboard`); routes needing no permission check are placed outside the group with only the `AdminAuth` middleware
 - **CORS**: when adding request headers, update the `Cors.php` middleware and the `Access-Control-Allow-Headers` fallback in `route.php` accordingly
 - **Super admin protection**: the `update`/`destroy` methods of `RoleController` are forbidden from operating on roles with `slug == 'super_admin'`
@@ -173,7 +187,8 @@ Redis sliding window (Lua atomic), default 60 req/min/IP/route:
 
 ### Database
 - Table prefix: `logistics_`
-- Primary key `id`: BIGINT type, non-auto-increment, generated by snowflake
+- Primary key `id`: BIGINT type, non-auto-increment, generated by snowflake; `worker`/`datacenter` default to values derived from the PID, set them explicitly across hosts
+- `logistics_order.tx_id` has a unique index `uk_tx_id`; a duplicate on-chain transaction returns 422
 - Sensitive fields use the `erikwang2013/encryptable` trait for automatic encryption/decryption
 - Migration files use SQL format
 
@@ -185,7 +200,7 @@ Redis sliding window (Lua atomic), default 60 req/min/IP/route:
 
 ### Docker Compose (recommended for production)
 
-The `docker-compose.yml` at the project root orchestrates 4 services:
+`admin/docker-compose.yml` orchestrates 4 services:
 
 | Service | Description |
 |------|------|
@@ -194,10 +209,15 @@ The `docker-compose.yml` at the project root orchestrates 4 services:
 | `mysql` | MySQL 8.0, persistent data volume |
 | `redis` | Redis 7 Alpine, cache/rate limiting/Session |
 
+Only `nginx` publishes host ports 80/443; `app` (8787), MySQL and Redis are reachable only on the container network. `app` reads `env_file: .env.docker`, and the installer syncs generated secrets into it.
+
 ```bash
-cp .env.docker .env
-docker-compose up -d
+docker compose up -d
+# Complete /install in the browser (database host: mysql), then recreate app so the keys take effect:
+docker compose up -d --force-recreate app
 ```
+
+The internal gRPC listener defaults to `tcp://127.0.0.1:8792` with 8 workers (`INTERNAL_GRPC_LISTEN` / `INTERNAL_GRPC_WORKERS` override). The gateway and PHP must use the same `INTERNAL_TOKEN`; an empty token makes the internal service fail closed.
 
 ### CI/CD
 

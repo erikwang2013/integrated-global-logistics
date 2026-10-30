@@ -55,9 +55,14 @@ redis.call('EXPIRE', KEYS[1], ARGV[5])
 return {1, count + 1}
 LUA;
         try {
-            $result = Redis::eval($lua, 1, $key, $windowStart, $limit, $now, $now . '.' . mt_rand(), $window + 10);
+            // 微秒时间 + 随机后缀，避免同一毫秒内 ZADD 成员重复
+            $member = (int) (microtime(true) * 1000000) . ':' . bin2hex(random_bytes(8));
+            $result = Redis::eval($lua, ...self::buildEvalArgs($key, $windowStart, $limit, $now, $member, $window + 10));
         } catch (\Throwable $e) {
             return $handler($request); // Redis down, fail open
+        }
+        if (!is_array($result)) {
+            return $handler($request); // 非预期返回，同样 fail open
         }
         $count     = (int) ($result[1] ?? 0);
         $remaining = max($limit - $count, 0);
@@ -82,5 +87,16 @@ LUA;
             'X-RateLimit-Remaining' => (string) $remaining,
             'X-RateLimit-Reset'     => (string) $reset,
         ]);
+    }
+
+    /**
+     * 构造 phpredis eval 参数：eval(script, args, num_keys)
+     * KEYS[1]=key；ARGV[1..5]=windowStart, limit, now, member, ttl
+     *
+     * @return array{0: array, 1: int} [args, num_keys]
+     */
+    public static function buildEvalArgs(string $key, int $windowStart, int $limit, int $now, string $member, int $ttl): array
+    {
+        return [[$key, $windowStart, $limit, $now, $member, $ttl], 1];
     }
 }

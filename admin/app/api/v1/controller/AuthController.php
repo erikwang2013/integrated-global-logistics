@@ -75,8 +75,9 @@ class AuthController
         // 校验用户凭证
         $user = AdminUser::where('username', $username)->first();
 
-        // 账号锁定检查（5次失败/15分钟）
-        $lockKey = "account_lock:{$username}";
+        // 账号锁定检查（5次失败/15分钟），按 用户名+IP 分组，避免锁死他人账号
+        $ip = $request->getRealIp();
+        $lockKey = "account_lock:{$username}:{$ip}";
         try {
             if (Redis::get($lockKey)) {
                 return json(['code' => 429, 'message' => trans('messages.account_locked'), 'data' => []]);
@@ -90,7 +91,7 @@ class AuthController
         if ($password === '' || strlen($password) < 6 || strlen($password) > 32 || !$user || !password_verify($password, $user->password)) {
             // 登录失败：计数 + 锁定
             try {
-                $failKey = "login_fail:{$username}";
+                $failKey = "login_fail:{$username}:{$ip}";
                 $fails = Redis::incr($failKey);
                 if ($fails === 1) Redis::expire($failKey, 900);
                 if ($fails >= 5) {
@@ -103,7 +104,7 @@ class AuthController
         }
 
         // 登录成功：清除失败计数
-        try { Redis::del("login_fail:{$username}"); Redis::del($lockKey); } catch (\Throwable) {}
+        try { Redis::del("login_fail:{$username}:{$ip}"); Redis::del($lockKey); } catch (\Throwable) {}
 
         if ($user->status === 0) {
             return json(['code' => 403, 'message' => trans('messages.account_disabled'), 'data' => []]);
@@ -112,7 +113,7 @@ class AuthController
         // 签发 JWT
         $jwt = self::getJWT();
         $tokenExpire = (int)(config('plugin.erikwang2013.jwt.jwt.default_expire') ?: 7200);
-        $token = $jwt->encode(['sub' => $user->id, 'username' => $user->username]);
+        $token = $jwt->encode(['sub' => $user->id, 'username' => $user->username, 'token_type' => 'access']);
         $refreshToken = $jwt->encode(['sub' => $user->id, 'token_type' => 'refresh'],
             (int)(config('plugin.erikwang2013.jwt.jwt.refresh_expire') ?: 1209600)
         );
@@ -154,49 +155,68 @@ class AuthController
      */
     public function refresh(Request $request): Response
     {
-        $refreshToken = $request->input('refresh_token', '');
+        $refreshToken = (string) $request->input('refresh_token', '');
 
-        if (empty($refreshToken)) {
+        if ($refreshToken === '') {
             return json(['code' => 422, 'message' => trans('messages.refresh_missing'), 'data' => []]);
         }
+
+        $blacklistKey = 'jwt_blacklist:' . md5($refreshToken);
 
         try {
             $jwt = self::getJWT();
             $payload = $jwt->decode($refreshToken);
-
-            // 刷新时更新最后登录时间和IP
-            $userId = $payload['sub'] ?? 0;
-            if ($userId) {
-                $user = AdminUser::find($userId);
-                if ($user) {
-                    $user->last_login_at = date('Y-m-d H:i:s');
-                    $user->last_login_ip = $request->getRealIp();
-                    $user->save();
-                }
-            }
-
-            $tokenExpire = (int)(config('plugin.erikwang2013.jwt.jwt.default_expire') ?: 7200);
-            $token = $jwt->encode(['sub' => $payload['sub'], 'username' => $payload['username'] ?? '']);
-            $newRefresh = $jwt->encode(['sub' => $payload['sub'], 'token_type' => 'refresh'],
-                (int)(config('plugin.erikwang2013.jwt.jwt.refresh_expire') ?: 1209600)
-            );
-
-            // 并发会话限制：注册新 token，移除旧 refresh token 的活跃状态
-            $this->trackSession($userId, $token, $tokenExpire);
-            try { Redis::zrem("user_tokens:{$userId}", md5($refreshToken)); } catch (\Throwable) {}
-
-            return json([
-                'code'    => 0,
-                'message' => 'success',
-                'data'    => [
-                    'access_token'  => $token,
-                    'refresh_token' => $newRefresh,
-                    'expires_in'    => (int)(config('plugin.erikwang2013.jwt.jwt.default_expire') ?: 7200),
-                ],
-            ]);
         } catch (Throwable $e) {
             return json(['code' => 401, 'message' => trans('messages.refresh_invalid'), 'data' => []]);
         }
+
+        // 仅接受 refresh token，拒绝 access / client token
+        if (!self::isRefreshPayload($payload)) {
+            return json(['code' => 401, 'message' => trans('messages.refresh_invalid'), 'data' => []]);
+        }
+
+        $userId = (int) ($payload['sub'] ?? 0);
+        $user = $userId > 0 ? AdminUser::find($userId) : null;
+        if (!$user || (int) $user->status !== 1) {
+            return json(['code' => 403, 'message' => trans('messages.account_disabled'), 'data' => []]);
+        }
+
+        // 原子占用旧 refresh token（SET NX），并发重放只有一个请求能赢；Redis 故障时保持现有 fail-open 语义
+        try {
+            $ttl = max((int) ($payload['exp'] ?? 0) - time(), 1);
+            if (Redis::set($blacklistKey, '1', ['nx', 'ex' => $ttl]) !== true) {
+                return json(['code' => 401, 'message' => trans('messages.refresh_invalid'), 'data' => []]);
+            }
+        } catch (\Throwable) {}
+
+        // 刷新时更新最后登录时间和IP
+        $user->last_login_at = date('Y-m-d H:i:s');
+        $user->last_login_ip = $request->getRealIp();
+        $user->save();
+
+        $tokenExpire = (int)(config('plugin.erikwang2013.jwt.jwt.default_expire') ?: 7200);
+        $token = $jwt->encode(['sub' => $user->id, 'username' => $user->username, 'token_type' => 'access']);
+        $newRefresh = $jwt->encode(['sub' => $user->id, 'token_type' => 'refresh'],
+            (int)(config('plugin.erikwang2013.jwt.jwt.refresh_expire') ?: 1209600)
+        );
+
+        // 只跟踪 access token；旧 refresh token 已在上方原子拉黑
+        $this->trackSession($user->id, $token, $tokenExpire);
+
+        return json([
+            'code'    => 0,
+            'message' => 'success',
+            'data'    => [
+                'access_token'  => $token,
+                'refresh_token' => $newRefresh,
+                'expires_in'    => (int)(config('plugin.erikwang2013.jwt.jwt.default_expire') ?: 7200),
+            ],
+        ]);
+    }
+
+    public static function isRefreshPayload(array $payload): bool
+    {
+        return ($payload['token_type'] ?? '') === 'refresh';
     }
 
     /**

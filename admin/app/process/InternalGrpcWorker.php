@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace app\process;
 
 use parse\Grpc;
+use proto\InternalService;
 
 /**
  * 内部 gRPC worker（e-cat 查询网关 → PHP worker 池；h2c unary，仅内网监听）。
@@ -25,6 +26,8 @@ class InternalGrpcWorker extends Grpc
     public function onWorkerStart($worker): void
     {
         self::loadHook();
+        // 预热 Logistics 配置与注册表，避免每个查询请求重复加载 187 条规则
+        InternalService::warmUp();
         echo '[' . $worker->name . '] ' . count(self::$route) . " grpc routes loaded\n";
     }
 }

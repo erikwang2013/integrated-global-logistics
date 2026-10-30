@@ -41,3 +41,9 @@ sequenceDiagram
     CTL->>FS: Write runtime/tmp/export_*.pdf
     CTL-->>C: File Download
 ```
+
+Notes:
+
+- Only tables on the export whitelist can be exported; `system_config` and other security-sensitive tables are excluded.
+- Sensitive columns are decrypted and masked before writing, and the PDF footer carries a non-removable copyright.
+- Temporary files under `runtime/tmp/` are not automatically cleaned; schedule a cleanup job on shared or long-running hosts.

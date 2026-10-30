@@ -11,7 +11,7 @@ open-admin is built on webman v2 and provides a RESTful JSON API. All admin endp
 - **Base URL**: `http://localhost:8787`
 - **Language**: switched via the `Accept-Language` header or the `?lang=zh_CN|en` parameter (default zh_CN), auto-detected by the Locale middleware
 
-> **Endpoint overview**: Auth (5) | Dashboard (1) | Users (7) | Roles (4) | Permissions (4) | Config (4) | Logs (1) | Profile (3) | Import/Export (3) | Upload (1) | Ops (4: health/metrics/docs/security.txt) | 37 endpoints in total
+> **Endpoint overview**: Auth (5) | Dashboard (1) | Users (7) | Roles (4) | Permissions (4) | Config (4) | Logs (1) | Profile (3) | Import/Export (3) | Upload (1) | Ops (4: health/metrics/docs/security.txt) | Logistics: tracking records/statistics, client/app review, plans, orders | Webhooks (3: carrier/Stripe/PayPal, see Section 18)
 - **Authentication**: `Authorization: Bearer <token>` (JWT)
 - **Response format**: `{ "code": 0, "message": "success", "data": {...} }`
 - **Docs endpoint**: `GET /api/docs` returns the OpenAPI 3.0 JSON specification
@@ -22,8 +22,9 @@ open-admin is built on webman v2 and provides a RESTful JSON API. All admin endp
 - All `POST` / `PUT` requests must set `Content-Type: application/json` (except file uploads), otherwise 415 is returned
 - The request body must not exceed 10MB, otherwise 413 is returned
 - The security filter scans all request inputs for XSS, SQL injection, path traversal, and command injection; hits return 403
-- 5 consecutive login failures trigger account lockout (15 minutes); during lockout, login requests return 429
+- 5 consecutive login failures trigger a login lockout keyed by username + IP (15 minutes); during lockout, login requests return 429
 - A single user can hold at most 3 valid tokens concurrently; when exceeded, the oldest token is automatically blacklisted
+- Access, refresh and client tokens are strictly separated by `token_type`; a refresh token is single-use and every successful refresh rotates it
 
 ## 2. Error Codes
 
@@ -112,9 +113,9 @@ POST /api/v1/captcha/generate
     "type": "click",
     "image": "data:image/png;base64,iVBORw0KGgo...",
     "extra": {
-      "targets": [
-        { "order": 1, "text": "A", "x": 120, "y": 85 },
-        { "order": 2, "text": "B", "x": 310, "y": 42 }
+      "texts": [
+        { "order": 1, "text": "A" },
+        { "order": 2, "text": "B" }
       ]
     }
   }
@@ -168,7 +169,7 @@ POST /api/v1/captcha/generate
 
 | type | extra fields | Type | Description |
 |------|-----------|------|------|
-| click | targets | array | Click targets with `order` (sequence), `text` (prompt text), `x`, `y` (coordinates) |
+| click | texts | array | Click target prompts with `order` (sequence) and `text`; coordinates are not exposed |
 | slider | x, y | int | Coordinates of the top-left corner of the gap (based on a 300×200 canvas) |
 | slider | puzzle_w, puzzle_h | int | Puzzle piece width and height |
 | slider | puzzle | string | Puzzle piece base64 data URI |
@@ -189,8 +190,8 @@ POST /api/v1/captcha/verify
   "key": "abc123def456",
   "type": "click",
   "clicks": [
-    { "x": 120, "y": 85 },
-    { "x": 310, "y": 42 }
+    [120, 85],
+    [310, 42]
   ]
 }
 ```
@@ -223,7 +224,7 @@ POST /api/v1/captcha/verify
 
 | type | clicks type | Description | Error tolerance |
 |------|------------|------|---------|
-| click | `[{x:int, y:int}]` | Array of click coordinates, in `order` sequence | 18px radius |
+| click | `[[x:int, y:int], ...]` | Array of click coordinate pairs, in `order` sequence | 18px radius |
 | slider | `int` | Slider X-axis offset | ±4px |
 | rotate | `int` | Rotation angle (0-359) | ±5° |
 
@@ -246,7 +247,7 @@ POST /api/v1/auth/login
 ```
 
 - **Authentication**: none
-- **Rate limit**: 10/min (per IP + path)
+- **Rate limit**: 10/min (per IP + path); login lockout counters are separate and keyed by username + IP
 
 **Request body**:
 ```json
@@ -312,8 +313,8 @@ The public key is built into the frontend application and is never transmitted o
 - 422: Parameter validation failed (missing required fields, invalid format)
 - 422: Complete the captcha verification first (captcha_key has not passed `/api/v1/captcha/verify`)
 - 401: Incorrect username or password
-- 403: Account has been disabled
-- 429: Account is locked, try again in 15 minutes (triggered by 5 consecutive login failures)
+- 403: Account has been disabled (checked on login and on every authenticated request)
+- 429: Login locked for this username + IP, try again in 15 minutes (triggered by 5 consecutive failures)
 
 ### 3.6 Register
 
@@ -394,11 +395,12 @@ POST /api/v1/auth/refresh
 }
 ```
 
-A successful refresh returns new access_token and refresh_token, and the old tokens automatically become invalid. The refresh also updates the user's last login time and IP.
+Only a token with `token_type=refresh` is accepted; access tokens and client tokens are rejected with 401. A refresh token is **single-use**: the server atomically claims it in Redis (`SET NX`) and blacklists it, then returns a new access_token and refresh_token. A concurrent replay of the same refresh token loses the race and receives 401. The refresh also checks that the admin still exists and is enabled, and updates the user's last login time and IP.
 
 **Possible errors**:
 - 422: Refresh token missing
-- 401: Refresh token invalid or expired
+- 401: Refresh token invalid, expired, already used, or not a refresh token
+- 403: Account has been disabled
 
 ### 3.8 Prometheus Metrics
 
@@ -599,7 +601,7 @@ POST /admin/user
 ```json
 {
   "username": "newuser",
-  "password": "123456",
+  "password": "Str0ng-Passw0rd-Example",
   "real_name": "新用户",
   "phone": "13800138000",
   "email": "newuser@example.com",
@@ -1200,9 +1202,11 @@ GET /admin/config
 | id | string | hashid |
 | group | string | Config group (e.g. `system`, `email`, `storage`) |
 | key | string | Config key |
-| value | string | Config value |
+| value | string | Config value; secret-like keys are returned as `***` |
 | type | string | Value type hint (`string`, `integer`, `boolean`, `json`, etc.) |
 | description | string | Config description |
+
+Config values are masked when the key looks secret (`secret`, `password`, `private_key`, `api_key`, `app_key`, `access_key`, `token`). Non-secret keys such as `webhook_url` and `*_id` stay readable. Because the list returns masked values, a client must not blindly write the list response back: an update that submits `***` as `value` is ignored and the stored secret is preserved.
 
 ### 8.2 Create Config
 
@@ -1482,7 +1486,7 @@ POST /admin/export/excel
 
 | Field | Type | Required | Default | Description |
 |------|------|------|------|------|
-| table | string | No | `admin_user` | Table to export. Supported: `admin_user`, `operation_log`, `admin_role`, `system_config` |
+| table | string | No | `admin_user` | Table to export. Supported: `admin_user`, `operation_log`, `admin_role`. `system_config` is intentionally not exportable |
 | columns | array{string} | No | | Field names of columns to export; empty exports all columns of the table |
 | conditions | object | No | `{}` | Filter conditions, key-value pairs; non-empty values are used in WHERE |
 | title | string | No | `数据导出` | Excel title (shown as the sheet name) |
@@ -1494,9 +1498,8 @@ POST /admin/export/excel
 | `admin_user` | id, username, real_name, phone, email, status, last_login_at, last_login_ip, created_at |
 | `operation_log` | id, user_id, action, method, path, ip, created_at |
 | `admin_role` | id, name, slug, description, status, created_at |
-| `system_config` | id, group, key, value, type, description, created_at |
 
-Sensitive fields `phone`, `email`, and `id_card` are automatically masked on export. Data is capped at 10,000 rows. The first Excel row is frozen and auto-filter is enabled.
+`system_config` is deliberately excluded: config values include payment secrets. Sensitive fields `phone`, `email`, and `id_card` are automatically masked on export. Data is capped at 10,000 rows. The first Excel row is frozen and auto-filter is enabled.
 
 ### 11.2 Export PDF
 
@@ -1703,12 +1706,15 @@ The complete authentication sequence:
    a. Extracts the Bearer token
    b. Checks the blacklist (Redis jwt_blacklist:{md5}) → 401
    c. Decodes the JWT, validates expiry → 401
-   d. Sets $request->adminId = sub field
+   d. Requires token_type=access (refresh and client tokens are rejected; a missing token_type is treated as legacy access)
+   e. Loads the admin user and requires status=1 → 401 if disabled (login returns 403)
+   f. Sets $request->adminId = sub field
     ↓
    AdminPermission middleware:
-   a. Resolves the permission identifier for resource routes
-   b. Queries user roles → role permissions, performs matching
-   c. No permission → 403
+   a. Requires an authenticated adminId → 401 if missing
+   b. Resolves the permission identifier for resource routes
+   c. Queries user roles → role permissions, performs matching
+   d. No permission → 403
     ↓
    Controller processes the request
     ↓
@@ -1718,9 +1724,11 @@ The complete authentication sequence:
    Client requests POST /api/v1/auth/refresh
    Request body: { refresh_token: "..." }
     ↓
-   Server decodes refresh_token → issues new access + refresh
+   Server verifies token_type=refresh, atomically claims the old refresh token
+   (Redis SET NX) and blacklists it, then issues a new access + refresh pair
     ↓
-   Client updates local tokens
+   Client updates local tokens; the old refresh token can no longer be used
+   (a concurrent replay returns 401)
 
 7. Logout
    Client requests POST /admin/profile/logout
@@ -1734,8 +1742,11 @@ The complete authentication sequence:
 
 ### JWT Structure
 
-- **access_token**: `{ sub: <user_id>, username: "<name>" }`, default TTL 7200 seconds (controlled by JWT config `default_expire`)
+- **access_token**: `{ sub: <user_id>, username: "<name>", token_type: "access" }`, default TTL 7200 seconds (controlled by JWT config `default_expire`)
 - **refresh_token**: `{ sub: <user_id>, token_type: "refresh" }`, default TTL 1209600 seconds (controlled by JWT config `refresh_expire`, i.e. 14 days)
+- **client token**: `{ sub: <client_id>, token_type: "client" }`, accepted only by the `/api/v1` client-portal route group
+
+The three types are strictly separated: admin routes accept only `access`, refresh accepts only `refresh`, and client-portal routes accept only `client`.
 
 ### Security Management
 
@@ -1746,7 +1757,11 @@ The complete authentication sequence:
 - SecurityFilter globally scans for XSS, SQL injection, path traversal, and command injection; 5 hits per IP in 60 seconds trigger a 15-minute temporary blacklist
 - Sensitive operations (deleting users, roles, permissions, configs) require password confirmation from the currently logged-in user
 - Concurrent session limit: at most 3 valid tokens per user; when a 4th device logs in, the oldest token is forcibly blacklisted
-- Account lockout: 5 consecutive login failures trigger a 15-minute lock; 429 is returned while locked
+- Login lockout: 5 consecutive failures lock the username + IP pair for 15 minutes; 429 is returned while locked
+- Refresh rotation: refresh tokens are single-use, atomically claimed in Redis and blacklisted after use
+- Disabled admins are rejected on login and on every authenticated request
+- Required secrets (`JWT_SECRET_KEY`, `ENCRYPTABLE_KEY`, `ENCRYPTION_KEY`, `INTERNAL_TOKEN`) have no code defaults; an installed environment refuses to start when `JWT_SECRET_KEY`, `ENCRYPTABLE_KEY` or `ENCRYPTION_KEY` is missing or still the old public default (`APP_DEBUG=true` only warns), while an empty `INTERNAL_TOKEN` makes the internal gRPC service reject every request
+- Secrets in system config are masked on read, and `***` is never written back over the stored value; operation logs mask the `value` field of `/admin/config` writes
 
 ### Middleware Architecture
 
@@ -1791,11 +1806,20 @@ The OperationLog middleware auto-detects the client platform and writes it to th
 
 ### Docker Compose
 
-The project root provides `docker-compose.yml` orchestrating 4 services (Nginx, webman app, MySQL, Redis). PHP is built via `Dockerfile` (based on `php:8.3-cli` with OPcache enabled).
+`admin/docker-compose.yml` orchestrates 4 services (Nginx, webman app, MySQL, Redis). PHP is built via `Dockerfile` (based on `php:8.3-cli` with OPcache enabled). Only Nginx publishes host ports (`NGINX_PORT` / `NGINX_SSL_PORT`, default 80/443); MySQL (3306) and Redis (6379) are reachable only on the internal Docker network. Nginx uses `docs/nginx-docker.conf`, proxies `app:8787`, and overwrites `X-Forwarded-For` with the real client address (it does not append, so clients cannot spoof their IP). In Docker the database host is the service name `mysql`.
+
+The repository-root `install.sh` starts the stack and polls `http://localhost:${NGINX_PORT}/health` (up to 120 seconds), then points you at `/install`. The installer generates the required secrets into `.env` and syncs them into `.env.docker`; after installation recreate the app container so the new keys are loaded:
 
 ```bash
-cp .env.docker .env
-docker-compose up -d
+cd admin
+docker compose up -d --force-recreate app
+```
+
+For a non-Docker deployment restart the worker: `php start.php restart -d`.
+
+```bash
+cp .env.docker .env   # only needed when running Compose outside the bundled script
+docker compose up -d
 ```
 
 ### CI/CD
@@ -1816,7 +1840,7 @@ For production deployments, refer to `docs/nginx-security.conf` for reverse-prox
 
 ## 16. Internal gRPC Interface (e-cat → PHP worker)
 
-For use by the e-cat query gateway only. On the PHP side it is a workerman h2c service (`tcp://0.0.0.0:8792`, process `internal_grpc`). The contract is defined in `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`), messages are protobuf-encoded, and metadata must carry `x-internal-token` (value from `config/logistics.php` `internal_token`, overridden by the `INTERNAL_TOKEN` environment variable in production). A missing or invalid token returns `code=401 UNAUTHORIZED`.
+For use by the e-cat query gateway only. On the PHP side it is a workerman h2c service that listens on `tcp://127.0.0.1:8792` by default (process `internal_grpc`, overridable with `INTERNAL_GRPC_LISTEN`) and starts 8 workers by default (`INTERNAL_GRPC_WORKERS`). Keep it on loopback or a private network; do not publish it. The contract is defined in `infrastructure/tracking-gateway/proto/internal.proto` (package `internal.v1`), messages are protobuf-encoded, and metadata must carry `x-internal-token` (value from `config/logistics.php` `internal_token`, from the `INTERNAL_TOKEN` environment variable). There is no default token: when `INTERNAL_TOKEN` is empty the internal service rejects every request (fail closed). A missing or invalid token returns `code=401 UNAUTHORIZED`. The Rust gateway likewise refuses to start when its `internal_token` (or `TRACKING_GATEWAY_INTERNAL_TOKEN`) is empty, and both sides must use the same value.
 
 ### 16.1 RPC Overview
 
@@ -1833,13 +1857,13 @@ For use by the e-cat query gateway only. On the PHP side it is a workerman h2c s
 | 400 | `INVALID_PARAMS` | Missing parameters |
 | 401 | `UNAUTHORIZED` | Invalid internal token |
 | 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | Carrier not registered / tracking not found / cannot detect |
-| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | Upstream credential error / network error / carrier business error (includes structured upstream payload, e.g. `[SF-INTERNATIONAL A1001] required parameters must not be empty`) |
+| 502 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | Upstream credential error / network error / carrier business error; `error_message` carries a generic text only, details stay in server logs |
 | 500 | `INTERNAL_ERROR` | Internal exception |
 
 
 ## 17. e-cat Query Gateway External API
 
-Rust high-frequency gateway (`infrastructure/tracking-gateway`), listens on `0.0.0.0:8080` (default), requests carry the `X-API-Key` header (config `api_keys`). The gateway handles API-Key authentication, Redis cache hits (prefix `logistics:`), rate limiting, per-carrier circuit breaking and RoundRobin worker forwarding; credentials are never sent down to the gateway.
+Rust high-frequency gateway (`infrastructure/tracking-gateway`), listens on `0.0.0.0:8080` (default), requests carry the `X-API-Key` header (a client key written to Redis after admin approval). The gateway handles API-Key authentication, Redis cache hits (prefix `logistics:`), rate limiting, per-carrier circuit breaking and RoundRobin worker forwarding; credentials are never sent down to the gateway.
 
 | 端点 | 说明 |
 |---|---|
@@ -1847,14 +1871,14 @@ Rust high-frequency gateway (`infrastructure/tracking-gateway`), listens on `0.0
 | `GET /v1/openapi.json` | OpenAPI 3.0 documentation (public endpoint, no key required) |
 | `GET /v1/carriers` | Carrier list (forwards PHP gRPC `InternalService.Carriers`) |
 | `POST /v1/tracking/query` | Tracking query (`{"carrier_code": "...", "tracking_no": "..."}`); when `carrier_code` is omitted the gateway auto-detects (detect is done inside query) |
-| `GET /v1/tracking/{query_no}` | Fetch the last tracking result by query number |
+| `GET /v1/tracking/{query_no}` | Fetch the last tracking result by query number (only the API key that created it can read) |
 
 
-Gateway-side additional semantics: exceeding `rate_limit` (default 100 per 60s) returns `429`; consecutive carrier failures trigger the circuit breaker (default OPEN 60s after 5x 5xx/transport errors) returning `503`; worker unreachable returns `502`. Gateway-to-worker traffic is internal gRPC (h2c, `0.0.0.0:8792`) authenticated with the shared secret `x-internal-token`, see Section 16.
+Gateway-side additional semantics: exceeding `rate_limit` (default 100 per 60s) returns `429`; the rate-limit key is derived from a SHA-256 hash of the API key rather than the raw key. Consecutive carrier failures (5xx responses and transport errors) trigger the per-carrier circuit breaker (default OPEN 60s) returning `503`; worker unreachable returns `502`. A failed carrier result is kept in a 15-second negative cache. The shared tracking cache `logistics:cache:track:{carrier}:{tracking_no}` is shared across keys, while the detail cache `logistics:cache:query:{api_key_hash}:{query_no}` is scoped to the API-key hash and kept for 7 days; a shared-cache HIT backfills the current key's detail cache. Gateway-to-worker traffic is internal gRPC (h2c, default `127.0.0.1:8792`, overridable via `INTERNAL_GRPC_LISTEN`) authenticated with the shared secret `x-internal-token`, see Section 16. The PHP carrier client uses a 6s timeout with 1 retry (2 attempts, ~12.2s worst case) so it stays inside the gateway's 15s timeout.
 
 ### 17.1 Response Envelope & Errors
 
-All endpoints return the unified envelope `{"code": 0, "message": "ok", "data": ...}`; `code != 0` is an error and `data` is omitted. Business error bodies may carry `error_code` / `error_message` (upstream carrier diagnostics, passed through by the gateway); `code` matches the HTTP status:
+All endpoints return the unified envelope `{"code": 0, "message": "ok", "data": ...}`; `code != 0` is an error and `data` is omitted. Business error bodies carry `error_code`; `error_message` contains a generic text only and internal details stay in server logs. `code` matches the HTTP status:
 
 | HTTP | Meaning |
 |---|---|
@@ -1862,12 +1886,13 @@ All endpoints return the unified envelope `{"code": 0, "message": "ok", "data": 
 | 401 | Missing or invalid key |
 | 404 | Query number not found |
 | 429 | Rate limited (default 100 per 60s per key), back off and retry |
+| 500 | Upstream internal error |
 | 502 | Worker unreachable or upstream failure |
 | 503 | Carrier circuit-broken, back off and retry |
 
 ### 17.2 Call Examples (curl)
 
-Demo key `demo-api-key`, gateway default `http://127.0.0.1:8080`:
+Replace `$API_KEY` with an approved client key written to Redis by the admin; gateway default `http://127.0.0.1:8080`:
 
 ```bash
 # Health check (public endpoint, no key required)
@@ -1877,15 +1902,55 @@ curl http://127.0.0.1:8080/v1/health
 curl http://127.0.0.1:8080/v1/openapi.json
 
 # Carrier list
-curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+curl -H "X-API-Key: $API_KEY" http://127.0.0.1:8080/v1/carriers
 
 # Tracking query (carrier optional)
-curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+curl -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
   http://127.0.0.1:8080/v1/tracking/query
 
 # Last result by query number
-curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+curl -H "X-API-Key: $API_KEY" http://127.0.0.1:8080/v1/tracking/{query_no}
 
 ```
+
+## 18. Carrier Callback & Payment Webhooks
+
+These endpoints are public routes with in-controller verification (no JWT). They return real HTTP status codes: `400` for malformed input, `401` for a failed or missing signature, `404` for an unknown carrier, `502` when an upstream capture fails, and `500` for an internal error. A success returns `{"code": 0, "message": "ok"}`.
+
+### 18.1 Carrier Callback
+
+```
+POST /api/callback/{carrier}
+```
+
+The carrier code must be configured in `config/logistics.php` (whitelist); unknown carriers return 404. The body is JSON:
+
+```json
+{
+  "tracking_no": "LX123456789CN",
+  "events": [
+    { "event_code": "IN_TRANSIT", "event_desc": "Departed facility", "location": "Shenzhen", "event_time": "2026-10-30 10:00:00" }
+  ],
+  "sign": "<hex sha256>"
+}
+```
+
+- Signature: `sha256(webhook_secret + compact JSON with the sign field removed)`, compared in constant time. If a carrier has no `webhook_secret`, the endpoint returns **401** by default. `CALLBACK_ALLOW_UNSIGNED=1` disables this check for development only.
+- Only the first 100 events are processed; `event_code` is truncated to 64, `event_desc` to 500, `location` to 200, and `event_time` to 32 characters.
+- Duplicate events are ignored via the unique key `(tracking_no, event_code, event_time)`; a replay with no new events still returns success.
+- The latest query record is updated and the gateway cache entries `logistics:cache:track:{carrier}:{tracking_no}` and `logistics:cache:detect:{tracking_no}` are invalidated (best effort).
+
+### 18.2 Payment Webhooks
+
+```
+POST /api/payment/webhook/stripe
+POST /api/payment/webhook/paypal
+```
+
+- Stripe: signature verification failure returns 401. An order is confirmed only for `checkout.session.completed` or `checkout.session.async_payment_succeeded` **and** `payment_status=paid`; events for a missing local order are acknowledged without changing state.
+- PayPal: signature verification failure returns 401. `CHECKOUT.ORDER.APPROVED` triggers `/capture` only when the local order exists; a failed capture returns 502 so PayPal retries. Only `PAYMENT.CAPTURE.COMPLETED` with `status=COMPLETED` confirms the order, and an `ORDER_ALREADY_CAPTURED` response is treated as idempotent success.
+- Order confirmation is transactional (pending → paid with an app row lock); the gateway Redis key is written only after the DB transaction commits. Non-pending orders are skipped idempotently.
+- Manual orders remain `pending` until an admin confirms them via `POST /admin/order/{id}/confirm`. The admin app review uses the app's latest paid order plan and ignores the client-supplied `app.plan_id`.
+- `logistics_order.tx_id` is unique (`uk_tx_id`); a duplicate transaction returns 422.
 

@@ -23,6 +23,10 @@ A full-stack admin dashboard built with webman v2 + Layui.
 | 📁 Files | Upload/Excel export/PDF export | Sensitive data auto-masked |
 | 🛡 Security | 18-layer defense-in-depth | XSS/SQLi/path traversal/cmd injection/CSRF/rate limit/CSP... |
 | 🏥 Ops | Health check/metrics/API docs/security.txt | Prometheus + OpenAPI 3.0 + hg/apidoc interactive docs |
+| 🔑 Client Portal | Client register/login + app management | Client JWT (`token_type=client`), API key stored as SHA-256 |
+| 💳 Payments | Stripe Checkout / PayPal / USDT | Webhook confirmation, unique `tx_id`, TRC20 amount offset |
+| 📦 Tracking Gateway | Rust gateway + PHP carrier adapters | h2c gRPC, Redis cache, per-carrier circuit breaker |
+| 🪝 Callbacks | Carrier event push | HMAC signature, fail-closed secret, 100 events per request |
 | 🌐 i18n | Chinese/English | Accept-Language header / ?lang= param |
 
 ## Copyright
@@ -77,7 +81,9 @@ open-admin/
 │   ├── api/
 │   │   └── v1/controller/          # API v1 (version in URL path)
 │   │       ├── CaptchaController.php
-│   │       └── AuthController.php    # Login/Refresh
+│   │       ├── AuthController.php    # Admin login/refresh
+│   │       ├── ClientAuthController.php # Client register/login
+│   │       └── ClientAppController.php  # Client app management
 │   ├── middleware/             # Middleware
 │   │   ├── Cors.php            # CORS
 │   │   ├── SecurityFilter.php  # Attack detection (HTTP method restriction/XSS/SQLi/path traversal/cmd injection/CSRF)
@@ -85,9 +91,11 @@ open-admin/
 │   │   ├── AdminAuth.php       # JWT auth + blacklist
 │   │   ├── AdminPermission.php # RBAC authorization
 │   │   └── OperationLog.php    # Auto operation logging (with source detection)
-│   └── model/                  # Eloquent models
+│   ├── model/                  # Eloquent models
+│   └── process/                # Processes (Http, Monitor, InternalGrpcWorker)
+├── support/bootstrap/Secrets.php # Startup secret validation
 ├── config/                     # Config files
-├── database/install.sql        # SQL install script (incl. permission seeds)
+├── database/install.sql        # SQL install script (incl. permission seeds, no default admin)
 └── vendor/                     # Composer dependencies
 ```
 
@@ -111,17 +119,18 @@ composer install
 cp .env.example .env
 ```
 
-Key environment variables:
+Security keys are required (the installer generates them into `.env`; for manual deployments use `openssl rand -hex 32` for JWT and `openssl rand -hex 16` for the 32-character encryption keys):
 
 | Variable | Description | Default |
 |---------|-------------|---------|
-| `JWT_SECRET` | JWT signing key | `open-admin-jwt-secret-change-in-production` |
-| `HASHIDS_SALT` | Hashids salt | `open-admin-hashids-salt-2026` |
-| `ENCRYPTION_KEY` | API encryption key | 32-byte default |
-| `SNOWFLAKE_DATACENTER_ID` | Datacenter ID (0-31) | `1` |
-| `SNOWFLAKE_WORKER_ID` | Worker ID (0-31) | `1` |
+| `JWT_SECRET_KEY` | JWT signing key | none, required |
+| `ENCRYPTABLE_KEY` | Database field encryption key (32 chars) | none, required |
+| `ENCRYPTION_KEY` | API transport encryption key (32 chars) | none, required |
+| `INTERNAL_TOKEN` | Gateway → PHP worker shared secret | none, required for gRPC |
+| `SNOWFLAKE_DATACENTER_ID` | Datacenter ID (0-31) | derived from process PID |
+| `SNOWFLAKE_WORKER_ID` | Worker ID (0-31) | derived from process PID |
 
-**Always change all keys to random strings in production.**
+An installed environment refuses to start when `JWT_SECRET_KEY`, `ENCRYPTABLE_KEY` or `ENCRYPTION_KEY` is missing (`APP_DEBUG=true` only logs a warning). An empty `INTERNAL_TOKEN` makes the internal gRPC service reject every request, and the gateway refuses to start. The old public defaults in `.env.example` must not be used in production.
 
 ### 3. One-Click Install
 
@@ -138,11 +147,11 @@ Open **`http://localhost:8787/install`** and follow the wizard:
 | Step | Description |
 |------|-------------|
 | ① Database | Host, port, database name, username, password |
-| ② Admin Account | Admin username and password (default: admin / admin888) |
+| ② Admin Account | Admin username and password (you choose them; no default account) |
 
-Click "Start Install" — tables are created, permissions seeded, admin account created, and `.env` is updated automatically.
+Click "Start Install" — tables are created, permissions seeded, admin account created, `.env` is updated, and random JWT/encryption/internal-token secrets are generated.
 
-> After installation, `runtime/install.lock` is created to prevent re-installation. Delete this file to re-install.
+> After installation, `runtime/install.lock` is created to prevent re-installation. Do not delete it; the installer refuses to run while an admin account exists. If you really need to reinstall, back up the database and clean the data first.
 
 ### 4. Login
 
@@ -153,25 +162,24 @@ Visit `http://localhost:8787` and log in with the admin credentials set during i
 Full Docker orchestration with 4 services: Nginx, PHP (webman app), MySQL, Redis.
 
 ```bash
-# 1. Configure Docker environment variables
-cp .env.docker .env
+# 1. Start all services (app reads .env.docker)
+docker compose up -d
 
-# 2. Start all services
-docker-compose up -d
+# 2. Open the install wizard in your browser
+# http://localhost/install  (database host: mysql)
 
-# 3. Open the install wizard in your browser
-# http://localhost:8787/install  (fill in DB and admin info)
-# Or run SQL migration manually (inside the app container):
-# docker-compose exec app mysql -h mysql -u root -p < database/install.sql
+# 3. Recreate app so the generated secrets take effect
+docker compose up -d --force-recreate app
 
 # 4. Access
-# http://localhost:8787  (webman)
-# http://localhost:8080  (Nginx reverse proxy)
+# http://localhost  (Nginx reverse proxy -> app:8787)
 ```
 
 - `Dockerfile`: PHP 8.3 + OPcache + Composer, based on `php:8.3-cli`
-- `docker-compose.yml`: 4 services, isolated network, persistent volumes
-- `.env.docker`: Docker-specific environment variables
+- `docker-compose.yml`: 4 services, isolated network, persistent volumes; only Nginx publishes host ports 80/443, while app (8787), MySQL (3306) and Redis (6379) stay on the container network
+- `.env.docker`: Docker-specific environment variables; the installer generates the required secrets into `.env` and syncs them into `.env.docker`
+- `docs/nginx-docker.conf`: site config that proxies `app:8787` and overwrites `X-Forwarded-For`
+- After installation, `install.sh` polls `/health` (MySQL/Redis may still be starting; the installer prints the DB host hint and the force-recreate step)
 
 ## Database Conventions
 
@@ -213,18 +221,21 @@ The complete API reference (response format, error codes, all endpoint details, 
 
 `docker-compose.yml` in the project root orchestrates 4 services:
 
-| Service | Image | Port |
+| Service | Image | Host Port |
 |------|------|------|
 | `nginx` | nginx:alpine | 80, 443 |
-| `app` | Local `Dockerfile` build | 8787 |
-| `mysql` | mysql:8.0 | 3306 |
-| `redis` | redis:7-alpine | 6379 |
+| `app` | Local `Dockerfile` build | not published (internal 8787) |
+| `mysql` | mysql:8.0 | not published (internal 3306) |
+| `redis` | redis:7-alpine | not published (internal 6379) |
 
-The PHP image is built from `Dockerfile`, based on `php:8.3-cli` with OPcache enabled.
+The PHP image is built from `Dockerfile`, based on `php:8.3-cli` with OPcache enabled. Only Nginx publishes host ports; the app, MySQL and Redis are reachable only on the Compose network, which also means the database host must be `mysql` inside Docker.
 
 ```bash
-cp .env.docker .env
-docker-compose up -d
+docker compose up -d
+# after /install:
+docker compose up -d --force-recreate app
+# non-Docker deployment:
+php start.php restart -d
 ```
 
 ### CI/CD
@@ -243,7 +254,25 @@ GitHub Actions CI pipeline: `.github/workflows/ci.yml`
 
 ### Nginx Security
 
-See `docs/nginx-security.conf` for production reverse-proxy security hardening.
+See `docs/nginx-security.conf` for bare-metal reverse-proxy hardening, and `docs/nginx-docker.conf` for the Docker deployment (proxies `app:8787`, overwrites `X-Forwarded-For` with `$remote_addr`). The bare-metal reference appends to `X-Forwarded-For`; ensure the outermost proxy overwrites it so clients cannot spoof the IP used for rate limiting.
+
+### Internal gRPC
+
+The PHP worker exposes `InternalService.Query/Detect/Carriers` on `tcp://127.0.0.1:8792` (8 workers) with `x-internal-token`. Set the same `INTERNAL_TOKEN` on PHP and the Rust tracking gateway; an empty token fails closed. See [ARCHITECTURE.en.md](../ARCHITECTURE.en.md#13-tracking-gateway-and-internal-grpc).
+
+## Upgrade to v1.2.0 (Breaking Changes)
+
+v1.2.0 is a security-hardening release with breaking changes. Before upgrading, back up the database and `.env`.
+
+1. **No default admin account.** The installer no longer seeds `erik/123456` or prefills `admin888`; it uses prepared statements and binds the first account to `super_admin`. It refuses to run while an admin exists and keeps `runtime/install.lock`. Back up the database before any deliberate reinstall.
+2. **Required secrets.** `JWT_SECRET_KEY`, `ENCRYPTABLE_KEY` (32 chars), `ENCRYPTION_KEY` (32 chars) and `INTERNAL_TOKEN` have no code defaults. The installer generates them into `.env` and syncs `.env.docker`; an installed environment refuses to start if one of the three encryption/JWT keys is missing or still an old public default (`APP_DEBUG=true` only warns), and an empty `INTERNAL_TOKEN` makes the internal gRPC service reject every request.
+3. **Existing encrypted data.** Data encrypted with the old public `ENCRYPTABLE_KEY` cannot be decrypted after upgrading. Set `ENCRYPTION_PREVIOUS_KEYS=open-admin-db-encryption-key-32b`, start the service, then re-encrypt the data with the new key and remove the legacy key.
+4. **Token types.** Access, refresh and client tokens are strictly separated. Refresh tokens are single-use and rotated; clients must call `/api/v1/auth/refresh` with a refresh token instead of reusing an access token or an old refresh token. Disabled admins lose access immediately, and `AdminPermission` returns 401 instead of allowing a missing `adminId`.
+5. **Internal gRPC.** PHP listens on `127.0.0.1:8792` (8 workers). PHP and the gateway must use the same `INTERNAL_TOKEN`; an empty token is rejected (fail closed). The old `demo-api-key` is removed and gateway error codes no longer use 5001.
+6. **Docker.** Only Nginx publishes host ports; MySQL/Redis are internal and the DB host is `mysql`. After installation run `docker compose up -d --force-recreate app`; non-Docker deployments run `php start.php restart -d`, otherwise old processes keep empty or stale keys.
+7. **Gateway semantics.** Error mapping uses 400/401/404/502/500 (plus 429 for rate limiting and 503 when a breaker is open); carrier 5xx responses and transport errors count toward the circuit breaker; detail cache is scoped by API-key hash (7-day TTL); a shared tracking-cache hit backfills the current key's detail cache; carrier HTTP timeout is 6s with 1 retry.
+8. **Webhooks and callbacks.** Carrier callbacks return 401 when `webhook_secret` is missing (`CALLBACK_ALLOW_UNSIGNED=1` is development-only), handle at most 100 events per request, and return real HTTP 4xx/5xx statuses. Stripe requires `payment_status=paid`; PayPal confirms only on `CAPTURE.COMPLETED`; manual orders stay pending until admin confirmation; `orders.tx_id` is unique and duplicates return 422.
+9. **Config and errors.** Secret config values are masked, `***` write-back is ignored, `system_config` is not exportable, and operation logs mask `/admin/config` values. API responses return generic errors while upstream details stay in server logs.
 
 ## Open Source Needs Your Support
 

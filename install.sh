@@ -39,16 +39,18 @@ fi
 echo "==> 启动 Docker Compose 服务（Nginx / PHP / MySQL / Redis）..."
 docker compose up -d
 
-echo "==> 轮询健康检查：http://localhost:${NGINX_PORT}/ （最多 120 秒）"
+# /health 在数据库不可用时也返回 200，比 / 更适合判断进程是否启动
+echo "==> 轮询健康检查：http://localhost:${NGINX_PORT}/health （最多 120 秒）"
 for i in $(seq 1 40); do
-    if curl -fsS "http://localhost:${NGINX_PORT}/" >/dev/null 2>&1; then
+    if curl -fsS "http://localhost:${NGINX_PORT}/health" >/dev/null 2>&1; then
         echo ""
         echo "==> 服务已就绪！"
         echo ""
         echo "访问 http://localhost:${NGINX_PORT}/install 完成安装向导："
-        echo "  - 数据库初始化"
+        echo "  - 数据库连接（Docker 环境下数据库主机填 mysql）"
         echo "  - 管理员账号创建"
         echo ""
+        echo "提示：安装完成后执行 docker compose up -d --force-recreate app，使新生成的密钥与 .env.docker 生效。"
         echo "提示：如需修改对外端口，设置环境变量 NGINX_PORT 后重新运行："
         echo "  NGINX_PORT=8080 bash install.sh"
         exit 0

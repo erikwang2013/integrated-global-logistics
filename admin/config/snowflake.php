@@ -10,12 +10,17 @@ declare(strict_types=1);
  * 用于生成全局唯一 BIGINT 主键，分布式环境需为每个节点分配不同 datacenter_id 和 worker_id
  * @link https://github.com/erikwang2013/snowflake-php
  */
-return [
-    // 数据中心 ID，取值范围 0-31。单机房部署保持默认值即可
-    'datacenter_id' => (int)(getenv('SNOWFLAKE_DATACENTER_ID') ?: 1),
+// shortcut: 同机多进程用 PID 派生 worker/datacenter；跨主机或 PID 复用超过 1024 时需要显式 env 或 Redis 序列
+$pid = getmypid() ?: 1;
+$workerEnv = getenv('SNOWFLAKE_WORKER_ID');
+$datacenterEnv = getenv('SNOWFLAKE_DATACENTER_ID');
 
-    // 工作节点 ID，取值范围 0-31。同一数据中心内每台机器需分配不同编号
-    'worker_id' => (int)(getenv('SNOWFLAKE_WORKER_ID') ?: 1),
+return [
+    // 数据中心 ID，取值范围 0-31。默认由 PID 派生，避免多个 HTTP/gRPC 进程生成重复 ID
+    'datacenter_id' => $datacenterEnv !== false ? (int) $datacenterEnv : intdiv($pid, 32) % 32,
+
+    // 工作节点 ID，取值范围 0-31。默认由 PID 派生，避免多个 HTTP/gRPC 进程生成重复 ID
+    'worker_id' => $workerEnv !== false ? (int) $workerEnv : $pid % 32,
 
     // 起始时间戳（毫秒），用于压缩 ID 长度。修改此值会导致已生成 ID 失效
     'start_timestamp' => (int)(getenv('SNOWFLAKE_START_TIMESTAMP') ?: 1700000000000),

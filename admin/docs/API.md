@@ -22,8 +22,9 @@
 - 所有 `POST` / `PUT` 请求必须设置 `Content-Type: application/json`（文件上传除外），否则返回 415
 - 请求体大小不得超过 10MB，否则返回 413
 - 安全过滤器对所有请求输入进行 XSS、SQL 注入、路径遍历、命令注入扫描，命中返回 403
-- 连续 5 次登录失败将触发账号锁定（15 分钟），锁定期间登录请求返回 429
+- 同一用户名 + IP 连续 5 次登录失败将触发锁定（15 分钟），锁定期间登录请求返回 429
 - 同一用户最多同时持有 3 个有效 Token，超出时最旧 Token 自动加入黑名单
+- access / refresh / client 三类 `token_type` 严格区分；refresh 单次使用并轮换，重放返回 401
 
 ## 2. 错误码
 
@@ -38,7 +39,7 @@
 | 413 | 请求体过大 | Content-Length 超过 10MB |
 | 415 | 不支持的媒体类型 | POST/PUT 请求 Content-Type 非 JSON 且非文件上传 |
 | 422 | 参数验证失败 | 必填字段缺失、格式不符、业务校验不通过 |
-| 429 | 请求过于频繁 | RateLimit 触发 / 账号锁定（连续5次登录失败锁定15分钟） |
+| 429 | 请求过于频繁 | RateLimit 触发 / 账号锁定（同一用户名 + IP 连续 5 次登录失败锁定 15 分钟） |
 | 500 | 服务器内部错误 | |
 
 ## 3. 公开端点
@@ -112,9 +113,9 @@ POST /api/v1/captcha/generate
     "type": "click",
     "image": "data:image/png;base64,iVBORw0KGgo...",
     "extra": {
-      "targets": [
-        { "order": 1, "text": "A", "x": 120, "y": 85 },
-        { "order": 2, "text": "B", "x": 310, "y": 42 }
+      "texts": [
+        { "order": 1, "text": "A" },
+        { "order": 2, "text": "B" }
       ]
     }
   }
@@ -168,7 +169,7 @@ POST /api/v1/captcha/generate
 
 | type | extra 字段 | 类型 | 说明 |
 |------|-----------|------|------|
-| click | targets | array | 点击目标，含 `order`(顺序) `text`(提示文字) `x` `y`(坐标) |
+| click | texts | array | 点击目标提示文字，含 `order`(顺序) `text`(提示文字)；不返回坐标 |
 | slider | x, y | int | 缺口左上角坐标 (基于 300×200 画布) |
 | slider | puzzle_w, puzzle_h | int | 拼图片宽高 |
 | slider | puzzle | string | 拼图片 base64 data URI |
@@ -189,8 +190,8 @@ POST /api/v1/captcha/verify
   "key": "abc123def456",
   "type": "click",
   "clicks": [
-    { "x": 120, "y": 85 },
-    { "x": 310, "y": 42 }
+    [120, 85],
+    [310, 42]
   ]
 }
 ```
@@ -223,7 +224,7 @@ POST /api/v1/captcha/verify
 
 | type | clicks 类型 | 说明 | 误差容限 |
 |------|------------|------|---------|
-| click | `[{x:int, y:int}]` | 点击坐标数组，按 order 顺序 | 18px 半径 |
+| click | `[[x:int, y:int], ...]` | 点击坐标数组（数值对），按 order 顺序 | 18px 半径 |
 | slider | `int` | 滑块 X 轴偏移量 | ±4px |
 | rotate | `int` | 旋转角度 (0-359) | ±5° |
 
@@ -313,7 +314,7 @@ POST /api/v1/auth/login
 - 422: 请先完成验证码校验（captcha_key 未通过 `/api/v1/captcha/verify`）
 - 401: 用户名或密码错误
 - 403: 账号已被禁用
-- 429: 账号已被锁定，请15分钟后再试（连续5次登录失败触发）
+- 429: 账号已被锁定，请15分钟后再试（同一用户名 + IP 连续 5 次登录失败触发）
 
 ### 3.6 注册
 
@@ -394,11 +395,17 @@ POST /api/v1/auth/refresh
 }
 ```
 
-刷新成功会同时返回新的 access_token 和 refresh_token，旧令牌自动失效。刷新时会更新用户最后登录时间和 IP。
+刷新成功会同时返回新的 access_token 和 refresh_token，旧 refresh 立即失效。刷新时会更新用户最后登录时间和 IP。
+
+约束：
+- 只接受 `token_type=refresh`；access token 或 client token 传入返回 401。
+- 旧 refresh 通过 Redis `SET NX` 原子占用，单次使用；并发重放只有一个请求成功，其余返回 401。
+- 管理员被禁用/删除后刷新返回 403。
 
 **可能的错误**:
 - 422: 缺少刷新令牌
-- 401: 刷新令牌无效或已过期
+- 401: 刷新令牌无效、已过期或已被使用
+- 403: 账号已被禁用或不存在
 
 ### 3.8 Prometheus 监控指标
 
@@ -1703,7 +1710,9 @@ POST /admin/upload
    a. 提取 Bearer token
    b. 检查黑名单 (Redis jwt_blacklist:{md5}) → 401
    c. 解码 JWT，校验过期 → 401
-   d. 设置 $request->adminId = sub 字段
+   d. 校验 token_type=access（refresh/client 拒绝）→ 401
+   e. 查库校验管理员存在且 status=1（禁用立即失效）→ 401
+   f. 设置 $request->adminId = sub 字段
     ↓
    AdminPermission 中间件:
    a. 对资源路由解析权限标识
@@ -1718,7 +1727,11 @@ POST /admin/upload
    客户端请求 POST /api/v1/auth/refresh
    请求体: { refresh_token: "..." }
     ↓
-   服务端解码 refresh_token → 签发新 access + refresh
+   服务端:
+   a. 解码并校验 token_type=refresh（access/client 拒绝）→ 401
+   b. 查库校验管理员状态 → 403（禁用/不存在）
+   c. Redis SET NX 原子占用旧 refresh，重放 → 401
+   d. 旧 refresh 写入黑名单，签发新 access + refresh
     ↓
    客户端更新本地令牌
 
@@ -1734,8 +1747,8 @@ POST /admin/upload
 
 ### JWT 结构
 
-- **access_token**: `{ sub: <user_id>, username: "<name>" }`，默认 TTL 7200 秒（由 JWT 配置 `default_expire` 控制）
-- **refresh_token**: `{ sub: <user_id>, token_type: "refresh" }`，默认 TTL 1209600 秒（由 JWT 配置 `refresh_expire` 控制，即 14 天）
+- **access_token**: `{ sub: <user_id>, username: "<name>", token_type: "access" }`，默认 TTL 7200 秒（由 JWT 配置 `default_expire` 控制）
+- **refresh_token**: `{ sub: <user_id>, token_type: "refresh" }`，默认 TTL 1209600 秒（由 JWT 配置 `refresh_expire` 控制，即 14 天）；单次使用，刷新后旧 token 进入黑名单
 
 ### 安全管理
 
@@ -1746,7 +1759,8 @@ POST /admin/upload
 - SecurityFilter 全局扫描 XSS、SQL 注入、路径遍历、命令注入，同 IP 5次/60秒临时黑名单 15 分钟
 - 敏感操作（删除用户、角色、权限、配置）需要当前登录用户密码二次确认
 - 并发会话限制：同一用户最多 3 个有效 Token，第 4 个设备登录时最旧 Token 被强制加入黑名单
-- 账号锁定：连续 5 次登录失败触发 15 分钟账号锁定，锁定期间返回 429
+- 账号锁定：同一用户名 + IP 连续 5 次登录失败触发 15 分钟锁定，锁定期间返回 429
+- 令牌类型：access / refresh / client 严格区分；refresh 单次使用并轮换；禁用管理员立即失效
 
 ### 中间件架构
 
@@ -1756,17 +1770,17 @@ POST /admin/upload
 Cors（跨域预处理 + 响应头）
   → Locale（Accept-Language 语言检测 / ?lang=zh_CN|en）
   → SecurityFilter（HTTP方法限制/请求体大小/Content-Type校验/XSS/SQL注入/路径遍历/命令注入/CSRF 攻击拦截）
-  → RateLimit（Redis 滑动窗口限流 + 账号锁定：5次登录失败锁定15分钟）
+  → RateLimit（Redis 滑动窗口限流；phpredis eval 参数签名已修复）
   → ClientAuth（客户端 JWT 认证，token_type=client，/api/v1 客户端门户路由组）
-  → AdminAuth（JWT 认证 + 黑名单，/admin 路由组）
-  → AdminPermission（RBAC 鉴权 / Redis 60s 缓存，/admin 路由组）
+  → AdminAuth（JWT 认证 + 黑名单 + token_type=access + 账号状态校验，/admin 路由组）
+  → AdminPermission（RBAC 鉴权 / Redis 60s 缓存；无 adminId 返回 401，/admin 路由组）
   → OperationLog（POST/PUT/DELETE 自动记录，含来源端检测，/admin 路由组）
 ```
 
 `/health` 和 `/api/docs` 为公开端点，仅经过 `Cors → SecurityFilter → RateLimit`。
 
 安全增强：
-- **账号锁定**：连续 5 次登录失败，账号自动锁定 15 分钟，期间登录返回 429
+- **账号锁定**：同一用户名 + IP 连续 5 次登录失败，锁定 15 分钟，期间登录返回 429
 - **并发会话限制**：同一用户最多 3 个有效 Token，超出时最旧 Token 自动加入黑名单
 - **security.txt**：`GET /.well-known/security.txt` 提供 RFC 9116 标准安全联系信息
 - **Nginx 安全配置**：参考 `docs/nginx-security.conf` 提供完整的反向代理安全加固示例
@@ -1791,11 +1805,12 @@ OperationLog 中间件自动识别客户端平台，写入操作日志 `source` 
 
 ### Docker Compose
 
-项目根目录提供 `docker-compose.yml`，编排 4 个服务（Nginx、webman app、MySQL、Redis）。PHP 通过 `Dockerfile` 构建（基于 `php:8.3-cli`，启用 OPcache）。
+项目根目录提供 `docker-compose.yml`，编排 4 个服务（Nginx、webman app、MySQL、Redis）。PHP 通过 `Dockerfile` 构建（基于 `php:8.3-cli`，启用 OPcache）。仅 Nginx 发布宿主 80/443；app 的 8787、MySQL 3306、Redis 6379 仅在容器网络可达。
 
 ```bash
-cp .env.docker .env
-docker-compose up -d
+docker compose up -d
+# 浏览器完成 /install（数据库主机填 mysql）后，重建 app 使密钥生效
+docker compose up -d --force-recreate app
 ```
 
 ### CI/CD
@@ -1812,11 +1827,11 @@ docker-compose up -d
 
 ### Nginx 安全配置
 
-生产环境部署请参考 `docs/nginx-security.conf` 进行反向代理安全加固配置。
+裸机生产环境参考 `docs/nginx-security.conf` 进行反向代理安全加固；Docker 使用 `docs/nginx-docker.conf`（反代 `app:8787`，以 `$remote_addr` 覆盖 `X-Forwarded-For`）。
 
 ## 16. 内部 gRPC 接口（e-cat → PHP worker）
 
-仅供 e-cat 查询网关调用，PHP 侧为 workerman h2c 服务（`tcp://0.0.0.0:8792`，进程 `internal_grpc`）。契约定义于 `infrastructure/tracking-gateway/proto/internal.proto`（package `internal.v1`），消息为 protobuf 编码，metadata 必须携带 `x-internal-token`（值来自 `config/logistics.php` 的 `internal_token`，生产环境用 `INTERNAL_TOKEN` 环境变量覆盖）。未携带/错误令牌返回响应 `code=401 UNAUTHORIZED`。
+仅供 e-cat 查询网关调用，PHP 侧为 workerman h2c 服务，默认监听 `tcp://127.0.0.1:8792`（`INTERNAL_GRPC_LISTEN` 可覆盖），默认 8 个 worker 进程（`INTERNAL_GRPC_WORKERS` 可覆盖）。契约定义于 `infrastructure/tracking-gateway/proto/internal.proto`（package `internal.v1`），消息为 protobuf 编码，metadata 必须携带 `x-internal-token`（值来自 `config/logistics.php` 的 `internal_token`，由 `INTERNAL_TOKEN` 环境变量注入）。`INTERNAL_TOKEN` 为空时内部接口 fail-closed，拒绝全部请求；网关 `internal_token` 为空时拒绝启动。未携带/错误令牌返回响应 `code=401 UNAUTHORIZED`。
 
 ### 16.1 RPC 一览
 
@@ -1833,12 +1848,20 @@ docker-compose up -d
 | 400 | `INVALID_PARAMS` | 缺参数 |
 | 401 | `UNAUTHORIZED` | 内部令牌错误 |
 | 404 | `CARRIER_NOT_FOUND` / `TRACKING_NOT_FOUND` / `CARRIER_NOT_DETECTED` | 承运商未注册 / 轨迹不存在 / 无法识别 |
-| 5001 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | 上游凭证错误 / 网络异常 / 承运商业务错误（含结构化上游报文，如 `[SF-INTERNATIONAL A1001] 必传参数不可为空`） |
+| 502 | `CARRIER_AUTH_ERROR` / `CARRIER_NETWORK_ERROR` / `CARRIER_ERROR` | 上游凭证错误 / 网络异常 / 承运商业务错误；`error_message` 只含通用文案，异常详情只写服务端日志 |
 | 500 | `INTERNAL_ERROR` | 内部异常 |
+
+> gRPC status 恒为 0，业务错误放在响应 `code`；网关对外映射时 4xx/5xx 原样作为 HTTP 状态，其余落 502。`5001` 等旧自定义错误码已取消。
 
 ## 17. e-cat 查询网关对外 API
 
-Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`（默认），请求头携带 `X-API-Key`（配置 `api_keys`）。网关承担 API-Key 鉴权、Redis 缓存命中（前缀 `logistics:`）、限流、按承运商熔断与 RoundRobin worker 转发；凭证永不下发到网关。
+Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`（默认），请求头携带 `X-API-Key`（管理端审核通过后写入 Redis 的客户端密钥）。网关承担 API-Key 鉴权、Redis 缓存命中（前缀 `logistics:`）、限流、按承运商熔断与 RoundRobin worker 转发；凭证永不下发到网关。
+
+缓存与限流语义：
+- 共享运单缓存 `logistics:cache:track:{carrier}:{tracking_no}`；按 API-Key 隔离的详情缓存 `logistics:cache:query:{sha256(api_key)}:{query_no}`，TTL 7 天。共享运单缓存命中时，会为当前 API-Key 补写详情缓存，避免跨租户读取。
+- 承运商 5xx / 网络失败写入 `logistics:cache:err:*` 负缓存 15s，故障期间不重复转发；网关未实现 single-flight。
+- 限流键使用 API-Key 的 sha256 哈希（`logistics:api:{hash}`），不保存明文密钥。
+- 网关 `internal_token` 为空时拒绝启动；`demo-api-key` 已移除，API-Key 必须由管理端审核写入 Redis。
 
 | 端点 | 说明 |
 |---|---|
@@ -1846,13 +1869,13 @@ Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`
 | `GET /v1/openapi.json` | OpenAPI 3.0 文档（公共端点，无需密钥） |
 | `GET /v1/carriers` | 承运商清单（转发 PHP gRPC `InternalService.Carriers`） |
 | `POST /v1/tracking/query` | 轨迹查询（`{"carrier_code": "...", "tracking_no": "..."}`），`carrier_code` 缺省时网关自动识别（detect 在 query 内部完成） |
-| `GET /v1/tracking/{query_no}` | 按查询号取上次轨迹结果 |
+| `GET /v1/tracking/{query_no}` | 按查询号取上次轨迹结果（仅创建该查询的 API-Key 可读） |
 
-网关侧附加语义：超出 `rate_limit`（默认 100 次/60s）返回 `429`；承运商连续失败触发熔断（默认 5 次 5xx/传输错误后 OPEN 60s）返回 `503`；worker 不可达返回 `502`。网关与 worker 之间为内网 gRPC（h2c，`0.0.0.0:8792`），`x-internal-token` 共享密钥鉴权，见第 16 节。
+网关侧附加语义：超出 `rate_limit`（默认 100 次/60s/API-Key）返回 `429`；承运商连续失败（5xx/传输错误，默认 30s 窗口失败率 ≥ 0.5）触发熔断（默认 OPEN 60s）返回 `503`；worker 不可达返回 `502`。网关与 worker 之间为内网 gRPC（h2c，默认 `127.0.0.1:8792`，可用 `INTERNAL_GRPC_LISTEN` 覆盖），`x-internal-token` 共享密钥鉴权，见第 16 节。PHP 上游承运商 HTTP 超时 6s、1 次重试（共 2 次尝试，约 12.2s，小于网关 15s 超时）。
 
 ### 17.1 响应信封与错误
 
-所有端点返回统一信封 `{"code": 0, "message": "ok", "data": ...}`；`code != 0` 视为错误，`data` 缺省。业务错误体可能携带 `error_code` / `error_message`（上游承运商诊断信息，网关透传），`code` 与 HTTP 状态一致：
+所有端点返回统一信封 `{"code": 0, "message": "ok", "data": ...}`；`code != 0` 视为错误，`data` 缺省。业务错误体携带 `error_code`；`error_message` 只含通用文案，内部异常详情只写服务端日志。`code` 与 HTTP 状态一致：
 
 | HTTP | 含义 |
 |---|---|
@@ -1860,12 +1883,13 @@ Rust 高频网关（`infrastructure/tracking-gateway`），监听 `0.0.0.0:8080`
 | 401 | 密钥缺失或无效 |
 | 404 | 查询号不存在 |
 | 429 | 限流（默认 100 次/60s/密钥），建议退避重试 |
-| 502 | worker 不可达或上游失败 |
+| 500 | PHP worker 内部错误 |
+| 502 | worker 不可达、承运商上游失败或无法识别的上游错误码 |
 | 503 | 承运商熔断，建议退避重试 |
 
 ### 17.2 调用示例（curl）
 
-演示密钥 `demo-api-key`，网关默认 `http://127.0.0.1:8080`：
+把 `$API_KEY` 替换为管理端审核通过、写入 Redis 的客户端密钥；网关默认 `http://127.0.0.1:8080`：
 
 ```bash
 # 健康检查（公共端点，无需密钥）
@@ -1875,15 +1899,15 @@ curl http://127.0.0.1:8080/v1/health
 curl http://127.0.0.1:8080/v1/openapi.json
 
 # 承运商清单
-curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/carriers
+curl -H "X-API-Key: $API_KEY" http://127.0.0.1:8080/v1/carriers
 
 # 轨迹查询（指定承运商可选）
-curl -X POST -H "X-API-Key: demo-api-key" -H "Content-Type: application/json" \
+curl -X POST -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
   -d '{"carrier_code": "china-post", "tracking_no": "LX123456789CN"}' \
   http://127.0.0.1:8080/v1/tracking/query
 
 # 按查询号取上次结果
-curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
+curl -H "X-API-Key: $API_KEY" http://127.0.0.1:8080/v1/tracking/{query_no}
 ```
 
 ## 18. 物流业务端点（M7-M13）
@@ -1911,3 +1935,28 @@ curl -H "X-API-Key: demo-api-key" http://127.0.0.1:8080/v1/tracking/{query_no}
 | PUT | `/api/v1/app/{id}`、`/api/v1/app/{id}/key` | 更新应用 / 重置密钥 |
 | POST | `/api/v1/app/{id}/order` | 应用下单 |
 | POST | `/api/v1/order/{id}/pay` | 发起支付（stripe / paypal / crypto） |
+
+### 18.3 承运商回调（`POST /api/callback/{carrier}`）
+
+公开端点，按承运商白名单 + 签名校验，错误返回真实 HTTP 状态：
+
+| HTTP | 场景 |
+|---|---|
+| 200 | 事件已落库/全部重复（`code=0`） |
+| 400 | JSON 非法、缺少 `tracking_no`、`events` 为空或无有效事件 |
+| 401 | 未配置 `webhook_secret`（默认拒绝）或签名错误；`CALLBACK_ALLOW_UNSIGNED=1` 仅开发放行 |
+| 404 | 承运商不在白名单 |
+
+单次最多处理 100 条事件，`event_code` / `event_desc` / `location` / `event_time` 会按长度截断；`(tracking_no, event_code, event_time)` 唯一键去重。
+
+### 18.4 支付 webhook（`POST /api/payment/webhook/{stripe|paypal}`）
+
+| HTTP | 场景 |
+|---|---|
+| 200 | 事件已处理或按设计忽略（未支付/未知事件） |
+| 400 | PayPal JSON 非法 |
+| 401 | Stripe/PayPal 验签失败 |
+| 502 | PayPal capture 失败（让 PayPal 重试） |
+| 503 | Stripe webhook secret 未配置 |
+
+确认规则：Stripe 仅 `checkout.session.completed` / `async_payment_succeeded` 且 `payment_status=paid`；PayPal `CHECKOUT.ORDER.APPROVED` 先 `/capture`，仅对本地存在订单扣款，`PAYMENT.CAPTURE.COMPLETED` 才确认；manual 渠道保持 pending，由管理员确认。`logistics_order.tx_id` 唯一索引，重复链上交易返回 422。

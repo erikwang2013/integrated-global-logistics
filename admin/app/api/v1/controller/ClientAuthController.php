@@ -116,8 +116,9 @@ class ClientAuthController
             return json(['code' => 422, 'message' => '用户名格式不正确', 'data' => []]);
         }
 
-        // 账号锁定检查（5次失败/15分钟）
-        $lockKey = "client_lock:{$username}";
+        // 账号锁定检查（5次失败/15分钟），按 用户名+IP 分组，避免锁死他人账号
+        $ip = $request->getRealIp();
+        $lockKey = "client_lock:{$username}:{$ip}";
         try {
             if (Redis::get($lockKey)) {
                 return json(['code' => 429, 'message' => '账号已锁定，请15分钟后再试', 'data' => []]);
@@ -129,7 +130,7 @@ class ClientAuthController
 
         if ($password === '' || strlen($password) < 6 || strlen($password) > 32 || !$user || !password_verify($password, $user->password)) {
             try {
-                $failKey = "client_login_fail:{$username}";
+                $failKey = "client_login_fail:{$username}:{$ip}";
                 $fails = Redis::incr($failKey);
                 if ($fails === 1) Redis::expire($failKey, 900);
                 if ($fails >= 5) {
@@ -141,7 +142,7 @@ class ClientAuthController
             return json(['code' => 401, 'message' => '用户名或密码错误', 'data' => []]);
         }
 
-        try { Redis::del("client_login_fail:{$username}"); Redis::del($lockKey); } catch (\Throwable) {}
+        try { Redis::del("client_login_fail:{$username}:{$ip}"); Redis::del($lockKey); } catch (\Throwable) {}
 
         if ((int) $user->status === 0) {
             return json(['code' => 403, 'message' => '账号已禁用', 'data' => []]);

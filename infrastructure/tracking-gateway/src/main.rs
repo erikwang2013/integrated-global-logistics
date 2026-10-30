@@ -73,6 +73,10 @@ struct GatewayConfig {
     detect_ttl_secs: u64,
     #[serde(default = "default_carriers_ttl")]
     carriers_cache_ttl_secs: u64,
+    /// 网关无 DB，详情缓存是 /v1/tracking/{query_no} 的唯一数据源，
+    /// 因此独立于 carrier 结果 TTL（默认 7 天）
+    #[serde(default = "default_detail_ttl")]
+    detail_cache_ttl_secs: u64,
     #[serde(default)]
     breaker: BreakerCfg,
 }
@@ -88,6 +92,9 @@ fn default_detect_ttl() -> u64 {
 }
 fn default_carriers_ttl() -> u64 {
     600
+}
+fn default_detail_ttl() -> u64 {
+    604_800
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -221,6 +228,12 @@ struct AppState {
     breakers: Arc<Breakers>,
 }
 
+/// 熔断失败判定：业务响应仅 5xx（承运商故障/内部错误）计入失败窗口；
+/// 4xx（参数错误/未找到）是确定性业务结果，不触发按承运商熔断。
+fn is_breaker_failure(code: i32) -> bool {
+    code >= 500
+}
+
 /// 按 carrier 维度各持一个 CircuitBreakerService（ecat-circuit-breaker 的
 /// 熔断状态在 Layer::layer 生成的 service 内），首次使用该 carrier 时创建。
 struct Breakers {
@@ -235,8 +248,11 @@ impl Breakers {
             .window(Duration::from_secs(cfg.breaker.window_secs))
             .half_open_probes(cfg.breaker.half_open_probes)
             .open_duration(Duration::from_secs(cfg.breaker.open_secs))
-            // 传输失败（Err）计入失败窗口；业务错误（Ok + code!=0）不算上游故障
-            .classify(|r: &Result<pb::QueryResponse, UpstreamError>| r.is_err());
+            // 传输失败（Err）与承运商 5xx 计入失败窗口；4xx 业务错误不算上游故障
+            .classify(|r: &Result<pb::QueryResponse, UpstreamError>| match r {
+                Err(_) => true,
+                Ok(resp) => is_breaker_failure(resp.code),
+            });
         Self {
             layer,
             map: Mutex::new(HashMap::new()),
@@ -434,6 +450,12 @@ fn sha256_hex(input: &str) -> String {
     digest.iter().map(|b| format!("{b:02x}")).collect()
 }
 
+/// 详情缓存键按 API-Key 哈希隔离，防止跨租户按 query_no 读取；
+/// carrier 结果缓存是同一上游结果，仍可按承运商/单号共享。
+fn query_cache_key(key_prefix: &str, api_key_hash: &str, query_no: &str) -> String {
+    format!("{key_prefix}cache:query:{api_key_hash}:{query_no}")
+}
+
 async fn require_api_key(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -447,7 +469,7 @@ async fn require_api_key(
     if key.is_empty() {
         return err_json(StatusCode::UNAUTHORIZED, 401, "invalid or missing api key");
     }
-    // 静态数组快速路径（demo key），随后走 Redis 动态校验
+    // 静态数组快速路径（可选），随后走 Redis 动态校验
     if state.cfg.api_keys.iter().any(|k| k == key) {
         return next.run(req).await;
     }
@@ -495,7 +517,9 @@ async fn tracking_query(
         .get("x-api-key")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("unknown");
-    let rate_key = format!("{}api:{api_key}", state.cfg.key_prefix);
+    let api_key_hash = sha256_hex(api_key);
+    // 限流键使用哈希，避免原始 API Key 落在 Redis 键空间
+    let rate_key = format!("{}api:{api_key_hash}", state.cfg.key_prefix);
     if state
         .rate
         .check(
@@ -533,7 +557,30 @@ async fn tracking_query(
     );
     if let Some(data) = cache_get(&state, &cache_key).await {
         metric("hit");
+        // 共享 track 缓存命中时，也要为当前 API-Key 补写详情缓存，
+        // 否则另一租户拿到同一 query_no 后 /v1/tracking/{query_no} 会 404
+        if let Some(qno) = data.get("query_no").and_then(Value::as_str) {
+            let qkey = query_cache_key(&state.cfg.key_prefix, &api_key_hash, qno);
+            cache_set(
+                &state,
+                &qkey,
+                data.clone(),
+                Duration::from_secs(state.cfg.detail_cache_ttl_secs),
+            )
+            .await;
+        }
         return with_cache_header(ok_json(data), &[("x-cache", "HIT")]);
+    }
+
+    // 承运商 5xx 负缓存（15s）：故障期间不重复转发 PHP；放在 carrier 结果缓存之后
+    let err_key = format!("{}cache:err:{carrier}:{tracking_no}", state.cfg.key_prefix);
+    if cache_get(&state, &err_key).await.is_some() {
+        metric("negcache");
+        return err_json(
+            StatusCode::BAD_GATEWAY,
+            502,
+            format!("carrier {carrier} is temporarily unavailable"),
+        );
     }
 
     let state2 = Arc::new(state.clone());
@@ -568,22 +615,30 @@ async fn tracking_query(
         }
     };
 
+    let failed = is_breaker_failure(resp.code);
     match parse_query(resp) {
         Ok(data) => {
             let ttl = ttl_for(&state, &carrier);
-            let query_no = data
-                .get("query_no")
-                .and_then(Value::as_str)
-                .map(str::to_string);
-            if let Some(qno) = query_no {
-                let qkey = format!("{}cache:query:{qno}", state.cfg.key_prefix);
-                cache_set(&state, &qkey, data.clone(), ttl).await;
+            if let Some(qno) = data.get("query_no").and_then(Value::as_str) {
+                let qkey = query_cache_key(&state.cfg.key_prefix, &api_key_hash, qno);
+                cache_set(
+                    &state,
+                    &qkey,
+                    data.clone(),
+                    Duration::from_secs(state.cfg.detail_cache_ttl_secs),
+                )
+                .await;
             }
             cache_set(&state, &cache_key, data.clone(), ttl).await;
             metric("ok");
             with_cache_header(ok_json(data), &[("x-cache", "MISS")])
         }
-        Err(resp) => resp,
+        Err(resp) => {
+            if failed {
+                cache_set(&state, &err_key, json!(true), Duration::from_secs(15)).await;
+            }
+            resp
+        }
     }
 }
 
@@ -695,10 +750,22 @@ fn worker_error(code: i32, message: &str, error: Option<(&str, &str)>) -> Respon
     (http, Json(body)).into_response()
 }
 
-async fn tracking_detail(State(state): State<AppState>, Path(query_no): Path<String>) -> Response {
+async fn tracking_detail(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(query_no): Path<String>,
+) -> Response {
+    // 中间件已校验 key；此处再取一次用于计算按租户隔离的缓存键
+    let key = headers
+        .get("x-api-key")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+    if key.is_empty() {
+        return err_json(StatusCode::UNAUTHORIZED, 401, "invalid or missing api key");
+    }
     match cache_get(
         &state,
-        &format!("{}cache:query:{query_no}", state.cfg.key_prefix),
+        &query_cache_key(&state.cfg.key_prefix, &sha256_hex(key), &query_no),
     )
     .await
     {
@@ -765,9 +832,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         std::env::var("TRACKING_GATEWAY_CONFIG").unwrap_or_else(|_| "config/config.json".into());
     let source = FileSource::new(config_path.clone());
     let map = source.load().await?;
-    let cfg = Arc::new(serde_json::from_value::<GatewayConfig>(Value::Object(
-        map.into_iter().collect(),
-    ))?);
+    let mut cfg =
+        serde_json::from_value::<GatewayConfig>(Value::Object(map.into_iter().collect()))?;
+    // 环境变量优先于配置文件；为空时拒绝启动，避免无鉴权的内部 gRPC 调用
+    if let Ok(token) = std::env::var("TRACKING_GATEWAY_INTERNAL_TOKEN") {
+        cfg.internal_token = token;
+    }
+    if cfg.internal_token.trim().is_empty() {
+        return Err("internal_token is empty: set TRACKING_GATEWAY_INTERNAL_TOKEN".into());
+    }
+    let cfg = Arc::new(cfg);
 
     let cache = Arc::new(RedisCache::connect(&cfg.redis_url).await?);
     let rate: Arc<dyn RateLimitStore> =
@@ -876,8 +950,26 @@ mod tests {
         assert_eq!(cfg.rate_limit.max_requests, 100);
         assert_eq!(cfg.cache.default_ttl_secs, 300);
         assert_eq!(cfg.detect_ttl_secs, 300);
+        assert_eq!(cfg.detail_cache_ttl_secs, 604_800);
         assert_eq!(cfg.breaker.half_open_probes, 3);
         assert!(cfg.carrier_cache_ttl.is_empty());
+    }
+
+    #[test]
+    fn breaker_failure_only_counts_5xx() {
+        assert!(is_breaker_failure(500));
+        assert!(is_breaker_failure(502));
+        assert!(!is_breaker_failure(404));
+        assert!(!is_breaker_failure(400));
+        assert!(!is_breaker_failure(0));
+    }
+
+    #[test]
+    fn query_cache_key_is_per_api_key() {
+        let a = query_cache_key("logistics:", "hash-a", "Q1");
+        let b = query_cache_key("logistics:", "hash-b", "Q1");
+        assert_eq!(a, "logistics:cache:query:hash-a:Q1");
+        assert_ne!(a, b);
     }
 
     #[test]

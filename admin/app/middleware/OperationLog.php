@@ -25,8 +25,8 @@ class OperationLog implements MiddlewareInterface
         $response = $handler($request);
 
         try {
-            // 递归过滤敏感字段
-            $input = $this->filterSensitive($request->all());
+            // 递归过滤敏感字段；配置接口的 value 也可能是密钥
+            $input = $this->filterSensitive($request->all(), $request->path());
 
             $log = new \app\model\OperationLog();
             $log->id         = SnowflakeService::generate();
@@ -49,14 +49,14 @@ class OperationLog implements MiddlewareInterface
     /**
      * 递归过滤敏感字段，防止密码等泄露到日志
      */
-    private function filterSensitive(array $data): array
+    private function filterSensitive(array $data, string $path = ''): array
     {
-        $keys = ['password', 'old_password', 'new_password', 'new_password_confirmation', 'token', 'secret', 'access_token', 'refresh_token', 'app_key', 'app_secret', 'access_key', 'access_secret'];
+        $keys = ['password', 'old_password', 'new_password', 'new_password_confirmation', 'token', 'secret', 'access_token', 'refresh_token', 'app_key', 'app_secret', 'access_key', 'access_secret', 'api_key', 'secret_key', 'private_key', 'webhook_secret'];
         foreach ($data as $key => $value) {
-            if (in_array($key, $keys, true)) {
+            if (in_array($key, $keys, true) || ($key === 'value' && str_starts_with($path, '/admin/config'))) {
                 $data[$key] = '***';
             } elseif (is_array($value)) {
-                $data[$key] = $this->filterSensitive($value);
+                $data[$key] = $this->filterSensitive($value, $path);
             }
         }
         return $data;

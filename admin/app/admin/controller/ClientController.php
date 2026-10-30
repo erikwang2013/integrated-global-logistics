@@ -203,20 +203,22 @@ class ClientController extends BaseController
         $app->reviewed_at = date('Y-m-d H:i:s');
 
         if ($action === 'approve') {
-            // 套餐优先取应用关联，兜底取最新已支付订单（兼容早期数据）
-            $planId = (int) $app->plan_id;
-            if (!$planId) {
-                $planId = (int) Order::where('app_id', $app->id)
-                    ->where('status', 'paid')
-                    ->orderBy('id', 'desc')
-                    ->value('plan_id');
+            // 以该应用最近一笔已付款订单的套餐为准，忽略客户端每次下单可覆盖的 app.plan_id：
+            // 既防止“买便宜套餐后挂贵套餐”，也避免付款后再次下单把 plan_id 改掉导致审核卡死。
+            $planId = (int) Order::where('app_id', $app->id)
+                ->where('status', 'paid')
+                ->orderByDesc('id')
+                ->value('plan_id');
+            if ($planId <= 0) {
+                return $this->fail('应用没有已付款订单，不能通过审核', 422);
             }
-            $plan = $planId ? Plan::find($planId) : null;
-            $days = $plan ? (int) $plan->valid_days : (int) $app->valid_days;
+            $plan = Plan::find($planId);
+            $days = $plan ? (int) $plan->valid_days : 0;
             if ($days <= 0) {
                 return $this->fail('应用未关联有效套餐，无法通过审核', 422);
             }
             $expireTs = time() + $days * 86400;
+            $app->plan_id = $planId;
             $app->valid_days = $days;
             $app->expire_at = gmdate('Y-m-d H:i:s', $expireTs);
             $app->review_remark = '';

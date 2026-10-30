@@ -32,12 +32,7 @@ class Redis
     private static function getInstance(): RedisClient
     {
         if (self::$instance !== null) {
-            try {
-                self::$instance->ping();
-                return self::$instance;
-            } catch (\Throwable) {
-                self::$instance = null;
-            }
+            return self::$instance;
         }
 
         $host = getenv('REDIS_HOST') ?: '127.0.0.1';
@@ -70,18 +65,26 @@ class Redis
 
     public static function __callStatic(string $name, array $arguments): mixed
     {
-        if ($name === 'eval') {
-            // eval(script, keyCount, key1, key2, ..., arg1, arg2, ...)
-            // keys start at index 2, count = $arguments[1]
-            $keyCount = (int)($arguments[1] ?? 0);
-            for ($i = 0; $i < $keyCount; $i++) {
-                $idx = 2 + $i;
-                $arguments[$idx] = self::prefixKey((string)$arguments[$idx]);
+        if ($name === 'eval' || $name === 'evalsha') {
+            // phpredis 签名：eval(script, args, num_keys)，args 前 num_keys 个为 key
+            $numKeys = (int)($arguments[2] ?? 0);
+            if (isset($arguments[1]) && is_array($arguments[1])) {
+                for ($i = 0; $i < $numKeys; $i++) {
+                    if (array_key_exists($i, $arguments[1])) {
+                        $arguments[1][$i] = self::prefixKey((string)$arguments[1][$i]);
+                    }
+                }
             }
         } elseif (!empty($arguments) && is_string($arguments[0])) {
             $arguments[0] = self::prefixKey($arguments[0]);
         }
 
-        return self::getInstance()->{$name}(...$arguments);
+        try {
+            return self::getInstance()->{$name}(...$arguments);
+        } catch (\RedisException $e) {
+            // 连接失效：丢弃实例，下次调用重连；不自动重试非幂等命令
+            self::$instance = null;
+            throw $e;
+        }
     }
 }
